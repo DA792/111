@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.content.ProtectedAreaIntroductionMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ProtectedAreaIntroductionResultMap" type="com.scenic.entity.content.ProtectedAreaIntroduction">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="language" property="language" jdbcType="VARCHAR"/>
+        <result column="image_url" property="imageUrl" jdbcType="VARCHAR"/>
+        <result column="audio_url" property="audioUrl" jdbcType="VARCHAR"/>
+        <result column="video_url" property="videoUrl" jdbcType="VARCHAR"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="enabled" property="enabled" jdbcType="BIT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="ProtectedAreaIntroduction_Column_List">
+        id, title, content, language, image_url, audio_url, video_url, sort_order, enabled, create_time, update_time
+    </sql>
+
+    <!-- 管理员查询保护区介绍列表 -->
+    <select id="selectForAdmin" resultMap="ProtectedAreaIntroductionResultMap">
+        SELECT 
+        <include refid="ProtectedAreaIntroduction_Column_List"/>
+        FROM protected_area_introduction
+        <where>
+            <if test="title != null and title != ''">
+                title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="language != null and language != ''">
+                AND language = #{language}
+            </if>
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+        ORDER BY sort_order ASC, create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 管理员查询保护区介绍总数 -->
+    <select id="selectCountForAdmin" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM protected_area_introduction
+        <where>
+            <if test="title != null and title != ''">
+                title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="language != null and language != ''">
+                AND language = #{language}
+            </if>
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+    </select>
+</mapper>

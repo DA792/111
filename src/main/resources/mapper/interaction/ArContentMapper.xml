@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.interaction.ArContentMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ArContentResultMap" type="com.scenic.entity.interaction.ArContent">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="content_url" property="contentUrl" jdbcType="VARCHAR"/>
+        <result column="content_type" property="contentType" jdbcType="VARCHAR"/>
+        <result column="target_id" property="targetId" jdbcType="VARCHAR"/>
+        <result column="target_type" property="targetType" jdbcType="VARCHAR"/>
+        <result column="latitude" property="latitude" jdbcType="DECIMAL"/>
+        <result column="longitude" property="longitude" jdbcType="DECIMAL"/>
+        <result column="enabled" property="enabled" jdbcType="BIT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="ArContent_Column_List">
+        id, title, description, content_url, content_type, target_id, target_type, latitude, longitude, enabled, create_time, update_time
+    </sql>
+
+    <!-- 管理员查询AR内容列表 -->
+    <select id="selectForAdmin" resultMap="ArContentResultMap">
+        SELECT 
+        <include refid="ArContent_Column_List"/>
+        FROM ar_content
+        <where>
+            <if test="title != null and title != ''">
+                title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="contentType != null and contentType != ''">
+                AND content_type = #{contentType}
+            </if>
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 管理员查询AR内容总数 -->
+    <select id="selectCountForAdmin" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM ar_content
+        <where>
+            <if test="title != null and title != ''">
+                title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="contentType != null and contentType != ''">
+                AND content_type = #{contentType}
+            </if>
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+    </select>
+</mapper>

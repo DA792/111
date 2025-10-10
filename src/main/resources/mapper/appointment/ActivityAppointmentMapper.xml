@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.appointment.ActivityAppointmentMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ActivityAppointmentResultMap" type="com.scenic.entity.appointment.ActivityAppointment">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="activity_name" property="activityName" jdbcType="VARCHAR"/>
+        <result column="contact_person" property="contactPerson" jdbcType="VARCHAR"/>
+        <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
+        <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
+        <result column="activity_id" property="activityId" jdbcType="BIGINT"/>
+        <result column="activity_date" property="activityDate" jdbcType="TIMESTAMP"/>
+        <result column="activity_time" property="activityTime" jdbcType="VARCHAR"/>
+        <result column="number_of_people" property="numberOfPeople" jdbcType="INTEGER"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="ActivityAppointment_Column_List">
+        id, activity_name, contact_person, contact_phone, contact_email, activity_id, 
+        activity_date, activity_time, number_of_people, remark, status, create_time, update_time
+    </sql>
+
+    <!-- 管理员查询活动预约列表 -->
+    <select id="selectForAdmin" resultMap="ActivityAppointmentResultMap">
+        SELECT 
+        <include refid="ActivityAppointment_Column_List"/>
+        FROM activity_appointment
+        <where>
+            <if test="activityName != null and activityName != ''">
+                activity_name LIKE CONCAT('%', #{activityName}, '%')
+            </if>
+            <if test="contactPerson != null and contactPerson != ''">
+                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 管理员查询活动预约总数 -->
+    <select id="selectCountForAdmin" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM activity_appointment
+        <where>
+            <if test="activityName != null and activityName != ''">
+                activity_name LIKE CONCAT('%', #{activityName}, '%')
+            </if>
+            <if test="contactPerson != null and contactPerson != ''">
+                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.interaction.PhotoCheckInMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="PhotoCheckInResultMap" type="com.scenic.entity.interaction.PhotoCheckIn">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="photo_url" property="photoUrl" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="category" property="category" jdbcType="VARCHAR"/>
+        <result column="latitude" property="latitude" jdbcType="DECIMAL"/>
+        <result column="longitude" property="longitude" jdbcType="DECIMAL"/>
+        <result column="likes" property="likes" jdbcType="INTEGER"/>
+        <result column="enabled" property="enabled" jdbcType="BIT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="PhotoCheckIn_Column_List">
+        id, user_id, user_name, photo_url, description, category, latitude, longitude, likes, enabled, create_time, update_time
+    </sql>
+
+    <!-- 管理员查询照片打卡列表 -->
+    <select id="selectForAdmin" resultMap="PhotoCheckInResultMap">
+        SELECT 
+        <include refid="PhotoCheckIn_Column_List"/>
+        FROM photo_check_in
+        <where>
+            <if test="userName != null and userName != ''">
+                user_name LIKE CONCAT('%', #{userName}, '%')
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 管理员查询照片打卡总数 -->
+    <select id="selectCountForAdmin" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM photo_check_in
+        <where>
+            <if test="userName != null and userName != ''">
+                user_name LIKE CONCAT('%', #{userName}, '%')
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="enabled != null">
+                AND enabled = #{enabled}
+            </if>
+        </where>
+    </select>
+</mapper>

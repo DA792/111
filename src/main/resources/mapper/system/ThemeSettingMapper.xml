@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.system.ThemeSettingMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="ThemeSettingResultMap" type="com.scenic.entity.system.ThemeSetting">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="theme_name" property="themeName" jdbcType="VARCHAR"/>
+        <result column="color_config" property="colorConfig" jdbcType="VARCHAR"/>
+        <result column="is_default" property="isDefault" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="ThemeSetting_Column_List">
+        id, theme_name, color_config, is_default, create_time, update_time
+    </sql>
+
+    <!-- 更新主题设置 -->
+    <update id="update" parameterType="com.scenic.entity.system.ThemeSetting">
+        UPDATE theme_setting
+        <set>
+            <if test="themeName != null and themeName != ''">
+                theme_name = #{themeName},
+            </if>
+            <if test="colorConfig != null and colorConfig != ''">
+                color_config = #{colorConfig},
+            </if>
+            <if test="isDefault != null">
+                is_default = #{isDefault},
+            </if>
+            update_time = #{updateTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+</mapper>

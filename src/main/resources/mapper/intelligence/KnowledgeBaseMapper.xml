@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.scenic.mapper.intelligence.KnowledgeBaseMapper">
+    
+    <!-- 结果映射 -->
+    <resultMap id="KnowledgeBaseResultMap" type="com.scenic.entity.intelligence.KnowledgeBase">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="file_path" property="filePath"/>
+        <result column="file_name" property="fileName"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="file_type" property="fileType"/>
+        <result column="version" property="version"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+    
+    <!-- 根据条件查询知识库列表 -->
+    <select id="selectByCondition" parameterType="map" resultMap="KnowledgeBaseResultMap">
+        SELECT * FROM knowledge_base
+        <where>
+            <if test="title != null and title != ''">
+                title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="version != null and version != ''">
+                AND version = #{version}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+    
+</mapper>
