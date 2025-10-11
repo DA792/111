@@ -128,26 +128,6 @@ public class PhotoCheckInController {
     }
     
     /**
-     * 管理后台端 - 根据分类获取照片打卡记录
-     * @param category 分类
-     * @return 照片打卡记录列表
-     */
-    @GetMapping(ADMIN_PREFIX + "/photo-check-in/category/{category}")
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByCategoryForAdmin(@PathVariable String category) {
-        return photoCheckInService.getPhotoCheckInsByCategory(category);
-    }
-    
-    /**
-     * 管理后台端 - 根据用户ID获取照片打卡记录
-     * @param userId 用户ID
-     * @return 照片打卡记录列表
-     */
-    @GetMapping(ADMIN_PREFIX + "/photo-check-in/user/{userId}")
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByUserId(@PathVariable Long userId) {
-        return photoCheckInService.getPhotoCheckInsByUserId(userId);
-    }
-    
-    /**
      * 管理后台端 - 删除照片打卡记录
      * @param photoCheckInId 照片打卡ID
      * @return 操作结果
