@@ -1,122 +1,140 @@
--- 文件资源表（resource_file）
-CREATE TABLE `resource_file` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `file_name` varchar(255) NOT NULL COMMENT '原始文件名',
-  `file_key` varchar(500) NOT NULL COMMENT 'MinIO存储路径',
-  `bucket_name` varchar(50) NOT NULL COMMENT '存储桶名称',
-  `file_size` bigint COMMENT '文件大小(字节)',
-  `mime_type` varchar(100) COMMENT '文件类型',
-  `file_type` tinyint NOT NULL COMMENT '1-图片 2-视频 3-文档 4-其他',
-  `width` smallint COMMENT '图片/视频宽度',
-  `height` smallint COMMENT '图片/视频高度',
-  `duration` int COMMENT '视频/音频时长(秒)',
-  `sha256` char(64) COMMENT '文件哈希值',
-  `upload_user_id` bigint COMMENT '上传用户ID',
-  `is_temp` tinyint DEFAULT 0 COMMENT '是否临时文件',
-  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_file_key` (`bucket_name`, `file_key`),
-  KEY `idx_upload_user` (`upload_user_id`),
-  KEY `idx_file_type` (`file_type`)
-) ENGINE=InnoDB COMMENT='统一文件存储表';
-
 -- 保护区大事件表
-CREATE TABLE protected_area_event (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '大事件ID',
-    title VARCHAR(255) NOT NULL COMMENT '大事件标题',
-    summary VARCHAR(500) COMMENT '大事件摘要',
-    content_type TINYINT DEFAULT 1 COMMENT '内容类型：1-纯文本，2-Markdown',
-    content TEXT COMMENT '大事件详细内容（纯文本或Markdown格式）',
-    content_file_id BIGINT COMMENT 'Markdown文件ID（关联resource_file表）',
-    event_date DATE NOT NULL COMMENT '大事件日期',
-    event_year INT GENERATED ALWAYS AS (YEAR(event_date)) STORED COMMENT '大事件年份',
-    event_month INT GENERATED ALWAYS AS (MONTH(event_date)) STORED COMMENT '大事件月份',
-    cover_image_id BIGINT COMMENT '封面图片ID',
-    cover_video_id BIGINT COMMENT '封面视频ID',
-    location VARCHAR(255) COMMENT '事件发生地点',
-    view_count INT DEFAULT 0 COMMENT '浏览次数',
-    enabled TINYINT(1) DEFAULT 1 COMMENT '是否启用：0-禁用，1-启用',
-    sort_order INT DEFAULT 0 COMMENT '排序顺序',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_event_date (event_date),
-    INDEX idx_event_year_month (event_year, event_month),
-    INDEX idx_enabled (enabled)
+CREATE TABLE `protected_area_event` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '事件ID',
+  `title` varchar(100) NOT NULL COMMENT '事件标题',
+  `content` text NOT NULL COMMENT '事件内容',
+  `event_time` datetime NOT NULL COMMENT '事件发生时间',
+  `event_type` tinyint NOT NULL COMMENT '事件类型：1-保护活动，2-物种观察，3-科研发现，4-其他',
+  `location` varchar(255) COMMENT '事件发生地点',
+  `cover_image_id` bigint COMMENT '封面图片ID（关联resource_file）',
+  `view_count` int NOT NULL DEFAULT 0 COMMENT '浏览次数',
+  `like_count` int NOT NULL DEFAULT 0 COMMENT '点赞次数',
+  `favorite_count` int NOT NULL DEFAULT 0 COMMENT '收藏次数',
+  `comment_count` int NOT NULL DEFAULT 0 COMMENT '评论次数',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态：1-已发布，2-草稿，3-已下架',
+  `is_top` tinyint NOT NULL DEFAULT 0 COMMENT '是否置顶：0-否，1-是',
+  `is_highlight` tinyint NOT NULL DEFAULT 0 COMMENT '是否精选：0-否，1-是',
+  `version` int NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_by` bigint COMMENT '创建人',
+  `update_by` bigint COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  KEY `idx_event_time` (`event_time`),
+  KEY `idx_event_type` (`event_type`),
+  KEY `idx_status` (`status`),
+  KEY `idx_is_top` (`is_top`),
+  KEY `idx_is_highlight` (`is_highlight`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区大事件表';
 
--- 保护区大事件媒体表（用于存储大事件的图片、视频等媒体资源）
-CREATE TABLE protected_area_event_media (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '媒体ID',
-    event_id BIGINT NOT NULL COMMENT '大事件ID',
-    file_id BIGINT NOT NULL COMMENT '文件资源ID',
-    thumbnail_id BIGINT COMMENT '缩略图文件ID（针对视频）',
-    title VARCHAR(255) COMMENT '媒体标题',
-    description VARCHAR(500) COMMENT '媒体描述',
-    sort_order INT DEFAULT 0 COMMENT '排序顺序',
-    is_highlight TINYINT(1) DEFAULT 0 COMMENT '是否为精彩瞬间：0-否，1-是',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_event_id (event_id),
-    INDEX idx_file_id (file_id),
-    INDEX idx_is_highlight (is_highlight)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区大事件媒体表';
+-- 保护区大事件图片表
+CREATE TABLE `protected_area_event_image` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `event_id` bigint NOT NULL COMMENT '事件ID',
+  `file_id` bigint NOT NULL COMMENT '图片文件ID（关联resource_file）',
+  `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序顺序',
+  `description` varchar(255) COMMENT '图片描述',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_by` bigint COMMENT '创建人',
+  `update_by` bigint COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  KEY `idx_event_id` (`event_id`),
+  KEY `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区大事件图片表';
 
+-- 保护区物种表
+CREATE TABLE `protected_area_species` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '物种ID',
+  `species_name` varchar(100) NOT NULL COMMENT '物种名称',
+  `scientific_name` varchar(100) COMMENT '学名',
+  `category` varchar(50) NOT NULL COMMENT '物种类别',
+  `protection_level` varchar(50) COMMENT '保护级别',
+  `description` text COMMENT '物种描述',
+  `habitat` text COMMENT '栖息地',
+  `behavior` text COMMENT '行为习性',
+  `distribution` text COMMENT '分布范围',
+  `population` varchar(255) COMMENT '种群数量',
+  `threats` text COMMENT '面临威胁',
+  `conservation_measures` text COMMENT '保护措施',
+  `cover_image_id` bigint COMMENT '封面图片ID（关联resource_file）',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态：1-已发布，2-草稿，3-已下架',
+  `version` int NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_by` bigint COMMENT '创建人',
+  `update_by` bigint COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_species_name` (`species_name`),
+  KEY `idx_category` (`category`),
+  KEY `idx_protection_level` (`protection_level`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区物种表';
 
--- 保护区大事件讲解表（用于存储大事件的相关讲解内容）
-CREATE TABLE protected_area_event_explanation (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '讲解ID',
-    event_id BIGINT NOT NULL COMMENT '大事件ID',
-    title VARCHAR(255) NOT NULL COMMENT '讲解标题',
-    content TEXT NOT NULL COMMENT '讲解内容',
-    author VARCHAR(100) COMMENT '作者',
-    image_id BIGINT COMMENT '配图文件ID',
-    sort_order INT DEFAULT 0 COMMENT '排序顺序',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_event_id (event_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区大事件讲解表';
+-- 保护区物种图片表
+CREATE TABLE `protected_area_species_image` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `species_id` bigint NOT NULL COMMENT '物种ID',
+  `file_id` bigint NOT NULL COMMENT '图片文件ID（关联resource_file）',
+  `sort_order` int NOT NULL DEFAULT 0 COMMENT '排序顺序',
+  `description` varchar(255) COMMENT '图片描述',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_by` bigint COMMENT '创建人',
+  `update_by` bigint COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  KEY `idx_species_id` (`species_id`),
+  KEY `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区物种图片表';
 
--- 保护区大事件讲解对象表（用于存储大事件讲解中的不同对象，如不同的鸟类）
-CREATE TABLE protected_area_event_explanation_object (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '讲解对象ID',
-    explanation_id BIGINT NOT NULL COMMENT '讲解ID',
-    object_name VARCHAR(255) NOT NULL COMMENT '对象名称（如：黑嘴天鹅）',
-    object_description TEXT COMMENT '对象描述',
-    image_id BIGINT COMMENT '对象图片文件ID',
-    sort_order INT DEFAULT 0 COMMENT '排序顺序',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_explanation_id (explanation_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区大事件讲解对象表';
+-- 用户收藏表
+CREATE TABLE `user_favorite` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `target_id` bigint NOT NULL COMMENT '收藏目标ID',
+  `target_type` tinyint NOT NULL COMMENT '目标类型：1-保护区大事件，2-保护区物种，3-其他',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_target` (`user_id`, `target_id`, `target_type`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_target_id` (`target_id`),
+  KEY `idx_target_type` (`target_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户收藏表';
 
--- 保护区大事件讲解对象音频表（用于存储不同对象的多语言音频）
-CREATE TABLE protected_area_event_explanation_audio (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '音频ID',
-    object_id BIGINT NOT NULL COMMENT '讲解对象ID',
-    language VARCHAR(50) NOT NULL DEFAULT 'zh_CN' COMMENT '语言代码：zh_CN-中文，en_US-英语，ja_JP-日语，ko_KR-韩语等',
-    audio_id BIGINT NOT NULL COMMENT '音频文件ID',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    INDEX idx_object_id (object_id),
-    INDEX idx_language (language),
-    UNIQUE KEY uk_object_language (object_id, language)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='保护区大事件讲解对象音频表';
+-- 用户评论表
+CREATE TABLE `user_comment` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '评论ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `target_id` bigint NOT NULL COMMENT '评论目标ID',
+  `target_type` tinyint NOT NULL COMMENT '目标类型：1-保护区大事件，2-保护区物种，3-其他',
+  `content` varchar(500) NOT NULL COMMENT '评论内容',
+  `parent_id` bigint DEFAULT NULL COMMENT '父评论ID，用于回复功能',
+  `like_count` int NOT NULL DEFAULT 0 COMMENT '点赞次数',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态：1-正常，2-已隐藏',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_target_id` (`target_id`),
+  KEY `idx_target_type` (`target_type`),
+  KEY `idx_parent_id` (`parent_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户评论表';
 
-
-
--- 用户搜索历史表
-CREATE TABLE user_search_history (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '历史ID',
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    keyword VARCHAR(100) NOT NULL COMMENT '搜索关键词',
-    search_count INT DEFAULT 1 COMMENT '搜索次数',
-    last_search_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '最后搜索时间',
-    create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    INDEX idx_user_id (user_id),
-    INDEX idx_keyword (keyword),
-    INDEX idx_last_search_time (last_search_time),
-    UNIQUE KEY uk_user_keyword (user_id, keyword)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户搜索历史表';
-
--- 注意：使用逻辑外键，不添加物理外键约束
--- 相关字段已添加索引以提高查询性能
+-- 用户点赞表
+CREATE TABLE `user_like` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `target_id` bigint NOT NULL COMMENT '点赞目标ID',
+  `target_type` tinyint NOT NULL COMMENT '目标类型：1-保护区大事件，2-保护区物种，3-评论，4-其他',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_target` (`user_id`, `target_id`, `target_type`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_target_id` (`target_id`),
+  KEY `idx_target_type` (`target_type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户点赞表';

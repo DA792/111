@@ -1,54 +1,17 @@
--- 知识库表
-CREATE TABLE IF NOT EXISTS `knowledge_base` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '知识库ID',
-  `title` VARCHAR(255) NOT NULL COMMENT '知识库标题',
-  `content` TEXT COMMENT '知识库内容',
-  `file_path` VARCHAR(500) COMMENT '文件路径',
-  `file_name` VARCHAR(255) COMMENT '文件名',
-  `file_size` BIGINT COMMENT '文件大小',
-  `file_type` VARCHAR(50) COMMENT '文件类型',
-  `version` VARCHAR(50) COMMENT '版本号',
-  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态（0-禁用，1-启用）',
-  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_title` (`title`),
-  KEY `idx_version` (`version`),
-  KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库表';
-
--- 知识图谱表
-CREATE TABLE IF NOT EXISTS `knowledge_graph` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '知识图谱ID',
-  `species_name` VARCHAR(255) NOT NULL COMMENT '物种名称',
-  `scientific_name` VARCHAR(255) COMMENT '学名',
-  `description` TEXT COMMENT '描述',
-  `image_url` VARCHAR(500) COMMENT '图片URL',
-  `category` VARCHAR(100) COMMENT '分类',
-  `habitat` VARCHAR(255) COMMENT '栖息地',
-  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态（0-禁用，1-启用）',
-  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_species_name` (`species_name`),
-  KEY `idx_category` (`category`),
-  KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识图谱表';
-
--- AI问答记录表
-CREATE TABLE IF NOT EXISTS `ai_qa_record` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '问答记录ID',
-  `user_id` BIGINT NOT NULL COMMENT '用户ID',
-  `question` TEXT NOT NULL COMMENT '问题',
-  `answer` TEXT NOT NULL COMMENT '回答',
-  `knowledge_base_id` BIGINT COMMENT '引用的知识库ID',
-  `knowledge_graph_id` BIGINT COMMENT '引用的知识图谱ID',
-  `status` TINYINT NOT NULL DEFAULT 1 COMMENT '状态（0-失败，1-成功）',
-  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+CREATE TABLE `blacklist_record` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '记录ID',
+  `user_id` bigint NOT NULL COMMENT '用户ID',
+  `action_type` tinyint NOT NULL COMMENT '操作类型：1-加入黑名单，2-移出黑名单',
+  `reason` varchar(255) COMMENT '原因',
+  `operator_id` bigint COMMENT '操作人ID',
+  `operator_name` varchar(50) COMMENT '操作人姓名',
+  `action_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+`create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+ `create_by` bigint COMMENT '创建人',
+  `update_by` bigint COMMENT '更新人',
   PRIMARY KEY (`id`),
   KEY `idx_user_id` (`user_id`),
-  KEY `idx_knowledge_base_id` (`knowledge_base_id`),
-  KEY `idx_knowledge_graph_id` (`knowledge_graph_id`),
-  KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='AI问答记录表';
+  KEY `idx_action_type` (`action_type`),
+  KEY `idx_action_time` (`action_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='黑名单记录表';
