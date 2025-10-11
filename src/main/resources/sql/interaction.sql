@@ -1,0 +1,20 @@
+CREATE TABLE `knowledge_base` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '知识库ID',
+  `name` varchar(100) NOT NULL COMMENT '知识库名称',
+  `description` text COMMENT '知识库描述',
+  `category_id` bigint COMMENT '分类ID',
+  `document_count` int NOT NULL DEFAULT 0 COMMENT '文档数量',
+  `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态：0-禁用，1-启用',
+  `creator_id` bigint COMMENT '创建人ID',
+  `creator_name` varchar(100) COMMENT '创建人名称',
+  `version` int NOT NULL DEFAULT 0 COMMENT '版本号（乐观锁）',
+  `deleted` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+ `create_by` bigint COMMENT '创建人',
+  `update_by` bigint COMMENT '更新人',
+  PRIMARY KEY (`id`),
+  KEY `idx_category_id` (`category_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_creator_id` (`creator_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='知识库表';

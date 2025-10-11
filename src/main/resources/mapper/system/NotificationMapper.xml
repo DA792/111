@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.system.NotificationMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="NotificationResultMap" type="com.scenic.entity.system.Notification">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="channel" property="channel" jdbcType="VARCHAR"/>
+        <result column="receiver_id" property="receiverId" jdbcType="BIGINT"/>
+        <result column="receiver_type" property="receiverType" jdbcType="VARCHAR"/>
+        <result column="send_status" property="sendStatus" jdbcType="TINYINT"/>
+        <result column="send_time" property="sendTime" jdbcType="TIMESTAMP"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="Notification_Column_List">
+        id, title, content, channel, receiver_id, receiver_type, send_status, send_time, create_time, update_time
+    </sql>
+
+    <!-- 根据条件查询通知列表 -->
+    <select id="selectByCondition" resultMap="NotificationResultMap">
+        SELECT 
+        <include refid="Notification_Column_List"/>
+        FROM notification
+        <where>
+            <if test="title != null and title != ''">
+                title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="channel != null and channel != ''">
+                AND channel = #{channel}
+            </if>
+            <if test="sendStatus != null">
+                AND send_status = #{sendStatus}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
+</mapper>

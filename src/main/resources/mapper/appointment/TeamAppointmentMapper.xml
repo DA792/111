@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.appointment.TeamAppointmentMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="TeamAppointmentResultMap" type="com.scenic.entity.appointment.TeamAppointment">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="team_name" property="teamName" jdbcType="VARCHAR"/>
+        <result column="contact_person" property="contactPerson" jdbcType="VARCHAR"/>
+        <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
+        <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
+        <result column="number_of_people" property="numberOfPeople" jdbcType="INTEGER"/>
+        <result column="scenic_spot_id" property="scenicSpotId" jdbcType="BIGINT"/>
+        <result column="scenic_spot_name" property="scenicSpotName" jdbcType="VARCHAR"/>
+        <result column="appointment_date" property="appointmentDate" jdbcType="TIMESTAMP"/>
+        <result column="appointment_time" property="appointmentTime" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="TeamAppointment_Column_List">
+        id, team_name, contact_person, contact_phone, contact_email, number_of_people, 
+        scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, remark, status, create_time, update_time
+    </sql>
+
+    <!-- 管理员查询团队预约列表 -->
+    <select id="selectForAdmin" resultMap="TeamAppointmentResultMap">
+        SELECT 
+        <include refid="TeamAppointment_Column_List"/>
+        FROM team_appointment
+        <where>
+            <if test="teamName != null and teamName != ''">
+                team_name LIKE CONCAT('%', #{teamName}, '%')
+            </if>
+            <if test="contactPerson != null and contactPerson != ''">
+                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 管理员查询团队预约总数 -->
+    <select id="selectCountForAdmin" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM team_appointment
+        <where>
+            <if test="teamName != null and teamName != ''">
+                team_name LIKE CONCAT('%', #{teamName}, '%')
+            </if>
+            <if test="contactPerson != null and contactPerson != ''">
+                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+</mapper>
