@@ -38,8 +38,17 @@
             <if test="contactPerson != null and contactPerson != ''">
                 AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
+            <if test="contactPhone != null and contactPhone != ''">
+                AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
+            </if>
             <if test="status != null and status != ''">
                 AND status = #{status}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND appointment_time <![CDATA[>=]]> #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND appointment_time <![CDATA[<=]]> #{endTime}
             </if>
         </where>
         ORDER BY create_time DESC
@@ -57,8 +66,17 @@
             <if test="contactPerson != null and contactPerson != ''">
                 AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
+            <if test="contactPhone != null and contactPhone != ''">
+                AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
+            </if>
             <if test="status != null and status != ''">
                 AND status = #{status}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND appointment_time <![CDATA[>=]]> #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND appointment_time <![CDATA[<=]]> #{endTime}
             </if>
         </where>
     </select>

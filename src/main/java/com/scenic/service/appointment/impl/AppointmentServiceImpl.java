@@ -169,6 +169,95 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
     
     /**
+     * 批量保存团队预约
+     * @param teamAppointments 团队预约列表
+     * @return 保存结果
+     */
+    @Override
+    public Result<String> batchSaveTeamAppointments(List<TeamAppointment> teamAppointments) {
+        try {
+            if (teamAppointments == null || teamAppointments.isEmpty()) {
+                return Result.error("团队预约数据不能为空");
+            }
+            
+            // 批量保存到数据库
+            int successCount = 0;
+            int failCount = 0;
+            StringBuilder errorMsg = new StringBuilder();
+            
+            for (TeamAppointment teamAppointment : teamAppointments) {
+                try {
+                    // 设置默认值
+                    if (teamAppointment.getStatus() == null || teamAppointment.getStatus().isEmpty()) {
+                        teamAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
+                    }
+                    if (teamAppointment.getCreateTime() == null) {
+                        teamAppointment.setCreateTime(LocalDateTime.now());
+                    }
+                    teamAppointment.setUpdateTime(LocalDateTime.now());
+                    
+                    teamAppointmentMapper.insert(teamAppointment);
+                    successCount++;
+                } catch (Exception e) {
+                    failCount++;
+                    errorMsg.append("第").append(successCount + failCount).append("条数据保存失败: ")
+                           .append(e.getMessage()).append("; ");
+                }
+            }
+            
+            String message = String.format("批量保存完成，成功%d条，失败%d条", successCount, failCount);
+            if (failCount > 0) {
+                message += "。错误信息: " + errorMsg.toString();
+            }
+            
+            return Result.success(message, "批量保存成功");
+        } catch (Exception e) {
+            return Result.error("批量保存失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 更新团队预约
+     * @param teamAppointmentId 团队预约ID
+     * @param appointmentDTO 预约信息
+     * @return 更新结果
+     */
+    @Override
+    public Result<String> updateTeamAppointment(Long teamAppointmentId, TeamAppointmentDTO appointmentDTO) {
+        try {
+            // 校验联系人电话合法性（简化处理）
+            if (appointmentDTO.getContactPhone() == null || appointmentDTO.getContactPhone().isEmpty()) {
+                return Result.error("联系电话不能为空");
+            }
+            
+            // 检查团队预约是否存在
+            TeamAppointment existingTeamAppointment = teamAppointmentMapper.selectById(teamAppointmentId);
+            if (existingTeamAppointment == null) {
+                return Result.error("团队预约记录不存在");
+            }
+            
+            // 更新团队预约主表记录
+            existingTeamAppointment.setTeamName(appointmentDTO.getTeamName());
+            existingTeamAppointment.setContactPerson(appointmentDTO.getContactPerson());
+            existingTeamAppointment.setContactPhone(appointmentDTO.getContactPhone());
+            existingTeamAppointment.setContactEmail(appointmentDTO.getContactEmail());
+            existingTeamAppointment.setScenicSpotId(appointmentDTO.getScenicSpotId());
+            existingTeamAppointment.setScenicSpotName(appointmentDTO.getScenicSpotName());
+            existingTeamAppointment.setAppointmentDate(appointmentDTO.getAppointmentDate());
+            existingTeamAppointment.setAppointmentTime(appointmentDTO.getAppointmentTime());
+            existingTeamAppointment.setRemark(appointmentDTO.getRemark());
+            existingTeamAppointment.setUpdateTime(LocalDateTime.now());
+            
+            // 保存团队预约主表记录
+            teamAppointmentMapper.updateById(existingTeamAppointment);
+            
+            return Result.success("更新成功", "TEAM" + existingTeamAppointment.getId());
+        } catch (Exception e) {
+            return Result.error("更新失败：" + e.getMessage());
+        }
+    }
+    
+    /**
      * 创建活动预约
      * @param appointmentDTO 预约信息
      * @return 预约结果
@@ -559,18 +648,24 @@ public class AppointmentServiceImpl implements AppointmentService {
      * @param size 每页大小
      * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @return 团队预约列表
      */
     @Override
     public Result<PageResult<TeamAppointment>> getAdminTeamAppointments(
-            int page, int size, String teamName, String contactPerson, String status) {
+            int page, int size, String teamName, String contactPerson, String contactPhone, 
+            String status, String startTime, String endTime) {
         try {
             // 分页获取团队预约记录
-            List<TeamAppointment> filteredTeamAppointments = teamAppointmentMapper.selectForAdmin(teamName, contactPerson, status, (page - 1) * size, size);
+            List<TeamAppointment> filteredTeamAppointments = teamAppointmentMapper.selectForAdmin(
+                teamName, contactPerson, contactPhone, status, startTime, endTime, (page - 1) * size, size);
             
             // 获取总数
-            int total = teamAppointmentMapper.selectCountForAdmin(teamName, contactPerson, status);
+            int total = teamAppointmentMapper.selectCountForAdmin(
+                teamName, contactPerson, contactPhone, status, startTime, endTime);
             
             PageResult<TeamAppointment> pageResult = PageResult.of(total, size, page, filteredTeamAppointments);
             return Result.success("查询成功", pageResult);

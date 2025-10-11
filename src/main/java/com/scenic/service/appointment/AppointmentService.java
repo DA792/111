@@ -11,6 +11,7 @@ import com.scenic.entity.appointment.TeamAppointment;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 预约服务接口
@@ -30,6 +31,21 @@ public interface AppointmentService {
      * @return 预约结果
      */
     Result<String> createTeamAppointment(TeamAppointmentDTO appointmentDTO);
+    
+    /**
+     * 批量保存团队预约
+     * @param teamAppointments 团队预约列表
+     * @return 保存结果
+     */
+    Result<String> batchSaveTeamAppointments(List<TeamAppointment> teamAppointments);
+    
+    /**
+     * 更新团队预约
+     * @param teamAppointmentId 团队预约ID
+     * @param appointmentDTO 预约信息
+     * @return 更新结果
+     */
+    Result<String> updateTeamAppointment(Long teamAppointmentId, TeamAppointmentDTO appointmentDTO);
     
     /**
      * 创建活动预约
@@ -154,11 +170,15 @@ public interface AppointmentService {
      * @param size 每页大小
      * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @return 团队预约列表
      */
     Result<PageResult<TeamAppointment>> getAdminTeamAppointments(
-            int page, int size, String teamName, String contactPerson, String status);
+            int page, int size, String teamName, String contactPerson, String contactPhone, 
+            String status, String startTime, String endTime);
     
     /**
      * 管理员查询活动预约列表

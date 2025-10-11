@@ -36,8 +36,8 @@ public interface UserMapper {
      * @param user 用户信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO user(user_name, password, real_name, id_type, id_number, nickname, phone, email, avatar, open_id, user_type, status, register_time, last_login_time, role, version, deleted, create_time, update_time) " +
-            "VALUES(#{userName}, #{password}, #{realName}, #{idType}, #{idNumber}, #{nickname}, #{phone}, #{email}, #{avatar}, #{openId}, #{userType}, #{status}, #{registerTime}, #{lastLoginTime}, #{role}, #{version}, #{deleted}, #{createTime}, #{updateTime})")
+    @Insert("INSERT INTO user(user_name, password, real_name, id_type, id_number, nickname, phone, email, avatar, open_id, user_type, status, register_time, last_login_time, role, version, deleted, create_time, update_time, enabled) " +
+            "VALUES(#{userName}, #{password}, #{realName}, #{idType}, #{idNumber}, #{nickname}, #{phone}, #{email}, #{avatar}, #{openId}, #{userType}, #{status}, #{registerTime}, #{lastLoginTime}, #{role}, #{version}, #{deleted}, #{createTime}, #{updateTime}, #{enabled})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(User user);
     
@@ -47,7 +47,7 @@ public interface UserMapper {
      * @return 更新结果
      */
     @Update("UPDATE user SET user_name = #{userName}, password = #{password}, real_name = #{realName}, id_type = #{idType}, id_number = #{idNumber}, nickname = #{nickname}, phone = #{phone}, email = #{email}, avatar = #{avatar}, " +
-            "open_id = #{openId}, user_type = #{userType}, status = #{status}, register_time = #{registerTime}, last_login_time = #{lastLoginTime}, role = #{role}, version = #{version}, deleted = #{deleted}, update_time = #{updateTime} WHERE id = #{id}")
+            "open_id = #{openId}, user_type = #{userType}, status = #{status}, register_time = #{registerTime}, last_login_time = #{lastLoginTime}, role = #{role}, version = #{version}, deleted = #{deleted}, update_time = #{updateTime}, enabled = #{enabled} WHERE id = #{id}")
     int updateById(User user);
     
     /**
