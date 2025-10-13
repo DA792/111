@@ -32,6 +32,14 @@ public interface UserMapper {
     User selectByOpenId(String openId);
     
     /**
+     * 根据用户名查询用户
+     * @param userName 用户名
+     * @return 用户信息
+     */
+    @Select("SELECT * FROM user WHERE user_name = #{userName}")
+    User selectByUsername(String userName);
+    
+    /**
      * 插入用户
      * @param user 用户信息
      * @return 插入结果

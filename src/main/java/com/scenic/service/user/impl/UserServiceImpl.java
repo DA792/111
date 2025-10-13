@@ -46,6 +46,43 @@ public class UserServiceImpl implements UserService {
     private AppointmentMapper appointmentMapper;
     
     @Override
+    public Result<Object> loginWithUsernameAndPassword(String username, String password) {
+        try {
+            // 从数据库查询用户
+            User user = userMapper.selectByUsername(username);
+            if (user == null) {
+                return Result.error("用户不存在");
+            }
+            
+            // 验证密码（实际项目中应该使用加密算法比较密码）
+            if (!password.equals(user.getPassword())) {
+                return Result.error("密码错误");
+            }
+            
+            // 验证用户是否为管理员
+            if (!"admin".equals(user.getRole()) && user.getUserType() != null && user.getUserType() != 1) {
+                return Result.error("非管理员用户，无权登录管理后台");
+            }
+            
+            // 更新最后登录时间
+            user.setLastLoginTime(java.time.LocalDateTime.now());
+            userMapper.updateById(user);
+            
+            // 生成token（实际项目中应该使用JWT或其他token生成方式）
+            String token = "admin_token_" + System.currentTimeMillis();
+            
+            // 构建返回对象，包含token和用户信息
+            java.util.Map<String, Object> resultMap = new java.util.HashMap<>();
+            resultMap.put("token", token);
+            resultMap.put("user", user);
+            
+            return Result.success("登录成功", resultMap);
+        } catch (Exception e) {
+            return Result.error("登录失败：" + e.getMessage());
+        }
+    }
+    
+    @Override
     public Result<String> loginWithWeChat(String code) {
         // 实际项目中需要调用微信接口验证code并获取用户信息
         // 这里简化处理，直接返回成功
@@ -234,7 +271,7 @@ public class UserServiceImpl implements UserService {
             // 设置默认值
             user.setCreateTime(java.time.LocalDateTime.now());
             user.setUpdateTime(java.time.LocalDateTime.now());
-            user.setEnabled(true);
+            user.setStatus(1); // 设置状态为启用
             
             // 插入用户
             int result = userMapper.insert(user);
