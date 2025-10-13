@@ -14,6 +14,14 @@ import com.scenic.entity.user.User;
 public interface UserService {
     
     /**
+     * 管理后台用户名密码登录
+     * @param username 用户名
+     * @param password 密码
+     * @return 登录结果，包含JWT token
+     */
+    Result<Object> loginWithUsernameAndPassword(String username, String password);
+    
+    /**
      * 微信登录
      * @param code 微信登录凭证
      * @return 登录结果

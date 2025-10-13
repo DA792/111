@@ -8,6 +8,7 @@ import com.scenic.dto.operation.OperatorDTO;
 import com.scenic.entity.operation.Operator;
 import com.scenic.mapper.operation.OperatorMapper;
 import com.scenic.service.operation.OperatorService;
+import com.scenic.utils.PasswordUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,9 @@ public class OperatorServiceImpl implements OperatorService {
     
     @Autowired
     private OperatorMapper operatorMapper;
+    
+    @Autowired
+    private PasswordUtil passwordUtil;
     
     /**
      * 分页查询操作员列表
@@ -98,6 +102,13 @@ public class OperatorServiceImpl implements OperatorService {
             
             // 转换为实体类
             Operator operator = convertToEntity(operatorDTO);
+            
+            // 对密码进行BCrypt加密
+            if (operator.getPassword() != null && !operator.getPassword().isEmpty()) {
+                String encodedPassword = passwordUtil.encodePassword(operator.getPassword());
+                operator.setPassword(encodedPassword);
+            }
+            
             operator.setCreateTime(LocalDateTime.now());
             operator.setUpdateTime(LocalDateTime.now());
             
@@ -143,6 +154,14 @@ public class OperatorServiceImpl implements OperatorService {
             
             // 转换为实体类
             Operator operator = convertToEntity(operatorDTO);
+            
+            // 如果密码被修改，则进行BCrypt加密
+            if (operator.getPassword() != null && !operator.getPassword().isEmpty() && 
+                !operator.getPassword().equals(existingOperator.getPassword())) {
+                String encodedPassword = passwordUtil.encodePassword(operator.getPassword());
+                operator.setPassword(encodedPassword);
+            }
+            
             operator.setId(id);
             operator.setUpdateTime(LocalDateTime.now());
             
