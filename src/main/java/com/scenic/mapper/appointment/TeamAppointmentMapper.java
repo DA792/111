@@ -29,7 +29,7 @@ public interface TeamAppointmentMapper {
      * @return 插入结果
      */
     @Insert("INSERT INTO team_appointment(team_name, contact_person, contact_phone, contact_email, " +
-            "number_of_people, scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, " +
+            "team_size, scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, " +
             "remark, status, create_time, update_time) " +
             "VALUES(#{teamName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, " +
             "#{numberOfPeople}, #{scenicSpotId}, #{scenicSpotName}, #{appointmentDate}, #{appointmentTime}, " +
@@ -44,7 +44,7 @@ public interface TeamAppointmentMapper {
      */
     @Update("UPDATE team_appointment SET team_name = #{teamName}, contact_person = #{contactPerson}, " +
             "contact_phone = #{contactPhone}, contact_email = #{contactEmail}, " +
-            "number_of_people = #{numberOfPeople}, scenic_spot_id = #{scenicSpotId}, " +
+            "team_size = #{numberOfPeople}, scenic_spot_id = #{scenicSpotId}, " +
             "scenic_spot_name = #{scenicSpotName}, appointment_date = #{appointmentDate}, " +
             "appointment_time = #{appointmentTime}, remark = #{remark}, status = #{status}, " +
             "update_time = #{updateTime} WHERE id = #{id}")
