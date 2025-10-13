@@ -1,5 +1,5 @@
 server:
-  port: 10030
+  port: 10032
 
 spring:
   datasource:
@@ -42,7 +42,7 @@ miniapp:
     prefix: /api/uniapp
   security:
     jwt:
-      secret: miniapp_secret_key
+      secret: miniapp_secret_key_with_at_least_256_bits_for_hmac_sha_algorithm_security_requirement_rfc7518
       expiration: 86400000 # 24小时
 
 # 管理后台端配置
@@ -51,7 +51,7 @@ admin:
     prefix: /api/manage
   security:
     jwt:
-      secret: admin_secret_key
+      secret: admin_secret_key_with_at_least_256_bits_for_hmac_sha_algorithm_security_requirement_rfc7518
       expiration: 7200000 # 2小时
 
 # 日志配置

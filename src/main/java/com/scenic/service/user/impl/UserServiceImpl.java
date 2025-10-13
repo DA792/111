@@ -1,7 +1,9 @@
 package com.scenic.service.user.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,8 @@ import com.scenic.mapper.user.UserMapper;
 import com.scenic.mapper.user.UserMessageMapper;
 import com.scenic.mapper.user.UserPhotoMapper;
 import com.scenic.service.user.UserService;
+import com.scenic.utils.JwtUtil;
+import com.scenic.utils.PasswordUtil;
 
 /**
  * 用户服务实现类
@@ -45,6 +49,12 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private AppointmentMapper appointmentMapper;
     
+    @Autowired
+    private JwtUtil jwtUtil;
+    
+    @Autowired
+    private PasswordUtil passwordUtil;
+    
     @Override
     public Result<Object> loginWithUsernameAndPassword(String username, String password) {
         try {
@@ -54,13 +64,13 @@ public class UserServiceImpl implements UserService {
                 return Result.error("用户不存在");
             }
             
-            // 验证密码（实际项目中应该使用加密算法比较密码）
-            if (!password.equals(user.getPassword())) {
+            // 使用BCrypt验证密码
+            if (!passwordUtil.matches(password, user.getPassword())) {
                 return Result.error("密码错误");
             }
             
             // 验证用户是否为管理员
-            if (!"admin".equals(user.getRole()) && user.getUserType() != null && user.getUserType() != 1) {
+            if (user.getUserType() == null || user.getUserType() != 2) {
                 return Result.error("非管理员用户，无权登录管理后台");
             }
             
@@ -68,11 +78,11 @@ public class UserServiceImpl implements UserService {
             user.setLastLoginTime(java.time.LocalDateTime.now());
             userMapper.updateById(user);
             
-            // 生成token（实际项目中应该使用JWT或其他token生成方式）
-            String token = "admin_token_" + System.currentTimeMillis();
+            // 生成JWT token
+            String token = jwtUtil.generateAdminToken(username, user.getId());
             
             // 构建返回对象，包含token和用户信息
-            java.util.Map<String, Object> resultMap = new java.util.HashMap<>();
+            Map<String, Object> resultMap = new HashMap<>();
             resultMap.put("token", token);
             resultMap.put("user", user);
             
@@ -97,6 +107,12 @@ public class UserServiceImpl implements UserService {
             User existingUser = userMapper.selectByOpenId(user.getOpenId());
             if (existingUser != null) {
                 return Result.error("用户已存在");
+            }
+            
+            // 对密码进行BCrypt加密
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                String encodedPassword = passwordUtil.encodePassword(user.getPassword());
+                user.setPassword(encodedPassword);
             }
             
             // 设置默认值
@@ -268,6 +284,12 @@ public class UserServiceImpl implements UserService {
                 return Result.error("用户已存在");
             }
             
+            // 对密码进行BCrypt加密
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                String encodedPassword = passwordUtil.encodePassword(user.getPassword());
+                user.setPassword(encodedPassword);
+            }
+            
             // 设置默认值
             user.setCreateTime(java.time.LocalDateTime.now());
             user.setUpdateTime(java.time.LocalDateTime.now());
@@ -335,8 +357,9 @@ public class UserServiceImpl implements UserService {
                 return Result.error("用户不存在");
             }
             
-            // 重置密码为默认密码
-            existingUser.setPassword("123456");
+            // 重置密码为默认密码，并使用BCrypt加密
+            String encodedPassword = passwordUtil.encodePassword("123456");
+            existingUser.setPassword(encodedPassword);
             existingUser.setUpdateTime(java.time.LocalDateTime.now());
             int result = userMapper.updateById(existingUser);
             if (result > 0) {
