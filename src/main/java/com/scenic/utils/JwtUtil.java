@@ -1,16 +1,5 @@
 package com.scenic.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
-
-import com.scenic.config.JwtConfig;
-
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -18,6 +7,17 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
+
+import com.scenic.config.JwtConfig;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 /**
  * JWT工具类，用于生成和验证JWT令牌
@@ -37,6 +37,19 @@ public class JwtUtil {
     
     // 生成管理员JWT令牌
     public String generateAdminToken(String username, Long userId) {
+        String redisKey = ADMIN_TOKEN_KEY_PREFIX + userId;
+        
+        // 棣查是否已存在有效的Token
+        String existingToken = redisTemplate.opsForValue().get(redisKey);
+        if (existingToken != null) {
+            // 验证现有Token是否仍然有效
+            if (validateAdminToken(existingToken)) {
+                // 如果现有Token仍然有效，直接返回
+                return existingToken;
+            }
+        }
+        
+        // 如果没有有效Token或Token已失效，则生成新Token
         Map<String, Object> claims = new HashMap<>();
         claims.put("username", username);
         claims.put("userId", userId);
@@ -49,7 +62,6 @@ public class JwtUtil {
         String tokenId = UUID.randomUUID().toString();
         
         // 将token存储到Redis中
-        String redisKey = ADMIN_TOKEN_KEY_PREFIX + userId;
         redisTemplate.opsForValue().set(redisKey, token, jwtConfig.getAdminExpiration(), TimeUnit.MILLISECONDS);
         
         return token;

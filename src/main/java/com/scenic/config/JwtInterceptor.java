@@ -29,10 +29,14 @@ public class JwtInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String requestURI = request.getRequestURI();
         
-        // 放行登录接口和注册接口
+        // 放行管理后台登录接口和注册接口
         if (requestURI.equals("/api/manage/login") || 
-            requestURI.startsWith("/api/uniapp/login") || 
             requestURI.contains("/register")) {
+            return true;
+        }
+        
+        // 小程序端请求不需要JWT验证，直接放行
+        if (requestURI.startsWith(miniappPrefix)) {
             return true;
         }
         
@@ -47,16 +51,8 @@ public class JwtInterceptor implements HandlerInterceptor {
         // 提取JWT令牌
         String token = authHeader.substring(7);
         
-        // 根据请求路径判断是小程序请求还是管理后台请求
-        if (requestURI.startsWith(miniappPrefix)) {
-            // 验证小程序JWT令牌
-            if (!jwtUtil.validateMiniappToken(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("未授权：小程序认证令牌无效或已过期");
-                return false;
-            }
-        } else if (requestURI.startsWith(adminPrefix)) {
-            // 验证管理后台JWT令牌
+        // 验证管理后台JWT令牌
+        if (requestURI.startsWith(adminPrefix)) {
             if (!jwtUtil.validateAdminToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("未授权：管理后台认证令牌无效或已过期");

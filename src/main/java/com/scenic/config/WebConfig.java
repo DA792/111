@@ -48,7 +48,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(jwtInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns("/api/manage/login")  // 排除管理后台登录接口
-                .excludePathPatterns("/api/uniapp/login/**")  // 排除小程序登录接口
+                .excludePathPatterns("/api/uniapp/**")  // 排除所有小程序接口
                 .excludePathPatterns("/api/**/register/**")  // 排除注册接口
                 .excludePathPatterns("/uploads/**");  // 排除静态资源
     }
