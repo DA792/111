@@ -75,21 +75,30 @@ public interface ActivityAppointmentMapper {
      * 管理员查询活动预约列表
      * @param activityName 活动名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 活动预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @param offset 偏移量
      * @param limit 限制数量
      * @return 活动预约列表
      */
     List<ActivityAppointment> selectForAdmin(@Param("activityName") String activityName, @Param("contactPerson") String contactPerson, 
-                                             @Param("status") String status, @Param("offset") int offset, @Param("limit") int limit);
+                                             @Param("contactPhone") String contactPhone, @Param("status") String status,
+                                             @Param("startTime") String startTime, @Param("endTime") String endTime,
+                                             @Param("offset") int offset, @Param("limit") int limit);
     
     /**
      * 管理员查询活动预约总数
      * @param activityName 活动名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 活动预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @return 活动预约总数
      */
     int selectCountForAdmin(@Param("activityName") String activityName, @Param("contactPerson") String contactPerson, 
-                            @Param("status") String status);
+                            @Param("contactPhone") String contactPhone, @Param("status") String status,
+                            @Param("startTime") String startTime, @Param("endTime") String endTime);
 }

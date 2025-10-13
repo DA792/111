@@ -40,6 +40,13 @@ public interface AppointmentService {
     Result<String> batchSaveTeamAppointments(List<TeamAppointment> teamAppointments);
     
     /**
+     * 批量保存活动预约
+     * @param activityAppointments 活动预约列表
+     * @return 保存结果
+     */
+    Result<String> batchSaveActivityAppointments(List<ActivityAppointment> activityAppointments);
+    
+    /**
      * 更新团队预约
      * @param teamAppointmentId 团队预约ID
      * @param appointmentDTO 预约信息
@@ -153,6 +160,14 @@ public interface AppointmentService {
     Result<String> reviewActivityAppointment(Long activityAppointmentId, String status);
     
     /**
+     * 管理员更新活动预约
+     * @param activityAppointmentId 活动预约ID
+     * @param appointmentDTO 活动预约信息
+     * @return 更新结果
+     */
+    Result<String> updateActivityAppointment(Long activityAppointmentId, ActivityAppointmentDTO appointmentDTO);
+    
+    /**
      * 管理员查询预约列表
      * @param page 页码
      * @param size 每页大小
@@ -186,11 +201,14 @@ public interface AppointmentService {
      * @param size 每页大小
      * @param activityName 活动名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @return 活动预约列表
      */
     Result<PageResult<ActivityAppointment>> getAdminActivityAppointments(
-            int page, int size, String activityName, String contactPerson, String status);
+            int page, int size, String activityName, String contactPerson, String contactPhone, String status, String startTime, String endTime);
     
     /**
      * 管理员删除预约
