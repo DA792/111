@@ -234,7 +234,7 @@ public class UserServiceImpl implements UserService {
             // 设置默认值
             user.setCreateTime(java.time.LocalDateTime.now());
             user.setUpdateTime(java.time.LocalDateTime.now());
-            user.setEnabled(true);
+            // user.setEnabled(true);
             
             // 插入用户
             int result = userMapper.insert(user);
