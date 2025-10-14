@@ -5,17 +5,21 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.github.pagehelper.PageHelper;
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
 import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
 import com.scenic.entity.interaction.PhotoCheckIn;
 import com.scenic.entity.interaction.vo.PhotoCheckInVO;
+import com.scenic.entity.system.ResourceFile;
 import com.scenic.mapper.interaction.PhotoCheckInMapper;
+import com.scenic.mapper.system.ResourceFileMapper;
 import com.scenic.service.interaction.PhotoCheckInService;
 
 /**
@@ -26,6 +30,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     
     @Autowired
     private PhotoCheckInMapper photoCheckInMapper;
+    
+    @Autowired
+    private ResourceFileMapper resourceFileMapper;
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -43,58 +50,43 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      */
     @Override
     public Result<String> uploadPhotoCheckIn(PhotoCheckInDTO photoCheckInDTO) {
-        try {
-            PhotoCheckIn photo = new PhotoCheckIn();
-            photo.setUserId(photoCheckInDTO.getUserId());
-            photo.setUserName(photoCheckInDTO.getUserName());
-            photo.setDescription(photoCheckInDTO.getDescription());
-            photo.setCategory(photoCheckInDTO.getCategory());
-            photo.setLikes(0);
-            photo.setLatitude(photoCheckInDTO.getLatitude());
-            photo.setLongitude(photoCheckInDTO.getLongitude());
-            photo.setPhotoUrl(photoCheckInDTO.getPhotoUrl());
-            photo.setCreateTime(LocalDateTime.now());
-            photo.setUpdateTime(LocalDateTime.now());
-            
-            photoCheckInMapper.insert(photo);
-            
-            // 清除相关缓存
-            redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
-            redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photoCheckInDTO.getCategory());
-            redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photoCheckInDTO.getUserId());
-            
-            return Result.success("操作成功", "照片上传成功");
-        } catch (Exception e) {
-            return Result.error("操作失败：" + e.getMessage());
-        }
+        return null;
     }
     
     /**
-     * 获取所有照片打卡记录
-     * @return 照片打卡记录列表
+     * 获取所有照片打卡记录 - 管理员端分页查询
+     * @param photoCheckInQueryDTO 查询条件
+     * @return 照片打卡记录分页结果
      */
     @Override
-    public PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO p) {
-        try {
-            // 先从Redis缓存中获取
-            List<PhotoCheckInDTO> cachedPhotos = (List<PhotoCheckInDTO>) redisTemplate.opsForValue().get(ALL_PHOTOS_CACHE_KEY);
-            if (cachedPhotos != null) {
-                return Result.success("查询成功", cachedPhotos);
-            }
-            
-            // 缓存中没有则从数据库查询
-            List<PhotoCheckIn> photos = photoCheckInMapper.selectAll();
-            List<PhotoCheckInDTO> photoDTOs = photos.stream()
-                    .map(this::convertToDTO)
-                    .collect(Collectors.toList());
-            
-            // 将结果存入Redis缓存，过期时间1小时
-            redisTemplate.opsForValue().set(ALL_PHOTOS_CACHE_KEY, photoDTOs, 1, TimeUnit.HOURS);
-            
-            return Result.success("查询成功", photoDTOs);
-        } catch (Exception e) {
-            return Result.error("查询失败：" + e.getMessage());
-        }
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
+        // 设置分页参数
+        PageHelper.startPage(photoCheckInQueryDTO.getPageNum(), photoCheckInQueryDTO.getPageSize());
+        
+        // 构造查询参数
+        String title = photoCheckInQueryDTO.getTitle();
+        String userName = photoCheckInQueryDTO.getUserName();
+        Long categoryId = photoCheckInQueryDTO.getCategoryId();
+        LocalDateTime createTime = photoCheckInQueryDTO.getCreateTime();
+        
+        // 计算偏移量
+        int offset = (photoCheckInQueryDTO.getPageNum() - 1) * photoCheckInQueryDTO.getPageSize();
+        
+        // 执行分页查询
+        List<PhotoCheckIn> photoCheckIns = photoCheckInMapper.selectForAdmin(
+            title, userName, categoryId, createTime, offset, photoCheckInQueryDTO.getPageSize()
+        );
+        
+        // 查询总数
+        int totalCount = photoCheckInMapper.selectCountForAdmin(title, userName, categoryId, createTime);
+        
+        // 转换为VO对象
+        List<PhotoCheckInVO> photoCheckInVOs = photoCheckIns.stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        
+        // 构造分页结果
+        return PageResult.of(totalCount, photoCheckInQueryDTO.getPageSize(), photoCheckInQueryDTO.getPageNum(), photoCheckInVOs);
     }
     
 
@@ -108,7 +100,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         try {
             PhotoCheckIn photo = photoCheckInMapper.selectById(photoCheckInId);
             if (photo != null) {
-                photo.setLikes(photo.getLikes() + 1);
+                photo.setLikeCount(photo.getLikeCount() + 1);
                 photo.setUpdateTime(LocalDateTime.now());
                 photoCheckInMapper.updateById(photo);
                 
@@ -119,7 +111,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 
                 // 清除相关缓存
                 redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
-                redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategory());
+                redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                 redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
                 
                 return Result.success("操作成功", "点赞成功");
@@ -140,8 +132,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         try {
             PhotoCheckIn photo = photoCheckInMapper.selectById(photoCheckInId);
             if (photo != null) {
-                if (photo.getLikeC() > 0) {
-                    photo.setLikes(photo.getLikes() - 1);
+                if (photo.getLikeCount() > 0) {
+                    photo.setLikeCount(photo.getLikeCount() - 1);
                     photo.setUpdateTime(LocalDateTime.now());
                     photoCheckInMapper.updateById(photo);
                     
@@ -152,7 +144,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                     
                     // 清除相关缓存
                     redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
-                    redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategory());
+                    redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                     redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
                     
                     return Result.success("操作成功", "取消点赞成功");
@@ -184,7 +176,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 
                 // 清除相关缓存
                 redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
-                redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategory());
+                redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                 redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
                 
                 return Result.success("操作成功", "照片已删除");
@@ -195,42 +187,6 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         }
     }
     
-    /**
-     * 修改照片打卡分类
-     * @param photoCheckInId 照片打卡ID
-     * @param category 新分类
-     * @return 操作结果
-     */
-    @Override
-    public Result<String> updatePhotoCheckInCategory(Long photoCheckInId, String category) {
-        try {
-            PhotoCheckIn photo = photoCheckInMapper.selectById(photoCheckInId);
-            if (photo != null) {
-                // 获取更新前的分类
-                String oldCategory = photo.getCategory();
-                
-                photo.setCategory(category);
-                photo.setUpdateTime(LocalDateTime.now());
-                photoCheckInMapper.updateById(photo);
-                
-                // 更新缓存
-                String cacheKey = PHOTO_CHECK_IN_CACHE_PREFIX + photoCheckInId;
-                PhotoCheckInDTO updatedDTO = convertToDTO(photo);
-                redisTemplate.opsForValue().set(cacheKey, updatedDTO, 1, TimeUnit.HOURS);
-                
-                // 清除相关缓存
-                redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
-                redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + oldCategory);
-                redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + category);
-                redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
-                
-                return Result.success("操作成功", "分类更新成功");
-            }
-            return Result.error("照片不存在");
-        } catch (Exception e) {
-            return Result.error("操作失败：" + e.getMessage());
-        }
-    }
     
     /**
      * 将PhotoCheckIn实体转换为PhotoCheckInDTO
@@ -239,17 +195,34 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      */
     private PhotoCheckInDTO convertToDTO(PhotoCheckIn photo) {
         PhotoCheckInDTO dto = new PhotoCheckInDTO();
-        dto.setId(photo.getId());
-        dto.setUserId(photo.getUserId());
-        dto.setUserName(photo.getUserName());
-        dto.setDescription(photo.getDescription());
-        dto.setCategory(photo.getCategory());
-        dto.setLikes(photo.getLikes());
-        dto.setLatitude(photo.getLatitude());
-        dto.setLongitude(photo.getLongitude());
-        dto.setPhotoUrl(photo.getPhotoUrl());
-        dto.setCreateTime(photo.getCreateTime());
-        dto.setUpdateTime(photo.getUpdateTime());
+        BeanUtils.copyProperties(photo, dto);
         return dto;
+    }
+    
+    /**
+     * 将PhotoCheckIn实体转换为PhotoCheckInVO
+     * @param photo PhotoCheckIn实体
+     * @return PhotoCheckInVO
+     */
+    private PhotoCheckInVO convertToVO(PhotoCheckIn photo) {
+        PhotoCheckInVO vo = new PhotoCheckInVO();
+        BeanUtils.copyProperties(photo, vo);
+        // 特别处理photoId字段，根据photoId获取文件路径
+        Long photoId = photo.getPhotoId();
+        if (photoId != null) {
+            ResourceFile resourceFile = resourceFileMapper.selectById(photoId);
+            if (resourceFile != null) {
+                vo.setPhotoPath(resourceFile.getFileKey());
+            }
+        }
+        // 设置分类名称
+        vo.setCategoryName(photo.getCategoryName());
+        return vo;
+    }
+
+    @Override
+    public Result<String> updatePhotoCheckInCategory(Long photoCheckInId, String category) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'updatePhotoCheckInCategory'");
     }
 }

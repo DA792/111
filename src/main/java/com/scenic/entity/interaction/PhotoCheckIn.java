@@ -28,6 +28,9 @@ public class PhotoCheckIn {
 
     @Column(name = "category_id")
     private Long categoryId;
+    
+    @Transient
+    private String categoryName;
 
     @Column(name = "like_count", nullable = false, columnDefinition = "int default 0")
     private Integer likeCount = 0;
@@ -56,6 +59,9 @@ public class PhotoCheckIn {
 
     @Column(name = "update_by")
     private Long updateBy;
+
+    @Column(name = "photo_id", columnDefinition = "bigint COMMENT '照片ID'")
+    private Long photoId;
 
     // Getters and Setters
     public Long getId() {
@@ -112,6 +118,14 @@ public class PhotoCheckIn {
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
     public Integer getLikeCount() {
@@ -184,6 +198,14 @@ public class PhotoCheckIn {
 
     public void setUpdateBy(Long updateBy) {
         this.updateBy = updateBy;
+    }
+
+    public Long getPhotoId() {
+        return photoId;
+    }
+
+    public void setPhotoId(Long photoId) {
+        this.photoId = photoId;
     }
 
     // 实体生命周期回调（可选）
