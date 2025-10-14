@@ -6,6 +6,7 @@ import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
 import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
+import com.scenic.entity.interaction.vo.CheckinCategoryVO;
 import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 
 /**
@@ -47,12 +48,24 @@ public interface PhotoCheckInService {
      * @return 操作结果
      */
     Result<String> deletePhotoCheckIn(Long photoCheckInId);
+
+    /**
+     * 获取打卡分类列表
+     * @return 分类列表
+     */
+    Result<List<CheckinCategoryVO>> getCategoryList();
     
     /**
-     * 管理端 - 修改照片打卡分类
-     * @param photoCheckInId 照片打卡ID
-     * @param category 新分类
+     * 删除打卡分类（软删除）
+     * @param categoryId 分类ID
      * @return 操作结果
      */
-    Result<String> updatePhotoCheckInCategory(Long photoCheckInId, String category);
+    Result<String> deleteCategory(Long categoryId);
+    
+    /**
+     * 新增打卡分类
+     * @param categoryName 分类名称
+     * @return 操作结果
+     */
+    Result<String> addCategory(String categoryName);
 }

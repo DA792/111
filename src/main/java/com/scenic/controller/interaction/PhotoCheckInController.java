@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
 import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
+import com.scenic.entity.interaction.vo.CheckinCategoryVO;
 import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 import com.scenic.service.interaction.PhotoCheckInService;
 import com.scenic.utils.FileUploadUtil;
@@ -43,15 +44,7 @@ public class PhotoCheckInController {
     private FileUploadUtil fileUploadUtil;
 
 
-    // /**
-    //  * 
-    //  * @param photoCheckInId
-    //  * @return
-    //  */
-    // @GetMapping("/photo-check-in/classList")
-    // public Result<List<CheckinClassVO>> getClassList() {
-    //     return photoCheckInService.getClassList();
-    // }
+
     
     
     /**
@@ -142,17 +135,35 @@ public class PhotoCheckInController {
     public Result<String> deletePhotoCheckIn(@PathVariable Long photoCheckInId) {
         return photoCheckInService.deletePhotoCheckIn(photoCheckInId);
     }
-    
+
+
     /**
-     * 管理后台端 - 修改照片打卡分类
-     * @param photoCheckInId 照片打卡ID
-     * @param category 新分类
+     * 管理后台端 - 获取拍照打卡分类列表
+     * @return 分类列表
+     */
+    @GetMapping(ADMIN_PREFIX + "/photo-check-in/categoryList")
+    public Result<List<CheckinCategoryVO>> getCategoryList() {
+        return photoCheckInService.getCategoryList();
+    }
+
+    /**
+     * 管理后台端 - 新增拍照打卡分类
+     * @param categoryName 分类名
      * @return 操作结果
      */
-    @PutMapping(ADMIN_PREFIX + "/photo-check-in/update-category/{photoCheckInId}")
-    public Result<String> updatePhotoCheckInCategory(
-            @PathVariable Long photoCheckInId,
-            @RequestParam("category") String category) {
-        return photoCheckInService.updatePhotoCheckInCategory(photoCheckInId, category);
+    @PostMapping(ADMIN_PREFIX + "/photo-check-in/category/add")
+    public Result<String> addCategory(String categoryName) {
+        return photoCheckInService.addCategory(categoryName);
     }
+
+    /**
+     * 管理后台端 - 删除拍照打卡分类
+     * @param categoryId 分类ID
+     * @return 操作结果
+     */
+    @DeleteMapping(ADMIN_PREFIX + "/photo-check-in/category/delete/{categoryId}")
+    public Result<String> deleteCategory(@PathVariable Long categoryId) {
+        return photoCheckInService.deleteCategory(categoryId);
+    }
+    
 }
