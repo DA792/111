@@ -21,7 +21,7 @@ public interface PhotoCheckInMapper {
      * @param id 照片打卡ID
      * @return 照片打卡信息
      */
-    @Select("SELECT * FROM photo_checkin WHERE id = #{id}")
+    @Select("SELECT * FROM photo_checkin WHERE id = #{id} AND deleted = 0")
     PhotoCheckIn selectById(Long id);
     
     /**
@@ -45,11 +45,11 @@ public interface PhotoCheckInMapper {
     int updateById(PhotoCheckIn photoCheckIn);
     
     /**
-     * 根据ID删除照片打卡
+     * 根据ID删除照片打卡（逻辑删除）
      * @param id 照片打卡ID
      * @return 删除结果
      */
-    @Delete("DELETE FROM photo_checkin WHERE id = #{id}")
+    @Update("UPDATE photo_checkin SET deleted = 1, update_time = NOW() WHERE id = #{id}")
     int deleteById(Long id);
     
     /**
@@ -89,7 +89,7 @@ public interface PhotoCheckInMapper {
      * @param userId 用户ID
      * @return 照片打卡总数
      */
-    @Select("SELECT COUNT(*) FROM photo_checkin WHERE user_id = #{userId}")
+    @Select("SELECT COUNT(*) FROM photo_checkin WHERE user_id = #{userId} AND deleted = 0")
     int selectCountByUserId(@Param("userId") Long userId);
     
     /**

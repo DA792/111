@@ -36,8 +36,9 @@
         FROM photo_checkin pc
         LEFT JOIN checkin_category cc ON pc.category_id = cc.id
         <where>
+            pc.deleted = 0
             <if test="title != null and title != ''">
-                title LIKE CONCAT('%', #{title}, '%')
+                AND title LIKE CONCAT('%', #{title}, '%')
             </if>
             <if test="userName != null and userName != ''">
                 AND user_name LIKE CONCAT('%', #{userName}, '%')
@@ -57,8 +58,9 @@
         SELECT COUNT(*)
         FROM photo_checkin
         <where>
+            deleted = 0
             <if test="title != null and title != ''">
-                title LIKE CONCAT('%', #{title}, '%')
+                AND title LIKE CONCAT('%', #{title}, '%')
             </if>
             <if test="userName != null and userName != ''">
                 AND user_name LIKE CONCAT('%', #{userName}, '%')

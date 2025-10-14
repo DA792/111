@@ -82,6 +82,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         // 尝试从Redis获取缓存
         PageResult<PhotoCheckInVO> cachedResult = (PageResult<PhotoCheckInVO>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedResult != null) {
+            System.out.println("--------------------cache-----------------------");
             return cachedResult;
         }
         
@@ -208,7 +209,10 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         try {
             PhotoCheckIn photo = photoCheckInMapper.selectById(photoCheckInId);
             if (photo != null) {
-                photoCheckInMapper.deleteById(photoCheckInId);
+                // 逻辑删除：将deleted字段设置为true
+                photo.setDeleted(true);
+                photo.setUpdateTime(LocalDateTime.now());
+                photoCheckInMapper.updateById(photo);
                 
                 // 删除缓存
                 String cacheKey = PHOTO_CHECK_IN_CACHE_PREFIX + photoCheckInId;
