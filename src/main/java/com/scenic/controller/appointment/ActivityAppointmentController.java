@@ -1,5 +1,7 @@
 package com.scenic.controller.appointment;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,12 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.appointment.ActivityAppointmentDTO;
 import com.scenic.entity.appointment.ActivityAppointment;
 import com.scenic.service.appointment.AppointmentService;
+import com.scenic.utils.ExcelParserUtil;
 
 /**
  * 活动预约控制器
@@ -84,7 +88,10 @@ public class ActivityAppointmentController {
      * @param size 每页大小
      * @param activityName 活动名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @return 活动预约列表
      */
     @GetMapping(ADMIN_PREFIX + "/activity-appointments")
@@ -93,8 +100,11 @@ public class ActivityAppointmentController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String activityName,
             @RequestParam(required = false) String contactPerson,
-            @RequestParam(required = false) String status) {
-        return appointmentService.getAdminActivityAppointments(page, size, activityName, contactPerson, status);
+            @RequestParam(required = false) String contactPhone,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        return appointmentService.getAdminActivityAppointments(page, size, activityName, contactPerson, contactPhone, status, startTime, endTime);
     }
     
     /**
@@ -105,6 +115,18 @@ public class ActivityAppointmentController {
     @GetMapping(ADMIN_PREFIX + "/activity-appointments/{id}")
     public Result<ActivityAppointment> getActivityAppointmentDetailForAdmin(@PathVariable Long id) {
         return appointmentService.getActivityAppointmentDetail(id);
+    }
+    
+    /**
+     * 管理后台端 - 更新活动预约
+     * @param id 活动预约ID
+     * @param appointmentDTO 活动预约信息
+     * @return 更新结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/activity-appointments/{id}")
+    public Result<String> updateActivityAppointmentForAdmin(@PathVariable Long id, @RequestBody ActivityAppointmentDTO appointmentDTO) {
+        // 复用审核接口实现更新功能
+        return appointmentService.updateActivityAppointment(id, appointmentDTO);
     }
     
     /**
@@ -136,5 +158,23 @@ public class ActivityAppointmentController {
     @PostMapping(ADMIN_PREFIX + "/activity-appointments/{id}/export")
     public Result<String> exportActivityAppointmentForAdmin(@PathVariable Long id) {
         return appointmentService.exportActivityAppointment(id);
+    }
+    
+    /**
+     * 管理后台端 - 导入活动预约数据
+     * @param file 上传的文件
+     * @return 导入结果
+     */
+    @PostMapping(ADMIN_PREFIX + "/activity-appointments/import")
+    public Result<String> importActivityAppointmentForAdmin(@RequestParam("file") MultipartFile file) {
+        try {
+            // 解析Excel文件
+            List<ActivityAppointment> activityAppointments = ExcelParserUtil.parseActivityAppointmentExcel(file);
+            
+            // 调用服务层批量保存
+            return appointmentService.batchSaveActivityAppointments(activityAppointments);
+        } catch (Exception e) {
+            return Result.error("文件解析失败：" + e.getMessage());
+        }
     }
 }
