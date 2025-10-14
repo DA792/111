@@ -1,7 +1,9 @@
 package com.scenic.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -10,6 +12,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+    
+    @Autowired
+    private JwtInterceptor jwtInterceptor;
     
     /**
      * 配置跨域访问
@@ -32,5 +37,19 @@ public class WebConfig implements WebMvcConfigurer {
         // 配置上传文件的访问路径
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:./uploads/");
+    }
+    
+    /**
+     * 配置拦截器
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        // 注册JWT拦截器，拦截所有请求
+        registry.addInterceptor(jwtInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/manage/login")  // 排除管理后台登录接口
+                .excludePathPatterns("/api/uniapp/**")  // 排除所有小程序接口
+                .excludePathPatterns("/api/**/register/**")  // 排除注册接口
+                .excludePathPatterns("/uploads/**");  // 排除静态资源
     }
 }

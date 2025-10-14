@@ -12,16 +12,14 @@ public class User {
     private String realName;
     private String idType;
     private String idNumber;
-    private String nickname;
     private String phone;
     private String email;
-    private String avatar;
+    private Long avatarFileId;
     private String openId;
     private Integer userType;
     private Integer status;
     private LocalDateTime registerTime;
     private LocalDateTime lastLoginTime;
-    private String role;
     private Integer version;
     private Integer deleted;
     private LocalDateTime createTime;
@@ -79,14 +77,6 @@ public class User {
         this.idNumber = idNumber;
     }
 
-    public String getNickname() {
-        return nickname;
-    }
-
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
-    }
-
     public String getPhone() {
         return phone;
     }
@@ -103,12 +93,12 @@ public class User {
         this.email = email;
     }
 
-    public String getAvatar() {
-        return avatar;
+    public Long getAvatarFileId() {
+        return avatarFileId;
     }
 
-    public void setAvatar(String avatar) {
-        this.avatar = avatar;
+    public void setAvatarFileId(Long avatarFileId) {
+        this.avatarFileId = avatarFileId;
     }
 
     public String getOpenId() {
@@ -149,14 +139,6 @@ public class User {
 
     public void setLastLoginTime(LocalDateTime lastLoginTime) {
         this.lastLoginTime = lastLoginTime;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
     }
 
     public Integer getVersion() {
@@ -200,16 +182,14 @@ public class User {
                 ", realName='" + realName + '\'' +
                 ", idType='" + idType + '\'' +
                 ", idNumber='" + idNumber + '\'' +
-                ", nickname='" + nickname + '\'' +
                 ", phone='" + phone + '\'' +
                 ", email='" + email + '\'' +
-                ", avatar='" + avatar + '\'' +
+                ", avatarFileId=" + avatarFileId +
                 ", openId='" + openId + '\'' +
                 ", userType=" + userType +
                 ", status=" + status +
                 ", registerTime=" + registerTime +
                 ", lastLoginTime=" + lastLoginTime +
-                ", role='" + role + '\'' +
                 ", version=" + version +
                 ", deleted=" + deleted +
                 ", createTime=" + createTime +

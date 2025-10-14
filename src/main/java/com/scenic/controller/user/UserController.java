@@ -1,5 +1,7 @@
 package com.scenic.controller.user;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,6 +38,18 @@ public class UserController {
     
     // 管理后台端API接口前缀
     private static final String ADMIN_PREFIX = "/manage";
+    
+    /**
+     * 管理后台端 - 用户名密码登录
+     * @param loginRequest 包含用户名和密码的登录请求
+     * @return 登录结果，包含token和用户信息
+     */
+    @PostMapping(ADMIN_PREFIX + "/login")
+    public Result<Object> loginForAdmin(@RequestBody Map<String, String> loginRequest) {
+        String username = loginRequest.get("username");
+        String password = loginRequest.get("password");
+        return userService.loginWithUsernameAndPassword(username, password);
+    }
     
     /**
      * 小程序端 - 微信登录
