@@ -66,6 +66,8 @@ public class TeamAppointmentController {
             return Result.success("文件上传成功", fileUrl);
         } catch (IOException e) {
             return Result.error("文件上传失败：" + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("文件上传失败：" + e.getMessage());
         }
     }
     
@@ -176,6 +178,8 @@ public class TeamAppointmentController {
             // 这里简化处理，实际应该解析文件内容并保存到数据库
             return Result.success("导入成功", "文件已上传并解析，文件路径：" + fileUrl);
         } catch (IOException e) {
+            return Result.error("文件上传失败：" + e.getMessage());
+        } catch (Exception e) {
             return Result.error("文件上传失败：" + e.getMessage());
         }
     }

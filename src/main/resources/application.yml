@@ -1,5 +1,5 @@
 server:
-  port: 10032
+  port: 10033
 
 spring:
   datasource:
@@ -65,6 +65,12 @@ logging:
 # 文件上传配置
 file:
   upload:
-    path: ./uploads
     max-file-size: 10MB
     max-request-size: 10MB
+
+# MinIO配置
+minio:
+  endpoint: http://192.168.77.2:10029
+  access-key: admin
+  secret-key: zssg0325
+  bucket-name: scenic-bucket

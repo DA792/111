@@ -283,16 +283,92 @@ minio/
     └── activities/      # 活动宣传视频
 ```
 
+### MinIO配置
+
+本系统使用MinIO作为对象存储服务，提供高性能、可扩展的文件存储解决方案。
+
+#### MinIO服务配置
+
+MinIO服务通过Docker容器运行，配置如下：
+
+```bash
+# 启动MinIO容器
+docker run -d \
+  -p 10029:9000 \
+  -p 10030:9001 \
+  --name minio-v3 \
+  -v /data/minio-v3:/data \
+  -e "MINIO_ROOT_USER=admin" \
+  -e "MINIO_ROOT_PASSWORD=zssg0325" \
+  minio/minio server /data --console-address ":9001"
+```
+
+- API端点端口：10029
+- 控制台端口：10030
+- 数据存储路径：/data/minio-v3
+- 访问凭证：admin/zssg0325
+
+#### 项目集成配置
+
+在`application.yml`中配置MinIO连接信息：
+
+```yaml
+# MinIO配置
+minio:
+  endpoint: http://192.168.77.2:10029
+  access-key: admin
+  secret-key: zssg0325
+  bucket-name: scenic-bucket
+```
+
+#### 核心组件
+
+1. **MinioConfig**：配置类，负责创建MinioClient实例
+2. **MinioService**：服务类，提供文件上传、删除和URL生成等功能
+3. **FileUploadUtil**：工具类，封装文件上传逻辑，使用MinIO存储文件
+
+#### 文件上传流程
+
+1. 客户端上传文件到服务器
+2. 服务器接收文件并生成唯一文件名
+3. 调用MinioService将文件上传到MinIO服务器
+4. 返回文件的访问URL给客户端
+5. 客户端通过URL访问文件
+
+#### 存储桶管理
+
+系统使用名为"scenic-bucket"的存储桶存储所有文件，并按照上述文件存储结构组织文件。在系统初始化时，会自动检查存储桶是否存在，不存在则创建。
+
+#### 文件访问URL
+
+MinIO生成的文件访问URL包含签名和过期时间，默认有效期为7天。URL格式如下：
+
+```
+http://192.168.77.2:10029/scenic-bucket/images/events/1234567890.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=...
+```
+
 ## 部署说明
 
 1. 确保已安装Java 17和MySQL 8.0+
 2. 创建数据库：`birdReserveDatabase`
 3. 修改`application.yml`中的数据库连接配置
-4. 运行项目：
+4. 启动MinIO服务：
+   ```bash
+   docker run -d \
+     -p 10029:9000 \
+     -p 10030:9001 \
+     --name minio-v3 \
+     -v /data/minio-v3:/data \
+     -e "MINIO_ROOT_USER=admin" \
+     -e "MINIO_ROOT_PASSWORD=zssg0325" \
+     minio/minio server /data --console-address ":9001"
+   ```
+5. 访问MinIO控制台（http://192.168.77.2:10030）并创建存储桶：`scenic-bucket`
+6. 运行项目：
    ```bash
    mvn spring-boot:run
    ```
-5. 访问地址：`http://localhost:10030`
+7. 访问应用地址：`http://localhost:10032`
 
 ## 技术环境
 
@@ -303,9 +379,11 @@ minio/
 ## 容器端口配置
 
 本项目运行在以下端口：
-- 应用服务端口：10030
+- 应用服务端口：10032
 - MySQL数据库端口：10227
 - Redis端口：10228
+- MinIO API端点端口：10029
+- MinIO控制台端口：10030
 
 ## 配置说明
 
@@ -338,6 +416,7 @@ src/main/java/com/scenic
 ├── Application.java              # 启动类
 ├── config/                      # 配置类
 │   ├── DataSourceConfig.java    # 数据源配置
+│   ├── MinioConfig.java         # MinIO配置
 │   ├── RedisConfig.java         # Redis配置
 │   ├── SecurityConfig.java      # 安全配置
 │   └── WebConfig.java           # Web配置
@@ -365,6 +444,15 @@ src/main/java/com/scenic
 │   └── user/                    # 用户实体
 ├── mapper/                      # 数据访问层
 ├── service/                     # 业务逻辑层
+│   ├── MinioService.java        # MinIO服务
+│   ├── appointment/             # 预约服务
+│   ├── content/                 # 内容服务
+│   ├── intelligence/            # 智能化服务
+│   ├── interaction/             # 互动服务
+│   ├── map/                     # 地图服务
+│   ├── operation/               # 运营管理服务
+│   ├── system/                  # 系统配置服务
+│   └── user/                    # 用户服务
 └── utils/                       # 工具类
 ```
 
@@ -415,4 +503,7 @@ src/main/java/com/scenic
 4. 建议使用HTTPS协议保障数据传输安全
 5. 个人预约默认状态为"已通过"，无需审核；团队预约和活动预约需要管理员审核
 6. 项目使用MyBatis作为ORM框架，通过Mapper接口访问数据库
-7. 文档内容存储在MinIO中，数据库仅存储引用，提高系统性能
+7. 文件存储使用MinIO对象存储服务，数据库仅存储文件引用，提高系统性能
+8. MinIO服务需要在应用启动前确保正常运行，并创建好相应的存储桶
+9. 文件上传前会自动检查存储桶是否存在，不存在则创建，但建议提前手动创建以避免权限问题
+10. MinIO生成的文件访问URL默认有效期为7天，如需调整可修改MinioService中的配置
