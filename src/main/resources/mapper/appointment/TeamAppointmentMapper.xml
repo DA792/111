@@ -9,7 +9,7 @@
         <result column="contact_person" property="contactPerson" jdbcType="VARCHAR"/>
         <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
         <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
-        <result column="number_of_people" property="numberOfPeople" jdbcType="INTEGER"/>
+        <result column="team_size" property="numberOfPeople" jdbcType="INTEGER"/>
         <result column="scenic_spot_id" property="scenicSpotId" jdbcType="BIGINT"/>
         <result column="scenic_spot_name" property="scenicSpotName" jdbcType="VARCHAR"/>
         <result column="appointment_date" property="appointmentDate" jdbcType="TIMESTAMP"/>
@@ -22,8 +22,8 @@
 
     <!-- 查询字段 -->
     <sql id="TeamAppointment_Column_List">
-        id, team_name, contact_person, contact_phone, contact_email, number_of_people, 
-        scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, remark, status, create_time, update_time
+        id, team_name, team_leader as contact_person, contact_phone, contact_email, team_size, 
+        scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, remarks as remark, status, create_time, update_time
     </sql>
 
     <!-- 管理员查询团队预约列表 -->
@@ -38,8 +38,17 @@
             <if test="contactPerson != null and contactPerson != ''">
                 AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
+            <if test="contactPhone != null and contactPhone != ''">
+                AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
+            </if>
             <if test="status != null and status != ''">
                 AND status = #{status}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND appointment_time <![CDATA[>=]]> #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND appointment_time <![CDATA[<=]]> #{endTime}
             </if>
         </where>
         ORDER BY create_time DESC
@@ -57,8 +66,17 @@
             <if test="contactPerson != null and contactPerson != ''">
                 AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
+            <if test="contactPhone != null and contactPhone != ''">
+                AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
+            </if>
             <if test="status != null and status != ''">
                 AND status = #{status}
+            </if>
+            <if test="startTime != null and startTime != ''">
+                AND appointment_time <![CDATA[>=]]> #{startTime}
+            </if>
+            <if test="endTime != null and endTime != ''">
+                AND appointment_time <![CDATA[<=]]> #{endTime}
             </if>
         </where>
     </select>
