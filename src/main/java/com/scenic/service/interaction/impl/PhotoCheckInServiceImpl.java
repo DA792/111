@@ -9,9 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
+import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
 import com.scenic.entity.interaction.PhotoCheckIn;
+import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 import com.scenic.mapper.interaction.PhotoCheckInMapper;
 import com.scenic.service.interaction.PhotoCheckInService;
 
@@ -71,7 +74,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      * @return 照片打卡记录列表
      */
     @Override
-    public Result<List<PhotoCheckInDTO>> getAllPhotoCheckIns() {
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO p) {
         try {
             // 先从Redis缓存中获取
             List<PhotoCheckInDTO> cachedPhotos = (List<PhotoCheckInDTO>) redisTemplate.opsForValue().get(ALL_PHOTOS_CACHE_KEY);
@@ -94,66 +97,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         }
     }
     
-    /**
-     * 根据分类获取照片打卡记录
-     * @param category 分类
-     * @return 照片打卡记录列表
-     */
-    @Override
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByCategory(String category) {
-        try {
-            // 先从Redis缓存中获取
-            String cacheKey = PHOTOS_BY_CATEGORY_CACHE_PREFIX + category;
-            List<PhotoCheckInDTO> cachedPhotos = (List<PhotoCheckInDTO>) redisTemplate.opsForValue().get(cacheKey);
-            if (cachedPhotos != null) {
-                return Result.success("查询成功", cachedPhotos);
-            }
-            
-            // 缓存中没有则从数据库查询
-            List<PhotoCheckIn> photos = photoCheckInMapper.selectByCategory(category, 0, 1000);
-            List<PhotoCheckInDTO> photoDTOs = photos.stream()
-                    .map(this::convertToDTO)
-                    .collect(Collectors.toList());
-            
-            // 将结果存入Redis缓存，过期时间1小时
-            redisTemplate.opsForValue().set(cacheKey, photoDTOs, 1, TimeUnit.HOURS);
-            
-            return Result.success("查询成功", photoDTOs);
-        } catch (Exception e) {
-            return Result.error("查询失败：" + e.getMessage());
-        }
-    }
-    
-    /**
-     * 根据用户ID获取照片打卡记录
-     * @param userId 用户ID
-     * @return 照片打卡记录列表
-     */
-    @Override
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByUserId(Long userId) {
-        try {
-            // 先从Redis缓存中获取
-            String cacheKey = PHOTOS_BY_USER_ID_CACHE_PREFIX + userId;
-            List<PhotoCheckInDTO> cachedPhotos = (List<PhotoCheckInDTO>) redisTemplate.opsForValue().get(cacheKey);
-            if (cachedPhotos != null) {
-                return Result.success("查询成功", cachedPhotos);
-            }
-            
-            // 缓存中没有则从数据库查询
-            List<PhotoCheckIn> photos = photoCheckInMapper.selectByUserId(userId, 0, 1000);
-            List<PhotoCheckInDTO> photoDTOs = photos.stream()
-                    .map(this::convertToDTO)
-                    .collect(Collectors.toList());
-            
-            // 将结果存入Redis缓存，过期时间1小时
-            redisTemplate.opsForValue().set(cacheKey, photoDTOs, 1, TimeUnit.HOURS);
-            
-            return Result.success("查询成功", photoDTOs);
-        } catch (Exception e) {
-            return Result.error("查询失败：" + e.getMessage());
-        }
-    }
-    
+
     /**
      * 点赞照片打卡
      * @param photoCheckInId 照片打卡ID
@@ -196,7 +140,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         try {
             PhotoCheckIn photo = photoCheckInMapper.selectById(photoCheckInId);
             if (photo != null) {
-                if (photo.getLikes() > 0) {
+                if (photo.getLikeC() > 0) {
                     photo.setLikes(photo.getLikes() - 1);
                     photo.setUpdateTime(LocalDateTime.now());
                     photoCheckInMapper.updateById(photo);

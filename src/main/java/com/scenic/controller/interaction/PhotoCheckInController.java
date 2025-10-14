@@ -16,8 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
+import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
+import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 import com.scenic.service.interaction.PhotoCheckInService;
 import com.scenic.utils.FileUploadUtil;
+import com.scenic.common.dto.PageResult;
 
 /**
  * 照片打卡控制器
@@ -84,18 +87,8 @@ public class PhotoCheckInController {
      * @return 照片打卡记录列表
      */
     @GetMapping(MINIAPP_PREFIX + "/photo-check-in/list")
-    public Result<List<PhotoCheckInDTO>> getAllPhotoCheckInsForMiniapp() {
-        return photoCheckInService.getAllPhotoCheckIns();
-    }
-    
-    /**
-     * 小程序端 - 根据分类获取照片打卡记录
-     * @param category 分类
-     * @return 照片打卡记录列表
-     */
-    @GetMapping(MINIAPP_PREFIX + "/photo-check-in/category/{category}")
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByCategoryForMiniapp(@PathVariable String category) {
-        return photoCheckInService.getPhotoCheckInsByCategory(category);
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckInsForMiniapp(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
+        return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
     }
     
     /**
@@ -123,8 +116,8 @@ public class PhotoCheckInController {
      * @return 照片打卡记录列表
      */
     @GetMapping(ADMIN_PREFIX + "/photo-check-in/list")
-    public Result<List<PhotoCheckInDTO>> getAllPhotoCheckInsForAdmin() {
-        return photoCheckInService.getAllPhotoCheckIns();
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckInsForAdmin(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
+        return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
     }
     
     /**

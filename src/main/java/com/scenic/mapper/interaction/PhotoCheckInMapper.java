@@ -59,26 +59,6 @@ public interface PhotoCheckInMapper {
     int deleteByUserId(Long userId);
     
     /**
-     * 根据分类查询照片打卡列表
-     * @param category 分类
-     * @param offset 偏移量
-     * @param limit 限制数量
-     * @return 照片打卡列表
-     */
-    @Select("SELECT * FROM photo_check_in WHERE category = #{category} AND enabled = 1 ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
-    List<PhotoCheckIn> selectByCategory(@Param("category") String category, @Param("offset") int offset, @Param("limit") int limit);
-    
-    /**
-     * 根据用户ID查询照片打卡列表
-     * @param userId 用户ID
-     * @param offset 偏移量
-     * @param limit 限制数量
-     * @return 照片打卡列表
-     */
-    @Select("SELECT * FROM photo_check_in WHERE user_id = #{userId} ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
-    List<PhotoCheckIn> selectByUserId(@Param("userId") Long userId, @Param("offset") int offset, @Param("limit") int limit);
-    
-    /**
      * 查询照片打卡列表
      * @param offset 偏移量
      * @param limit 限制数量

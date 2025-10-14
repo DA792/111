@@ -2,8 +2,11 @@ package com.scenic.service.interaction;
 
 import java.util.List;
 
+import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
+import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
+import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 
 /**
  * 拍照打卡服务接口
@@ -21,21 +24,8 @@ public interface PhotoCheckInService {
      * 获取所有照片打卡记录
      * @return 照片打卡记录列表
      */
-    Result<List<PhotoCheckInDTO>> getAllPhotoCheckIns();
+    PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO);
     
-    /**
-     * 根据分类获取照片打卡记录
-     * @param category 分类
-     * @return 照片打卡记录列表
-     */
-    Result<List<PhotoCheckInDTO>> getPhotoCheckInsByCategory(String category);
-    
-    /**
-     * 根据用户ID获取照片打卡记录
-     * @param userId 用户ID
-     * @return 照片打卡记录列表
-     */
-    Result<List<PhotoCheckInDTO>> getPhotoCheckInsByUserId(Long userId);
     
     /**
      * 点赞照片打卡
