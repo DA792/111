@@ -41,6 +41,18 @@ public class PhotoCheckInController {
     
     @Autowired
     private FileUploadUtil fileUploadUtil;
+
+
+    // /**
+    //  * 
+    //  * @param photoCheckInId
+    //  * @return
+    //  */
+    // @GetMapping("/photo-check-in/classList")
+    // public Result<List<CheckinClassVO>> getClassList() {
+    //     return photoCheckInService.getClassList();
+    // }
+    
     
     /**
      * 小程序端 - 上传照片打卡
@@ -119,7 +131,8 @@ public class PhotoCheckInController {
     public PageResult<PhotoCheckInVO> getAllPhotoCheckInsForAdmin(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
         return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
     }
-    
+
+
     /**
      * 管理后台端 - 删除照片打卡记录
      * @param photoCheckInId 照片打卡ID
