@@ -42,6 +42,11 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     private static final String ALL_PHOTOS_CACHE_KEY = "all_photos";
     private static final String PHOTOS_BY_CATEGORY_CACHE_PREFIX = "photos_category:";
     private static final String PHOTOS_BY_USER_ID_CACHE_PREFIX = "photos_user_id:";
+    private static final String PHOTO_CHECK_IN_PAGE_CACHE_PREFIX = "photo_checkin:page:";
+    
+    // 缓存过期时间（分钟）
+    private static final int PAGE_CACHE_EXPIRE_MINUTES = 5;
+    private static final int EMPTY_RESULT_CACHE_EXPIRE_MINUTES = 2;
     
     /**
      * 上传照片打卡
@@ -60,6 +65,15 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      */
     @Override
     public PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
+        // 生成缓存键
+        String cacheKey = generatePageCacheKey(photoCheckInQueryDTO);
+        
+        // 尝试从Redis获取缓存
+        PageResult<PhotoCheckInVO> cachedResult = (PageResult<PhotoCheckInVO>) redisTemplate.opsForValue().get(cacheKey);
+        if (cachedResult != null) {
+            return cachedResult;
+        }
+        
         // 设置分页参数
         PageHelper.startPage(photoCheckInQueryDTO.getPageNum(), photoCheckInQueryDTO.getPageSize());
         
@@ -86,7 +100,18 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 .collect(Collectors.toList());
         
         // 构造分页结果
-        return PageResult.of(totalCount, photoCheckInQueryDTO.getPageSize(), photoCheckInQueryDTO.getPageNum(), photoCheckInVOs);
+        PageResult<PhotoCheckInVO> pageResult = PageResult.of(totalCount, photoCheckInQueryDTO.getPageSize(), photoCheckInQueryDTO.getPageNum(), photoCheckInVOs);
+        
+        // 缓存结果
+        if (photoCheckInVOs.isEmpty()) {
+            // 空结果缓存较短时间
+            redisTemplate.opsForValue().set(cacheKey, pageResult, EMPTY_RESULT_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+        } else {
+            // 非空结果缓存较长时间
+            redisTemplate.opsForValue().set(cacheKey, pageResult, PAGE_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+        }
+        
+        return pageResult;
     }
     
 
@@ -113,6 +138,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
                 redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                 redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
+                // 清除分页缓存
+                clearPageCaches();
                 
                 return Result.success("操作成功", "点赞成功");
             }
@@ -146,6 +173,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                     redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
                     redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                     redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
+                    // 清除分页缓存
+                    clearPageCaches();
                     
                     return Result.success("操作成功", "取消点赞成功");
                 } else {
@@ -178,6 +207,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
                 redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                 redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
+                // 清除分页缓存
+                clearPageCaches();
                 
                 return Result.success("操作成功", "照片已删除");
             }
@@ -218,6 +249,31 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         // 设置分类名称
         vo.setCategoryName(photo.getCategoryName());
         return vo;
+    }
+
+    /**
+     * 生成分页查询缓存键
+     * @param queryDTO 查询条件
+     * @return 缓存键
+     */
+    private String generatePageCacheKey(PhotoCheckInQueryDTO queryDTO) {
+        StringBuilder key = new StringBuilder(PHOTO_CHECK_IN_PAGE_CACHE_PREFIX);
+        key.append(queryDTO.getPageNum()).append(":")
+           .append(queryDTO.getPageSize()).append(":")
+           .append("title:").append(queryDTO.getTitle() != null ? queryDTO.getTitle() : "").append(":")
+           .append("user:").append(queryDTO.getUserName() != null ? queryDTO.getUserName() : "").append(":")
+           .append("category:").append(queryDTO.getCategoryId() != null ? queryDTO.getCategoryId() : "").append(":")
+           .append("createTime:").append(queryDTO.getCreateTime() != null ? queryDTO.getCreateTime().toString() : "");
+        return key.toString();
+    }
+    
+    /**
+     * 清除分页缓存
+     * 使用模式匹配清除所有分页相关的缓存
+     */
+    private void clearPageCaches() {
+        // 清除所有分页缓存
+        redisTemplate.delete(PHOTO_CHECK_IN_PAGE_CACHE_PREFIX + "*");
     }
 
     @Override
