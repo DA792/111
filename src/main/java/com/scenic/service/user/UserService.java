@@ -85,11 +85,11 @@ public interface UserService {
      * 查询用户列表
      * @param page 页码
      * @param size 每页大小
-     * @param username 用户名（可选）
-     * @param phone 电话（可选）
+     * @param userType 用户类型（必填）
+     * @param keyword 关键词搜索（可选，包含用户名、证件类型、证件号码、手机号字段的模糊搜索）
      * @return 用户列表
      */
-    Result<PageResult<User>> getUsers(int page, int size, String username, String phone);
+    Result<PageResult<User>> getUsers(int page, int size, int userType, String keyword);
     
     /**
      * 获取用户详情

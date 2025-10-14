@@ -246,14 +246,14 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public Result<PageResult<User>> getUsers(int page, int size, String username, String phone) {
+    public Result<PageResult<User>> getUsers(int page, int size, int userType, String keyword) {
         try {
             // 实际项目中需要从数据库查询用户列表
             int offset = (page - 1) * size;
-            List<User> users = userMapper.selectList(offset, size, username, phone);
+            List<User> users = userMapper.selectList(offset, size, userType, keyword);
             
             // 查询总数
-            int total = userMapper.selectCount(username, phone);
+            int total = userMapper.selectCount(userType, keyword);
             
             return Result.success("查询成功", PageResult.of(total, size, page, users));
         } catch (Exception e) {
@@ -288,12 +288,20 @@ public class UserServiceImpl implements UserService {
             if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                 String encodedPassword = passwordUtil.encodePassword(user.getPassword());
                 user.setPassword(encodedPassword);
+            } else {
+                // 密码未填写时，自动填充原始密码"123456"
+                String encodedPassword = passwordUtil.encodePassword("123456");
+                user.setPassword(encodedPassword);
             }
             
             // 设置默认值
-            user.setCreateTime(java.time.LocalDateTime.now());
-            user.setUpdateTime(java.time.LocalDateTime.now());
+            java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            user.setCreateTime(now);
+            user.setUpdateTime(now);
+            user.setRegisterTime(now); // 注册时间与创建时间一致
             user.setStatus(1); // 设置状态为启用
+            user.setVersion(0); // 设置版本号为0
+            user.setDeleted(0); // 设置为未删除状态
             
             // 插入用户
             int result = userMapper.insert(user);
@@ -315,10 +323,10 @@ public class UserServiceImpl implements UserService {
                 return Result.error("用户不存在");
             }
             
-            // 更新用户信息
+            // 更新用户信息 - 只更新传入的非空字段
             user.setId(userId);
             user.setUpdateTime(java.time.LocalDateTime.now());
-            int result = userMapper.updateById(user);
+            int result = userMapper.updateByIdSelective(user);
             if (result > 0) {
                 return Result.success("更新成功", "用户信息更新成功");
             } else {
