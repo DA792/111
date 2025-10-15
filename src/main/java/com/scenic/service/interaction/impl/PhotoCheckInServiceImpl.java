@@ -3,9 +3,6 @@ package com.scenic.service.interaction.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeUnit;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
@@ -418,6 +415,29 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             }
         } catch (Exception e) {
             return Result.error("添加分类失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 管理后台端 - 获取当前照片打卡记录详情
+     * @param photoCheckInId 照片打卡ID
+     * @return 照片打卡记录详情
+     */
+    @Override
+    public Result<PhotoCheckInVO> getPhotoCheckInsInfoForAdmin(Long photoCheckInId) {
+        try {
+            // 从数据库查询照片打卡记录
+            PhotoCheckIn photoCheckIn = photoCheckInMapper.selectById(photoCheckInId);
+            if (photoCheckIn == null) {
+                return Result.error("照片打卡记录不存在");
+            }
+            
+            // 转换为VO对象
+            PhotoCheckInVO photoCheckInVO = convertToVO(photoCheckIn);
+            
+            return Result.success("获取成功", photoCheckInVO);
+        } catch (Exception e) {
+            return Result.error("获取照片打卡详情失败：" + e.getMessage());
         }
     }
 }

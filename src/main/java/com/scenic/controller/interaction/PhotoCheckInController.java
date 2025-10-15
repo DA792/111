@@ -125,6 +125,15 @@ public class PhotoCheckInController {
         return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
     }
 
+        /**
+     * 管理后台端 - 获取当前照片打卡记录详情
+     * @return 照片打卡记录列表
+     */
+    @GetMapping(ADMIN_PREFIX + "/photo-check-in/info/{photoCheckInId}")
+    public Result<PhotoCheckInVO> getPhotoCheckInsInfoForAdmin(@PathVariable Long photoCheckInId) {
+        return photoCheckInService.getPhotoCheckInsInfoForAdmin(photoCheckInId);
+    }
+
 
     /**
      * 管理后台端 - 删除照片打卡记录

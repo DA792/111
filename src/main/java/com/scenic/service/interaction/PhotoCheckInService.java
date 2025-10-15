@@ -68,4 +68,11 @@ public interface PhotoCheckInService {
      * @return 操作结果
      */
     Result<String> addCategory(String categoryName);
+    
+    /**
+     * 管理后台端 - 获取当前照片打卡记录详情
+     * @param photoCheckInId 照片打卡ID
+     * @return 照片打卡记录详情
+     */
+    Result<PhotoCheckInVO> getPhotoCheckInsInfoForAdmin(Long photoCheckInId);
 }
