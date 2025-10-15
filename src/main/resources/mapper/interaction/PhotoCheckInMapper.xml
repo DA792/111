@@ -29,6 +29,15 @@
         pc.id, pc.user_id, pc.user_name, pc.user_avatar, pc.title, pc.content, pc.category_id, cc.name as category_name, pc.like_count, pc.view_count, pc.status, pc.version, pc.deleted, pc.create_time, pc.update_time, pc.create_by, pc.update_by, pc.photo_id
     </sql>
 
+    <!-- 根据ID查询照片打卡详情（包含分类名称） -->
+    <select id="selectById" resultMap="PhotoCheckInResultMap">
+        SELECT 
+        <include refid="PhotoCheckIn_Column_List"/>
+        FROM photo_checkin pc
+        LEFT JOIN checkin_category cc ON pc.category_id = cc.id
+        WHERE pc.id = #{id} AND pc.deleted = 0
+    </select>
+
     <!-- 管理员查询照片打卡列表 -->
     <select id="selectForAdmin" resultMap="PhotoCheckInResultMap">
         SELECT 

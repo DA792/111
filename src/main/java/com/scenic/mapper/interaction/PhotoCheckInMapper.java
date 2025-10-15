@@ -21,7 +21,6 @@ public interface PhotoCheckInMapper {
      * @param id 照片打卡ID
      * @return 照片打卡信息
      */
-    @Select("SELECT * FROM photo_checkin WHERE id = #{id} AND deleted = 0")
     PhotoCheckIn selectById(Long id);
     
     /**
