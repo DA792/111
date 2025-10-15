@@ -26,6 +26,7 @@ import com.scenic.mapper.interaction.PhotoCheckInMapper;
 import com.scenic.mapper.ResourceFileMapper;
 import com.scenic.service.MinioService;
 import com.scenic.service.interaction.PhotoCheckInService;
+import com.scenic.utils.UserContextUtil;
 
 /**
  * 拍照打卡服务实现类
@@ -47,6 +48,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    
+    @Autowired
+    private UserContextUtil userContextUtil;
     
     // Redis缓存键前缀
     private static final String PHOTO_CHECK_IN_CACHE_PREFIX = "photo_check_in:";
@@ -438,8 +442,10 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             newCategory.setVersion(0); // 默认版本号为0
             newCategory.setCreateTime(java.time.LocalDateTime.now());
             newCategory.setUpdateTime(java.time.LocalDateTime.now());
-            newCategory.setCreateBy(1L); // 默认创建人ID为1
-            newCategory.setUpdateBy(1L); // 默认更新人ID为1
+            // 使用当前用户信息
+            Long currentUserId = userContextUtil.getCurrentUserId();
+            newCategory.setCreateBy(currentUserId != null ? currentUserId : 1L);
+            newCategory.setUpdateBy(currentUserId != null ? currentUserId : 1L);
             
             // 插入数据库
             int result = checkinCategoryMapper.insert(newCategory);
@@ -532,8 +538,11 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             resourceFile.setFileType(1); // 1表示图片
             resourceFile.setCreateTime(java.time.LocalDateTime.now());
             resourceFile.setUpdateTime(java.time.LocalDateTime.now());
-            resourceFile.setCreateBy(1L); // 管理员ID
-            resourceFile.setUpdateBy(1L);
+            // 使用当前用户信息
+            Long currentUserId = userContextUtil.getCurrentUserId();
+            resourceFile.setCreateBy(currentUserId != null ? currentUserId : 1L);
+            resourceFile.setUpdateBy(currentUserId != null ? currentUserId : 1L);
+            resourceFile.setUploadUserId(currentUserId != null ? currentUserId : 1L);
             
             resourceFileMapper.insert(resourceFile);
             
@@ -542,8 +551,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             photoCheckIn.setTitle(title.trim());
             photoCheckIn.setCategoryId(categoryId);
             photoCheckIn.setPhotoId(resourceFile.getId());
-            photoCheckIn.setUserId(1L); // 管理员ID
-            photoCheckIn.setUserName("管理员");
+            // 使用当前用户ID
+            photoCheckIn.setUserId(currentUserId != null ? currentUserId : 1L);
+            photoCheckIn.setUserName("管理员"); // 这里可以根据需要从用户信息中获取真实用户名
             photoCheckIn.setUserAvatar(""); // 默认头像
             photoCheckIn.setContent(""); // 默认内容为空
             photoCheckIn.setLikeCount(0);
@@ -553,8 +563,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             photoCheckIn.setDeleted(false);
             photoCheckIn.setCreateTime(java.time.LocalDateTime.now());
             photoCheckIn.setUpdateTime(java.time.LocalDateTime.now());
-            photoCheckIn.setCreateBy(1L);
-            photoCheckIn.setUpdateBy(1L);
+            photoCheckIn.setCreateBy(currentUserId != null ? currentUserId : 1L);
+            photoCheckIn.setUpdateBy(currentUserId != null ? currentUserId : 1L);
             
             // 保存到数据库
             photoCheckInMapper.insert(photoCheckIn);
@@ -634,8 +644,11 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 resourceFile.setFileType(1); // 1表示图片
                 resourceFile.setCreateTime(java.time.LocalDateTime.now());
                 resourceFile.setUpdateTime(java.time.LocalDateTime.now());
-                resourceFile.setCreateBy(1L); // 管理员ID
-                resourceFile.setUpdateBy(1L);
+                // 使用当前用户信息
+                Long currentUserId = userContextUtil.getCurrentUserId();
+                resourceFile.setCreateBy(currentUserId != null ? currentUserId : 1L);
+                resourceFile.setUpdateBy(currentUserId != null ? currentUserId : 1L);
+                resourceFile.setUploadUserId(currentUserId != null ? currentUserId : 1L);
                 
                 resourceFileMapper.insert(resourceFile);
                 
@@ -649,7 +662,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 existingPhotoCheckIn.setPhotoId(photoId);
             }
             existingPhotoCheckIn.setUpdateTime(java.time.LocalDateTime.now());
-            existingPhotoCheckIn.setUpdateBy(1L);
+            // 使用当前用户ID
+            Long currentUserId = userContextUtil.getCurrentUserId();
+            existingPhotoCheckIn.setUpdateBy(currentUserId != null ? currentUserId : 1L);
             
             // 保存到数据库
             photoCheckInMapper.updateById(existingPhotoCheckIn);

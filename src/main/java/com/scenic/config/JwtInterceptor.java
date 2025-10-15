@@ -7,8 +7,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
 
+import com.scenic.entity.user.User;
 import com.scenic.utils.JwtUtil;
+import com.scenic.utils.UserContextUtil;
+
+import io.jsonwebtoken.Claims;
 
 /**
  * JWT拦截器，用于验证请求中的JWT令牌
@@ -18,6 +23,9 @@ public class JwtInterceptor implements HandlerInterceptor {
     
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private UserContextUtil userContextUtil;
     
     @Value("${miniapp.api.prefix}")
     private String miniappPrefix;
@@ -59,6 +67,17 @@ public class JwtInterceptor implements HandlerInterceptor {
                 response.getWriter().write("未授权：管理后台认证令牌无效或已过期");
                 return false;
             }
+            
+            // 解析token并设置当前用户信息
+            try {
+                Claims claims = jwtUtil.getAllClaimsFromToken(token, jwtUtil.getAdminSecret());
+                User user = userContextUtil.createUserFromClaims(claims);
+                userContextUtil.setCurrentUser(user);
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("未授权：无法解析用户信息");
+                return false;
+            }
         } else {
             // 其他路径，默认需要认证
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -67,5 +86,11 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
         
         return true;
+    }
+    
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        // 请求完成后清除用户上下文，防止内存泄漏
+        userContextUtil.clear();
     }
 }
