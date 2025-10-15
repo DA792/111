@@ -1,19 +1,32 @@
 package com.scenic.service.user.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
+import com.scenic.config.WechatConfig;
 import com.scenic.dto.appointment.AppointmentResponseDTO;
 import com.scenic.dto.user.UserAppointmentPersonDTO;
 import com.scenic.dto.user.UserMessageDTO;
 import com.scenic.dto.user.UserPhotoDTO;
+import com.scenic.dto.user.WechatLoginRequestDTO;
+import com.scenic.dto.user.WechatLoginResponseDTO;
+import com.scenic.dto.user.WechatSessionDTO;
 import com.scenic.entity.appointment.Appointment;
 import com.scenic.entity.user.User;
 import com.scenic.entity.user.UserAppointmentPerson;
@@ -33,6 +46,8 @@ import com.scenic.utils.PasswordUtil;
  */
 @Service
 public class UserServiceImpl implements UserService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
     
     @Autowired
     private UserMapper userMapper;
@@ -54,6 +69,22 @@ public class UserServiceImpl implements UserService {
     
     @Autowired
     private PasswordUtil passwordUtil;
+    
+    @Autowired
+    private WechatConfig wechatConfig;
+    
+    @Autowired
+    private RestTemplate restTemplate;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
+    // Redis中存储微信会话信息的key前缀
+    private static final String WECHAT_SESSION_KEY_PREFIX = "wechat:session:";
+    private static final String WECHAT_TOKEN_KEY_PREFIX = "wechat:token:";
     
     @Override
     public Result<Object> loginWithUsernameAndPassword(String username, String password) {
@@ -93,11 +124,338 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public Result<String> loginWithWeChat(String code) {
-        // 实际项目中需要调用微信接口验证code并获取用户信息
-        // 这里简化处理，直接返回成功
-        // 注意：实际项目中需要实现具体的业务逻辑
-        return Result.success("登录成功", "token123456");
+    public Result<Object> loginWithWeChat(String code) {
+        try {
+            // 创建微信登录请求DTO
+            WechatLoginRequestDTO loginRequest = new WechatLoginRequestDTO();
+            loginRequest.setCode(code);
+            
+            // 调用微信登录
+            WechatLoginResponseDTO loginResponse = loginWithWeChat(loginRequest);
+            
+            if (loginResponse == null) {
+                return Result.error("微信登录失败");
+            }
+            
+            // 构建返回对象，包含token和用户信息
+            Map<String, Object> resultMap = new HashMap<>();
+            resultMap.put("token", loginResponse.getToken());
+            resultMap.put("userId", loginResponse.getUserId());
+            resultMap.put("userName", loginResponse.getUserName());
+            resultMap.put("realName", loginResponse.getRealName());
+            resultMap.put("userType", loginResponse.getUserType());
+            resultMap.put("status", loginResponse.getStatus());
+            resultMap.put("avatarUrl", loginResponse.getAvatarUrl());
+            resultMap.put("isNewUser", loginResponse.getIsNewUser());
+            
+            return Result.success("登录成功", resultMap);
+        } catch (Exception e) {
+            return Result.error("微信登录失败：" + e.getMessage());
+        }
+    }
+    
+    @Override
+    public WechatSessionDTO getWechatSession(String code) {
+        try {
+            // 构建请求URL
+            String url = wechatConfig.getCode2SessionUrl() +
+                    "?appid=" + wechatConfig.getAppId() +
+                    "&secret=" + wechatConfig.getAppSecret() +
+                    "&js_code=" + code +
+                    "&grant_type=authorization_code";
+            
+            // 发送请求
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            
+            // 解析响应
+            WechatSessionDTO sessionDTO = objectMapper.readValue(response.getBody(), WechatSessionDTO.class);
+            
+            if (!sessionDTO.isSuccess()) {
+                logger.error("获取微信会话失败: {}", sessionDTO.getErrmsg());
+            }
+            
+            return sessionDTO;
+        } catch (Exception e) {
+            logger.error("获取微信会话异常", e);
+            WechatSessionDTO errorSession = new WechatSessionDTO();
+            errorSession.setErrcode(-1);
+            errorSession.setErrmsg("系统异常: " + e.getMessage());
+            return errorSession;
+        }
+    }
+    
+    @Override
+    @Transactional
+    public WechatLoginResponseDTO loginWithWeChat(WechatLoginRequestDTO loginRequest) {
+        // 获取微信会话信息
+        WechatSessionDTO sessionDTO = getWechatSession(loginRequest.getCode());
+        
+        if (!sessionDTO.isSuccess()) {
+            WechatLoginResponseDTO errorResponse = new WechatLoginResponseDTO();
+            errorResponse.setIsNewUser(false);
+            return errorResponse;
+        }
+        
+        String openid = sessionDTO.getOpenid();
+        
+        try {
+            // 先从Redis中查询用户会话信息
+            Map<String, Object> sessionInfo = getUserSessionFromRedis(openid);
+            
+            if (sessionInfo != null) {
+                logger.info("从Redis中获取到用户会话信息: {}", openid);
+                
+                // 从会话信息中获取用户ID
+                Long userId = (Long) sessionInfo.get("userId");
+                
+                // 从数据库中获取最新的用户信息，确保数据一致性
+                User user = userMapper.selectById(userId);
+                if (user == null) {
+                    // Redis中有记录但数据库中没有，说明数据不一致
+                    // 清除Redis中的记录
+                    clearUserSessionFromRedis(userId, openid);
+                    // 重新走数据库查询流程
+                    return handleDatabaseLogin(openid, sessionDTO, loginRequest);
+                }
+                
+                // 获取用户信息
+                WechatLoginResponseDTO existingUserResponse = convertUserToResponseDTO(user);
+                existingUserResponse.setIsNewUser(false);
+                
+                // 生成新的JWT令牌
+                String token = jwtUtil.generateMiniAppToken(openid, userId);
+                existingUserResponse.setToken(token);
+                
+                // 更新Redis中的会话信息
+                saveSessionToRedis(userId, openid, sessionDTO.getSessionKey(), token);
+                
+                // 更新用户最后登录时间
+                user.setLastLoginTime(LocalDateTime.now());
+                userMapper.updateById(user);
+                
+                return existingUserResponse;
+            }
+            
+            // Redis中不存在，走数据库查询流程
+            return handleDatabaseLogin(openid, sessionDTO, loginRequest);
+            
+        } catch (Exception e) {
+            logger.error("微信登录处理异常", e);
+            throw new RuntimeException("微信登录处理异常: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 处理数据库登录流程
+     */
+    @Transactional
+    private WechatLoginResponseDTO handleDatabaseLogin(String openid, WechatSessionDTO sessionDTO, WechatLoginRequestDTO loginRequest) {
+        // 检查数据库中用户是否存在
+        boolean isExist = isUserExistByOpenid(openid);
+        
+        if (!isExist) {
+            // 创建新用户
+            Long userId = createUser(openid, loginRequest);
+            
+            // 获取用户信息
+            User user = userMapper.selectById(userId);
+            WechatLoginResponseDTO newUserResponse = convertUserToResponseDTO(user);
+            newUserResponse.setIsNewUser(true);
+            
+            // 生成JWT令牌
+            String token = jwtUtil.generateMiniAppToken(openid, userId);
+            newUserResponse.setToken(token);
+            
+            // 将会话信息存储到Redis中
+            saveSessionToRedis(userId, openid, sessionDTO.getSessionKey(), token);
+            
+            return newUserResponse;
+        } else {
+            // 获取用户信息
+            User user = userMapper.selectByOpenId(openid);
+            WechatLoginResponseDTO existingUserResponse = convertUserToResponseDTO(user);
+            existingUserResponse.setIsNewUser(false);
+            
+            // 生成JWT令牌
+            String token = jwtUtil.generateMiniAppToken(openid, user.getId());
+            existingUserResponse.setToken(token);
+            
+            // 将会话信息存储到Redis中
+            saveSessionToRedis(user.getId(), openid, sessionDTO.getSessionKey(), token);
+            
+            // 更新最后登录时间
+            user.setLastLoginTime(LocalDateTime.now());
+            userMapper.updateById(user);
+            
+            return existingUserResponse;
+        }
+    }
+    
+    /**
+     * 将User对象转换为WechatLoginResponseDTO
+     */
+    private WechatLoginResponseDTO convertUserToResponseDTO(User user) {
+        if (user == null) {
+            return null;
+        }
+        
+        WechatLoginResponseDTO responseDTO = new WechatLoginResponseDTO();
+        responseDTO.setUserId(user.getId());
+        responseDTO.setUserName(user.getUserName());
+        responseDTO.setRealName(user.getRealName());
+        responseDTO.setUserType(user.getUserType());
+        responseDTO.setStatus(user.getStatus());
+        
+        // 获取头像URL
+        if (user.getAvatarFileId() != null) {
+            responseDTO.setAvatarUrl("/api/files/avatar/" + user.getId());
+        }
+        
+        return responseDTO;
+    }
+    
+    @Override
+    public boolean isUserExistByOpenid(String openid) {
+        return userMapper.countByOpenId(openid) > 0;
+    }
+    
+    @Override
+    @Transactional
+    public Long createUser(String openid, WechatLoginRequestDTO loginRequest) {
+        User user = new User();
+        
+        // 设置基本信息
+        user.setOpenId(openid);
+        user.setUserName("wx_user_" + openid.substring(openid.length() - 8));
+        user.setRealName(loginRequest.getNickName());
+        user.setUserType(1); // 普通用户
+        user.setStatus(1); // 正常状态
+        user.setRegisterTime(LocalDateTime.now());
+        user.setLastLoginTime(LocalDateTime.now());
+        user.setCreateTime(LocalDateTime.now());
+        user.setUpdateTime(LocalDateTime.now());
+        user.setDeleted(0);
+        user.setVersion(0);
+        
+        // 保存用户
+        userMapper.insert(user);
+        
+        return user.getId();
+    }
+    
+    @Override
+    public WechatLoginResponseDTO getUserInfo(String openid) {
+        User user = userMapper.selectByOpenId(openid);
+        
+        if (user == null) {
+            return null;
+        }
+        
+        WechatLoginResponseDTO responseDTO = new WechatLoginResponseDTO();
+        responseDTO.setUserId(user.getId());
+        responseDTO.setUserName(user.getUserName());
+        responseDTO.setRealName(user.getRealName());
+        responseDTO.setUserType(user.getUserType());
+        responseDTO.setStatus(user.getStatus());
+        
+        // 获取头像URL
+        if (user.getAvatarFileId() != null) {
+            // 这里需要根据实际情况获取头像URL
+            // 可以调用FileController中的方法获取
+            responseDTO.setAvatarUrl("/api/files/avatar/" + user.getId());
+        }
+        
+        return responseDTO;
+    }
+    
+    /**
+     * 从Redis中获取用户会话信息
+     *
+     * @param openid 微信openid
+     * @return 会话信息Map，不存在则返回null
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getUserSessionFromRedis(String openid) {
+        try {
+            String sessionKey = WECHAT_SESSION_KEY_PREFIX + openid;
+            Object sessionObj = redisTemplate.opsForValue().get(sessionKey);
+            
+            if (sessionObj != null) {
+                return (Map<String, Object>) sessionObj;
+            }
+            
+            return null;
+        } catch (Exception e) {
+            logger.error("从Redis获取用户会话信息失败", e);
+            return null;
+        }
+    }
+    
+    /**
+     * 清除Redis中的用户会话信息
+     *
+     * @param userId 用户ID
+     * @param openid 微信openid
+     */
+    private void clearUserSessionFromRedis(Long userId, String openid) {
+        try {
+            // 获取旧的会话信息，以便清除旧的token
+            Map<String, Object> oldSessionInfo = getUserSessionFromRedis(openid);
+            if (oldSessionInfo != null && oldSessionInfo.containsKey("token")) {
+                String oldToken = (String) oldSessionInfo.get("token");
+                String oldTokenKey = WECHAT_TOKEN_KEY_PREFIX + oldToken;
+                redisTemplate.delete(oldTokenKey);
+            }
+            
+            // 清除会话信息
+            String sessionKey1 = WECHAT_SESSION_KEY_PREFIX + userId;
+            String sessionKey2 = WECHAT_SESSION_KEY_PREFIX + openid;
+            redisTemplate.delete(sessionKey1);
+            redisTemplate.delete(sessionKey2);
+            
+            logger.info("用户 {} 的微信会话信息已从Redis中清除", userId);
+        } catch (Exception e) {
+            logger.error("清除Redis中的用户会话信息失败", e);
+        }
+    }
+    
+    /**
+     * 将微信会话信息存储到Redis中
+     *
+     * @param userId 用户ID
+     * @param openid 微信openid
+     * @param sessionKey 微信会话密钥
+     * @param token JWT令牌
+     */
+    private void saveSessionToRedis(Long userId, String openid, String sessionKey, String token) {
+        try {
+            // 先清除旧的会话信息
+            clearUserSessionFromRedis(userId, openid);
+            
+            // 存储会话信息
+            String sessionKey1 = WECHAT_SESSION_KEY_PREFIX + userId;
+            String sessionKey2 = WECHAT_SESSION_KEY_PREFIX + openid;
+            
+            // 创建会话信息Map
+            Map<String, Object> sessionInfo = new HashMap<>();
+            sessionInfo.put("userId", userId);
+            sessionInfo.put("openid", openid);
+            sessionInfo.put("sessionKey", sessionKey);
+            sessionInfo.put("token", token);
+            sessionInfo.put("loginTime", System.currentTimeMillis());
+            
+            // 存储会话信息，有效期24小时
+            redisTemplate.opsForValue().set(sessionKey1, sessionInfo, 24, TimeUnit.HOURS);
+            redisTemplate.opsForValue().set(sessionKey2, sessionInfo, 24, TimeUnit.HOURS);
+            
+            // 存储token，有效期24小时
+            String tokenKey = WECHAT_TOKEN_KEY_PREFIX + token;
+            redisTemplate.opsForValue().set(tokenKey, userId, 24, TimeUnit.HOURS);
+            
+            logger.info("用户 {} 的微信会话信息已存储到Redis", userId);
+        } catch (Exception e) {
+            logger.error("存储微信会话信息到Redis失败", e);
+        }
     }
     
     @Override
@@ -246,14 +604,14 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public Result<PageResult<User>> getUsers(int page, int size, int userType, String keyword) {
+    public Result<PageResult<User>> getUsers(int page, int size, String username, String phone) {
         try {
             // 实际项目中需要从数据库查询用户列表
             int offset = (page - 1) * size;
-            List<User> users = userMapper.selectList(offset, size, userType, keyword);
+            List<User> users = userMapper.selectList(offset, size, username, phone);
             
             // 查询总数
-            int total = userMapper.selectCount(userType, keyword);
+            int total = userMapper.selectCount(username, phone);
             
             return Result.success("查询成功", PageResult.of(total, size, page, users));
         } catch (Exception e) {
@@ -288,20 +646,12 @@ public class UserServiceImpl implements UserService {
             if (user.getPassword() != null && !user.getPassword().isEmpty()) {
                 String encodedPassword = passwordUtil.encodePassword(user.getPassword());
                 user.setPassword(encodedPassword);
-            } else {
-                // 密码未填写时，自动填充原始密码"123456"
-                String encodedPassword = passwordUtil.encodePassword("123456");
-                user.setPassword(encodedPassword);
             }
             
             // 设置默认值
-            java.time.LocalDateTime now = java.time.LocalDateTime.now();
-            user.setCreateTime(now);
-            user.setUpdateTime(now);
-            user.setRegisterTime(now); // 注册时间与创建时间一致
+            user.setCreateTime(java.time.LocalDateTime.now());
+            user.setUpdateTime(java.time.LocalDateTime.now());
             user.setStatus(1); // 设置状态为启用
-            user.setVersion(0); // 设置版本号为0
-            user.setDeleted(0); // 设置为未删除状态
             
             // 插入用户
             int result = userMapper.insert(user);
@@ -323,10 +673,10 @@ public class UserServiceImpl implements UserService {
                 return Result.error("用户不存在");
             }
             
-            // 更新用户信息 - 只更新传入的非空字段
+            // 更新用户信息
             user.setId(userId);
             user.setUpdateTime(java.time.LocalDateTime.now());
-            int result = userMapper.updateByIdSelective(user);
+            int result = userMapper.updateById(user);
             if (result > 0) {
                 return Result.success("更新成功", "用户信息更新成功");
             } else {

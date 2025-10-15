@@ -248,17 +248,17 @@ public class UserController {
      * 管理后台端 - 查询用户列表
      * @param page 页码
      * @param size 每页大小
-     * @param userType 用户类型（必填）
-     * @param keyword 关键词搜索（可选，包含用户名、证件类型、证件号码、手机号字段的模糊搜索）
+     * @param username 用户名（可选）
+     * @param phone 电话（可选）
      * @return 用户列表
      */
     @GetMapping(ADMIN_PREFIX + "/users")
     public Result<PageResult<User>> getUsersForAdmin(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam int userType,
-            @RequestParam(required = false) String keyword) {
-        return userService.getUsers(page, size, userType, keyword);
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String phone) {
+        return userService.getUsers(page, size, username, phone);
     }
     
     /**
@@ -274,12 +274,10 @@ public class UserController {
     /**
      * 管理后台端 - 创建用户
      * @param user 用户信息
-     * @param createBy 创建人ID
      * @return 创建结果
      */
     @PostMapping(ADMIN_PREFIX + "/users")
-    public Result<String> createUserForAdmin(@RequestBody User user, @RequestParam Long createBy) {
-        user.setCreateBy(createBy);
+    public Result<String> createUserForAdmin(@RequestBody User user) {
         return userService.createUser(user);
     }
     
@@ -291,30 +289,5 @@ public class UserController {
     @PutMapping(ADMIN_PREFIX + "/users/{userId}/reset-password")
     public Result<String> resetPasswordForAdmin(@PathVariable Long userId) {
         return userService.resetPassword(userId);
-    }
-    
-    /**
-     * 管理后台端 - 更新用户信息
-     * @param userId 用户ID
-     * @param user 用户信息
-     * @param updateBy 更新人ID
-     * @return 更新结果
-     */
-    @PutMapping(ADMIN_PREFIX + "/users/{userId}")
-    public Result<String> updateUserForAdmin(@PathVariable Long userId, @RequestBody User user, @RequestParam Long updateBy) {
-        user.setUpdateBy(updateBy);
-        return userService.updateUser(userId, user);
-    }
-    
-    /**
-     * 管理后台端 - 删除用户
-     * @param userId 用户ID
-     * @param updateBy 更新人ID
-     * @return 删除结果
-     */
-    @DeleteMapping(ADMIN_PREFIX + "/users/{userId}")
-    public Result<String> deleteUserForAdmin(@PathVariable Long userId, @RequestParam Long updateBy) {
-        // 这里可以将updateBy传递给service层，用于记录操作人
-        return userService.deleteUser(userId);
     }
 }
