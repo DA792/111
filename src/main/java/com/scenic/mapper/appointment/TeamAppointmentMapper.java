@@ -28,12 +28,6 @@ public interface TeamAppointmentMapper {
      * @param teamAppointment 团队预约信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO team_appointment(team_name, contact_person, contact_phone, contact_email, " +
-            "team_size, scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, " +
-            "remark, status, create_time, update_time) " +
-            "VALUES(#{teamName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, " +
-            "#{numberOfPeople}, #{scenicSpotId}, #{scenicSpotName}, #{appointmentDate}, #{appointmentTime}, " +
-            "#{remark}, #{status}, #{createTime}, #{updateTime})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(TeamAppointment teamAppointment);
     
@@ -42,11 +36,11 @@ public interface TeamAppointmentMapper {
      * @param teamAppointment 团队预约信息
      * @return 更新结果
      */
-    @Update("UPDATE team_appointment SET team_name = #{teamName}, contact_person = #{contactPerson}, " +
+    @Update("UPDATE team_appointment SET team_name = #{teamName}, team_leader = #{contactPerson}, " +
             "contact_phone = #{contactPhone}, contact_email = #{contactEmail}, " +
             "team_size = #{numberOfPeople}, scenic_spot_id = #{scenicSpotId}, " +
             "scenic_spot_name = #{scenicSpotName}, appointment_date = #{appointmentDate}, " +
-            "appointment_time = #{appointmentTime}, remark = #{remark}, status = #{status}, " +
+            "appointment_time = #{appointmentTime}, remarks = #{remark}, status = #{status}, " +
             "update_time = #{updateTime} WHERE id = #{id}")
     int updateById(TeamAppointment teamAppointment);
     

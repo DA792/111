@@ -1,4 +1,4 @@
-package com.scenic.entity.appointment;
+                                                                                                                                            package com.scenic.entity.appointment;
 
 import java.time.LocalDateTime;
 
@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
  */
 public class TeamAppointment {
     private Long id;
+    private String appointmentNo;
+    private Long userId;
     private String teamName;
     private String contactPerson;
     private String contactPhone;
@@ -17,9 +19,10 @@ public class TeamAppointment {
     private LocalDateTime appointmentDate;
     private String appointmentTime;
     private String remark;
-    private String status; // 预约状态：待审核、已确认、已取消、已完成、已拒绝
+    private Integer status; // 预约状态：0-已取消，1-待审核，2-已完成
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long createBy;
 
     // 构造函数
     public TeamAppointment() {}
@@ -29,8 +32,24 @@ public class TeamAppointment {
         return id;
     }
 
+    public String getAppointmentNo() {
+        return appointmentNo;
+    }
+
+    public void setAppointmentNo(String appointmentNo) {
+        this.appointmentNo = appointmentNo;
+    }
+
     public void setId(Long id) {
         this.id = id;
+    }
+    
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getTeamName() {
@@ -113,11 +132,11 @@ public class TeamAppointment {
         this.remark = remark;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
@@ -137,10 +156,20 @@ public class TeamAppointment {
         this.updateTime = updateTime;
     }
 
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
     @Override
     public String toString() {
         return "TeamAppointment{" +
                 "id=" + id +
+                ", appointmentNo='" + appointmentNo + '\'' +
+                ", userId=" + userId +
                 ", teamName='" + teamName + '\'' +
                 ", contactPerson='" + contactPerson + '\'' +
                 ", contactPhone='" + contactPhone + '\'' +
@@ -154,6 +183,7 @@ public class TeamAppointment {
                 ", status='" + status + '\'' +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
+                ", createBy=" + createBy +
                 '}';
     }
 }

@@ -122,8 +122,22 @@ public class AppointmentServiceImpl implements AppointmentService {
                 return Result.error("联系电话不能为空");
             }
             
+            // 从请求参数中获取createBy
+            String createByStr = appointmentDTO.getCreateBy();
+            Long createBy = null;
+            if (createByStr != null && !createByStr.isEmpty()) {
+                try {
+                    createBy = Long.parseLong(createByStr);
+                } catch (NumberFormatException e) {
+                    // 如果转换失败，使用默认值
+                    createBy = null;
+                }
+            }
+            
             // 创建团队预约主表记录
             TeamAppointment teamAppointment = new TeamAppointment();
+            teamAppointment.setAppointmentNo(appointmentDTO.getAppointmentNo());
+            teamAppointment.setUserId(appointmentDTO.getUserId());
             teamAppointment.setTeamName(appointmentDTO.getTeamName());
             teamAppointment.setContactPerson(appointmentDTO.getContactPerson());
             teamAppointment.setContactPhone(appointmentDTO.getContactPhone());
@@ -133,9 +147,17 @@ public class AppointmentServiceImpl implements AppointmentService {
             teamAppointment.setAppointmentDate(appointmentDTO.getAppointmentDate());
             teamAppointment.setAppointmentTime(appointmentDTO.getAppointmentTime());
             teamAppointment.setRemark(appointmentDTO.getRemark());
-            teamAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
+            
+            // 设置状态，如果DTO中提供了状态则使用，否则使用默认的1(待审核)
+            if (appointmentDTO.getStatus() != null && !appointmentDTO.getStatus().isEmpty()) {
+                teamAppointment.setStatus(Integer.valueOf(appointmentDTO.getStatus()));
+            } else {
+                teamAppointment.setStatus(1); // 1表示待审核
+            }
+            
             teamAppointment.setCreateTime(LocalDateTime.now());
             teamAppointment.setUpdateTime(LocalDateTime.now());
+            teamAppointment.setCreateBy(createBy);
             
             // 保存团队预约主表记录
             teamAppointmentMapper.insert(teamAppointment);
@@ -188,8 +210,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             for (TeamAppointment teamAppointment : teamAppointments) {
                 try {
                     // 设置默认值
-                    if (teamAppointment.getStatus() == null || teamAppointment.getStatus().isEmpty()) {
-                        teamAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
+                    if (teamAppointment.getStatus() == null) {
+                        teamAppointment.setStatus(1); // 1表示待审核
                     }
                     if (teamAppointment.getCreateTime() == null) {
                         teamAppointment.setCreateTime(LocalDateTime.now());
@@ -360,7 +382,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             teamAppointment.setTeamName("上传团队-" + System.currentTimeMillis());
             teamAppointment.setContactPerson("联系人");
             teamAppointment.setContactPhone("13800138000");
-            teamAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
+            teamAppointment.setStatus(1); // 1表示待审核
             teamAppointment.setCreateTime(LocalDateTime.now());
             teamAppointment.setUpdateTime(LocalDateTime.now());
             
@@ -420,7 +442,7 @@ public class AppointmentServiceImpl implements AppointmentService {
                 return Result.error("已完成的团队预约无法取消");
             }
             
-            teamAppointment.setStatus(AppointmentConstants.STATUS_CANCELLED);
+            teamAppointment.setStatus(3); // 3表示已取消
             teamAppointment.setUpdateTime(LocalDateTime.now());
             teamAppointmentMapper.updateById(teamAppointment);
             
@@ -628,7 +650,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             // 更新团队预约状态
-            teamAppointment.setStatus(status);
+            teamAppointment.setStatus(Integer.valueOf(status));
             teamAppointment.setUpdateTime(LocalDateTime.now());
             teamAppointmentMapper.updateById(teamAppointment);
             

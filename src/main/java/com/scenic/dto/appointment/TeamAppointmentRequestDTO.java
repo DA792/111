@@ -1,6 +1,7 @@
 package com.scenic.dto.appointment;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import javax.validation.constraints.NotBlank;
@@ -10,18 +11,15 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.scenic.entity.appointment.TeamMember;
 
 /**
- * 团队预约DTO类
+ * 团队预约请求DTO类 - 用于处理前端JSON请求
  */
-public class TeamAppointmentDTO {
-    @NotBlank(message = "预约编号不能为空")
-    @Size(max = 50, message = "预约编号长度不超过50字符")
-    private String appointmentNo;
-    
-    private Long userId;
-    
+public class TeamAppointmentRequestDTO {
     @NotBlank(message = "团队名称不能为空")
     @Size(max = 100, message = "团队名称长度不能超过100个字符")
     private String teamName;
@@ -42,39 +40,21 @@ public class TeamAppointmentDTO {
     private String scenicSpotName;
     
     @NotNull(message = "预约日期不能为空")
-    private LocalDateTime appointmentDate;
+    private String appointmentDate;
     
     private String appointmentTime;
     
     @Size(max = 500, message = "备注长度不能超过500个字符")
     private String remark;
     
-    private String status; // 用于存储数字字符串，如"1"表示待审核
-    
     private List<TeamMember> members;
     
     private String createBy;
 
     // 构造函数
-    public TeamAppointmentDTO() {}
+    public TeamAppointmentRequestDTO() {}
 
     // Getter 和 Setter 方法
-    public String getAppointmentNo() {
-        return appointmentNo;
-    }
-
-    public void setAppointmentNo(String appointmentNo) {
-        this.appointmentNo = appointmentNo;
-    }
-    
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
     public String getTeamName() {
         return teamName;
     }
@@ -123,11 +103,11 @@ public class TeamAppointmentDTO {
         this.scenicSpotName = scenicSpotName;
     }
 
-    public LocalDateTime getAppointmentDate() {
+    public String getAppointmentDate() {
         return appointmentDate;
     }
 
-    public void setAppointmentDate(LocalDateTime appointmentDate) {
+    public void setAppointmentDate(String appointmentDate) {
         this.appointmentDate = appointmentDate;
     }
 
@@ -147,14 +127,6 @@ public class TeamAppointmentDTO {
         this.remark = remark;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public List<TeamMember> getMembers() {
         return members;
     }
@@ -171,21 +143,46 @@ public class TeamAppointmentDTO {
         this.createBy = createBy;
     }
 
+    /**
+     * 将字符串格式的日期转换为LocalDateTime
+     * @return LocalDateTime对象
+     */
+    public LocalDateTime getAppointmentDateTime() {
+        if (appointmentDate == null) {
+            return null;
+        }
+        
+        try {
+            if (appointmentDate.contains(" ")) {
+                // 包含时间的完整日期时间字符串
+                return LocalDateTime.parse(appointmentDate.replace(" ", "T"));
+            } else {
+                // 只有日期的字符串
+                return LocalDateTime.parse(appointmentDate + "T00:00:00");
+            }
+        } catch (Exception e) {
+            // 尝试其他常见格式
+            try {
+                return java.time.LocalDate.parse(appointmentDate).atStartOfDay();
+            } catch (Exception ex) {
+                System.err.println("日期解析失败: " + ex.getMessage());
+                return null;
+            }
+        }
+    }
+
     @Override
     public String toString() {
-        return "TeamAppointmentDTO{" +
-                "appointmentNo='" + appointmentNo + '\'' +
-                ", userId=" + userId +
-                ", teamName='" + teamName + '\'' +
+        return "TeamAppointmentRequestDTO{" +
+                "teamName='" + teamName + '\'' +
                 ", contactPerson='" + contactPerson + '\'' +
                 ", contactPhone='" + contactPhone + '\'' +
                 ", contactEmail='" + contactEmail + '\'' +
                 ", scenicSpotId=" + scenicSpotId +
                 ", scenicSpotName='" + scenicSpotName + '\'' +
-                ", appointmentDate=" + appointmentDate +
+                ", appointmentDate='" + appointmentDate + '\'' +
                 ", appointmentTime='" + appointmentTime + '\'' +
                 ", remark='" + remark + '\'' +
-                ", status='" + status + '\'' +
                 ", members=" + members +
                 ", createBy='" + createBy + '\'' +
                 '}';

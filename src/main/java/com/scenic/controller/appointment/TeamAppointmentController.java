@@ -22,6 +22,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.appointment.TeamAppointmentDTO;
+import com.scenic.dto.appointment.AdminTeamAppointmentDTO;
+import com.scenic.dto.appointment.TeamAppointmentRequestDTO;
 import com.scenic.entity.appointment.TeamAppointment;
 import com.scenic.mapper.appointment.TeamAppointmentMapper;
 import com.scenic.service.appointment.AppointmentService;
@@ -63,7 +65,7 @@ public class TeamAppointmentController {
      * @return 预约结果
      */
     @PostMapping(MINIAPP_PREFIX + "/team-appointments")
-    public Result<String> createTeamAppointment(@Valid @RequestBody TeamAppointmentDTO appointmentDTO,
+    public Result<String> createTeamAppointment(@Valid @RequestBody TeamAppointmentRequestDTO appointmentDTO,
                                                 BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             List<ObjectError> errors = bindingResult.getAllErrors();
@@ -73,7 +75,87 @@ public class TeamAppointmentController {
             }
             return Result.error("参数验证失败: " + errorMsg.toString());
         }
-        return appointmentService.createTeamAppointment(appointmentDTO);
+        
+        // 将TeamAppointmentRequestDTO转换为TeamAppointmentDTO
+        TeamAppointmentDTO teamAppointmentDTO = new TeamAppointmentDTO();
+        teamAppointmentDTO.setTeamName(appointmentDTO.getTeamName());
+        teamAppointmentDTO.setContactPerson(appointmentDTO.getContactPerson());
+        teamAppointmentDTO.setContactPhone(appointmentDTO.getContactPhone());
+        teamAppointmentDTO.setContactEmail(appointmentDTO.getContactEmail());
+        teamAppointmentDTO.setScenicSpotId(appointmentDTO.getScenicSpotId());
+        teamAppointmentDTO.setScenicSpotName(appointmentDTO.getScenicSpotName());
+        teamAppointmentDTO.setRemark(appointmentDTO.getRemark());
+        teamAppointmentDTO.setMembers(appointmentDTO.getMembers());
+        teamAppointmentDTO.setCreateBy(appointmentDTO.getCreateBy());
+        
+        // 处理预约日期
+        teamAppointmentDTO.setAppointmentDate(appointmentDTO.getAppointmentDateTime());
+        teamAppointmentDTO.setAppointmentTime(appointmentDTO.getAppointmentTime());
+        
+        return appointmentService.createTeamAppointment(teamAppointmentDTO);
+    }
+    
+    /**
+     * 管理后台端 - 新增团队预约
+     * @param appointmentDTO 团队预约信息
+     * @return 新增结果
+     */
+    @PostMapping(ADMIN_PREFIX + "/team-appointments")
+    public Result<String> createTeamAppointmentForAdmin(@Valid @RequestBody AdminTeamAppointmentDTO appointmentDTO,
+                                                        BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<ObjectError> errors = bindingResult.getAllErrors();
+            StringBuilder errorMsg = new StringBuilder();
+            for (ObjectError error : errors) {
+                errorMsg.append(error.getDefaultMessage()).append("; ");
+            }
+            return Result.error("参数验证失败: " + errorMsg.toString());
+        }
+        
+        // 将AdminTeamAppointmentDTO转换为TeamAppointmentDTO
+        TeamAppointmentDTO teamAppointmentDTO = new TeamAppointmentDTO();
+        teamAppointmentDTO.setAppointmentNo(appointmentDTO.getAppointmentNo());
+        teamAppointmentDTO.setUserId(appointmentDTO.getUserId());
+        teamAppointmentDTO.setTeamName(appointmentDTO.getTeamName());
+        teamAppointmentDTO.setContactPerson(appointmentDTO.getTeamLeader());
+        teamAppointmentDTO.setContactPhone(appointmentDTO.getContactPhone());
+        teamAppointmentDTO.setContactEmail(appointmentDTO.getContactEmail());
+        teamAppointmentDTO.setScenicSpotId(appointmentDTO.getScenicSpotId());
+        teamAppointmentDTO.setScenicSpotName(appointmentDTO.getScenicSpotName());
+        teamAppointmentDTO.setRemark(appointmentDTO.getRemarks());
+        teamAppointmentDTO.setMembers(appointmentDTO.getMembers());
+        
+        // 处理预约日期
+        if (appointmentDTO.getAppointmentDate() != null) {
+            try {
+                // 将字符串转换为LocalDateTime
+                java.time.LocalDateTime appointmentDate;
+                if (appointmentDTO.getAppointmentDate().contains(" ")) {
+                    // 包含时间的完整日期时间字符串
+                    appointmentDate = java.time.LocalDateTime.parse(appointmentDTO.getAppointmentDate().replace(" ", "T"));
+                } else {
+                    // 只有日期的字符串
+                    java.time.LocalDate date = java.time.LocalDate.parse(appointmentDTO.getAppointmentDate());
+                    appointmentDate = date.atStartOfDay();
+                }
+                teamAppointmentDTO.setAppointmentDate(appointmentDate);
+            } catch (Exception e) {
+                // 如果解析失败，记录日志但不抛出异常
+                System.err.println("日期解析失败: " + e.getMessage());
+            }
+        }
+        
+        teamAppointmentDTO.setAppointmentTime(appointmentDTO.getAppointmentTime());
+        teamAppointmentDTO.setCreateBy(appointmentDTO.getCreateBy());
+        
+        // 设置状态，如果未提供则使用默认值"1"（待审核）
+        if (appointmentDTO.getStatus() != null) {
+            teamAppointmentDTO.setStatus(String.valueOf(appointmentDTO.getStatus()));
+        } else {
+            teamAppointmentDTO.setStatus("1"); // 1表示待审核
+        }
+        
+        return appointmentService.createTeamAppointment(teamAppointmentDTO);
     }
     
     /**
