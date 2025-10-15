@@ -24,7 +24,8 @@ public class User {
     private Integer deleted;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    private Boolean enabled;
+    private Long createBy;
+    private Long updateBy;
 
     // 构造函数
     public User() {}
@@ -174,12 +175,20 @@ public class User {
         this.updateTime = updateTime;
     }
 
-    public Boolean getEnabled() {
-        return enabled;
+    public Long getCreateBy() {
+        return createBy;
     }
 
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
     }
 
     @Override
@@ -203,7 +212,8 @@ public class User {
                 ", deleted=" + deleted +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
-                ", enabled=" + enabled +
+                ", createBy=" + createBy +
+                ", updateBy=" + updateBy +
                 '}';
     }
 }
