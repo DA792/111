@@ -128,9 +128,6 @@
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
         </dependency>
-<<<<<<< HEAD
-
-=======
         
         <!-- MinIO客户端 -->
         <dependency>
@@ -139,7 +136,6 @@
             <version>8.5.2</version>
         </dependency>
         
->>>>>>> 791fcf2760b58949d8c1e05f2601678ca69c37f6
         <!-- Apache POI for Excel processing -->
         <dependency>
             <groupId>org.apache.poi</groupId>

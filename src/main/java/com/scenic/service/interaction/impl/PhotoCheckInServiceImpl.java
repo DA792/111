@@ -20,10 +20,11 @@ import com.scenic.entity.interaction.CheckinCategory;
 import com.scenic.entity.interaction.PhotoCheckIn;
 import com.scenic.entity.interaction.vo.CheckinCategoryVO;
 import com.scenic.entity.interaction.vo.PhotoCheckInVO;
-import com.scenic.entity.system.ResourceFile;
+import com.scenic.entity.ResourceFile;
 import com.scenic.mapper.interaction.CheckinCategoryMapper;
 import com.scenic.mapper.interaction.PhotoCheckInMapper;
-import com.scenic.mapper.system.ResourceFileMapper;
+import com.scenic.mapper.ResourceFileMapper;
+import com.scenic.service.MinioService;
 import com.scenic.service.interaction.PhotoCheckInService;
 
 /**
@@ -40,6 +41,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     
     @Autowired
     private ResourceFileMapper resourceFileMapper;
+    
+    @Autowired
+    private MinioService minioService;
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -240,6 +244,21 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     private PhotoCheckInDTO convertToDTO(PhotoCheckIn photo) {
         PhotoCheckInDTO dto = new PhotoCheckInDTO();
         BeanUtils.copyProperties(photo, dto);
+        // 特别处理photoId字段，根据photoId获取文件URL
+        Long photoId = photo.getPhotoId();
+        if (photoId != null) {
+            ResourceFile resourceFile = resourceFileMapper.selectById(photoId);
+            if (resourceFile != null) {
+                try {
+                    // 获取MinIO预签名URL（1小时有效期）
+                    String fileUrl = minioService.getPresignedObjectUrl(resourceFile.getFileKey(), 3600);
+                    dto.setPhotoUrl(fileUrl);
+                } catch (Exception e) {
+                    // 如果获取URL失败，使用文件键作为备用
+                    dto.setPhotoUrl(resourceFile.getFileKey());
+                }
+            }
+        }
         return dto;
     }
     
@@ -256,7 +275,14 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
         if (photoId != null) {
             ResourceFile resourceFile = resourceFileMapper.selectById(photoId);
             if (resourceFile != null) {
-                vo.setPhotoPath(resourceFile.getFileKey());
+                try {
+                    // 获取MinIO预签名URL（1小时有效期）
+                    String fileUrl = minioService.getPresignedObjectUrl(resourceFile.getFileKey(), 3600);
+                    vo.setPhotoPath(fileUrl);
+                } catch (Exception e) {
+                    // 如果获取URL失败，使用文件键作为备用
+                    vo.setPhotoPath(resourceFile.getFileKey());
+                }
             }
         }
         // 设置分类名称
@@ -469,7 +495,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 return Result.error("指定的分类不存在或已禁用");
             }
             
-            // 上传文件
+            // 上传文件到MinIO
             String originalFilename = photo.getOriginalFilename();
             if (originalFilename == null || originalFilename.isEmpty()) {
                 return Result.error("文件名不能为空");
@@ -477,18 +503,16 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             
             // 生成唯一文件名
             String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            String uniqueFilename = java.util.UUID.randomUUID().toString() + fileExtension;
+            String uniqueFilename = "photo-checkin/" + java.util.UUID.randomUUID().toString() + fileExtension;
             
-            // 保存文件到上传目录
-            java.nio.file.Path uploadPath = java.nio.file.Paths.get("./uploads", uniqueFilename);
-            java.nio.file.Files.createDirectories(uploadPath.getParent());
-            java.nio.file.Files.write(uploadPath, photo.getBytes());
+            // 上传到MinIO
+            String fileUrl = minioService.uploadFile(photo, uniqueFilename);
             
             // 保存文件信息到resource_file表
             ResourceFile resourceFile = new ResourceFile();
             resourceFile.setFileName(originalFilename);
             resourceFile.setFileKey(uniqueFilename);
-            resourceFile.setBucketName("local"); // 本地存储
+            resourceFile.setBucketName("user-avatars"); // MinIO存储桶名称
             resourceFile.setFileSize(photo.getSize());
             resourceFile.setMimeType(photo.getContentType());
             resourceFile.setFileType(1); // 1表示图片
@@ -573,8 +597,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             // 如果上传了新图片，处理图片上传
             Long photoId = existingPhotoCheckIn.getPhotoId();
             if (photo != null && !photo.isEmpty()) {
-                // 删除旧图片文件（如果需要的话，这里可以根据业务需求决定是否删除）
-                // 上传新文件
+                // 上传新文件到MinIO
                 String originalFilename = photo.getOriginalFilename();
                 if (originalFilename == null || originalFilename.isEmpty()) {
                     return Result.error("文件名不能为空");
@@ -582,18 +605,16 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 
                 // 生成唯一文件名
                 String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                String uniqueFilename = java.util.UUID.randomUUID().toString() + fileExtension;
+                String uniqueFilename = "photo-checkin/" + java.util.UUID.randomUUID().toString() + fileExtension;
                 
-                // 保存文件到上传目录
-                java.nio.file.Path uploadPath = java.nio.file.Paths.get("./uploads", uniqueFilename);
-                java.nio.file.Files.createDirectories(uploadPath.getParent());
-                java.nio.file.Files.write(uploadPath, photo.getBytes());
+                // 上传到MinIO
+                String fileUrl = minioService.uploadFile(photo, uniqueFilename);
                 
                 // 保存文件信息到resource_file表
                 ResourceFile resourceFile = new ResourceFile();
                 resourceFile.setFileName(originalFilename);
                 resourceFile.setFileKey(uniqueFilename);
-                resourceFile.setBucketName("local"); // 本地存储
+                resourceFile.setBucketName("user-avatars"); // MinIO存储桶名称
                 resourceFile.setFileSize(photo.getSize());
                 resourceFile.setMimeType(photo.getContentType());
                 resourceFile.setFileType(1); // 1表示图片
