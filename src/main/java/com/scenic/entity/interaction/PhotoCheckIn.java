@@ -17,7 +17,7 @@ public class PhotoCheckIn {
     @Column(name = "user_name", length = 100)
     private String userName;
 
-    @Column(name = "user_avatar", length = 255)
+    @Column(name = "user_avatar", length = 1024)
     private String userAvatar;
 
     @Column(name = "title", length = 100)

@@ -24,6 +24,7 @@ import com.scenic.entity.ResourceFile;
 import com.scenic.mapper.interaction.CheckinCategoryMapper;
 import com.scenic.mapper.interaction.PhotoCheckInMapper;
 import com.scenic.mapper.ResourceFileMapper;
+import com.scenic.mapper.user.UserMapper;
 import com.scenic.service.MinioService;
 import com.scenic.service.interaction.PhotoCheckInService;
 import com.scenic.utils.UserContextUtil;
@@ -51,6 +52,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     
     @Autowired
     private UserContextUtil userContextUtil;
+    
+    @Autowired
+    private UserMapper userMapper;
     
     // Redis缓存键前缀
     private static final String PHOTO_CHECK_IN_CACHE_PREFIX = "photo_check_in:";
@@ -552,9 +556,53 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             photoCheckIn.setCategoryId(categoryId);
             photoCheckIn.setPhotoId(resourceFile.getId());
             // 使用当前用户ID
-            photoCheckIn.setUserId(currentUserId != null ? currentUserId : 1L);
-            photoCheckIn.setUserName("管理员"); // 这里可以根据需要从用户信息中获取真实用户名
-            photoCheckIn.setUserAvatar(""); // 默认头像
+            Long userId = currentUserId != null ? currentUserId : 1L;
+            photoCheckIn.setUserId(userId);
+            
+            // 根据用户ID获取用户信息
+            String userName = "管理员";
+            String userAvatar = "";
+            try {
+                // 查询用户信息
+                com.scenic.entity.user.User user = userMapper.selectById(userId);
+                if (user != null) {
+                    // 设置用户名
+                    userName = user.getUserName() != null ? user.getUserName() : "管理员";
+                    
+                    // 获取用户头像
+                    Long avatarFileId = user.getAvatarFileId();
+                    if (avatarFileId != null) {
+                        ResourceFile avatarFile = resourceFileMapper.selectById(avatarFileId);
+                        if (avatarFile != null) {
+                            try {
+                                // 生成头像URL
+                                String fullUrl = minioService.getPresignedObjectUrl(
+                                    avatarFile.getBucketName() != null ? avatarFile.getBucketName() : "user-avatars",
+                                    avatarFile.getFileKey(),
+                                    7 * 24 * 3600 // 7天有效期
+                                );
+                                
+                                // 检查URL长度，确保不超过数据库字段限制（1024个字符）
+                                if (fullUrl.length() > 1024) {
+                                    System.err.println("警告：用户头像URL长度超过1024个字符，将被截断");
+                                    userAvatar = fullUrl.substring(0, 1020) + "...";
+                                } else {
+                                    userAvatar = fullUrl;
+                                }
+                            } catch (Exception e) {
+                                // 如果获取URL失败，使用文件键作为备用
+                                userAvatar = avatarFile.getFileKey();
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                // 如果获取用户信息失败，使用默认值
+                System.err.println("获取用户信息失败：" + e.getMessage());
+            }
+            
+            photoCheckIn.setUserName(userName);
+            photoCheckIn.setUserAvatar(userAvatar);
             photoCheckIn.setContent(""); // 默认内容为空
             photoCheckIn.setLikeCount(0);
             photoCheckIn.setViewCount(0);
@@ -665,6 +713,50 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             // 使用当前用户ID
             Long currentUserId = userContextUtil.getCurrentUserId();
             existingPhotoCheckIn.setUpdateBy(currentUserId != null ? currentUserId : 1L);
+            
+            // 根据用户ID获取用户信息并更新用户名和头像
+            Long userId = existingPhotoCheckIn.getUserId();
+            if (userId != null) {
+                try {
+                    // 查询用户信息
+                    com.scenic.entity.user.User user = userMapper.selectById(userId);
+                    if (user != null) {
+                        // 设置用户名
+                        String userName = user.getUserName() != null ? user.getUserName() : "管理员";
+                        existingPhotoCheckIn.setUserName(userName);
+                        
+                        // 获取用户头像
+                        Long avatarFileId = user.getAvatarFileId();
+                        if (avatarFileId != null) {
+                            ResourceFile avatarFile = resourceFileMapper.selectById(avatarFileId);
+                            if (avatarFile != null) {
+                                try {
+                                    // 生成头像URL
+                                    String fullUrl = minioService.getPresignedObjectUrl(
+                                        avatarFile.getBucketName() != null ? avatarFile.getBucketName() : "user-avatars",
+                                        avatarFile.getFileKey(),
+                                        7 * 24 * 3600 // 7天有效期
+                                    );
+                                    
+                                    // 检查URL长度，确保不超过数据库字段限制（1024个字符）
+                                    if (fullUrl.length() > 1024) {
+                                        System.err.println("警告：用户头像URL长度超过1024个字符，将被截断");
+                                        existingPhotoCheckIn.setUserAvatar(fullUrl.substring(0, 1020) + "...");
+                                    } else {
+                                        existingPhotoCheckIn.setUserAvatar(fullUrl);
+                                    }
+                                } catch (Exception e) {
+                                    // 如果获取URL失败，使用文件键作为备用
+                                    existingPhotoCheckIn.setUserAvatar(avatarFile.getFileKey());
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    // 如果获取用户信息失败，记录错误但不影响更新操作
+                    System.err.println("获取用户信息失败：" + e.getMessage());
+                }
+            }
             
             // 保存到数据库
             photoCheckInMapper.updateById(existingPhotoCheckIn);
