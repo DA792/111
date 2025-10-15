@@ -24,6 +24,7 @@ public class User {
     private Integer deleted;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Boolean enabled;
 
     // 构造函数
     public User() {}
@@ -173,6 +174,14 @@ public class User {
         this.updateTime = updateTime;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     @Override
     public String toString() {
         return "User{" +
@@ -194,6 +203,7 @@ public class User {
                 ", deleted=" + deleted +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
+                ", enabled=" + enabled +
                 '}';
     }
 }

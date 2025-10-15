@@ -1,6 +1,7 @@
 package com.scenic.controller.appointment;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,7 +19,9 @@ import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.appointment.TeamAppointmentDTO;
 import com.scenic.entity.appointment.TeamAppointment;
+import com.scenic.mapper.appointment.TeamAppointmentMapper;
 import com.scenic.service.appointment.AppointmentService;
+import com.scenic.utils.ExcelParserUtil;
 import com.scenic.utils.FileUploadUtil;
 
 /**
@@ -33,6 +36,12 @@ public class TeamAppointmentController {
     
     @Autowired
     private FileUploadUtil fileUploadUtil;
+    
+    @Autowired
+    private ExcelParserUtil excelParserUtil;
+    
+    @Autowired
+    private TeamAppointmentMapper teamAppointmentMapper;
     
     // 小程序端API接口前缀
     private static final String MINIAPP_PREFIX = "/uniapp";
@@ -52,6 +61,19 @@ public class TeamAppointmentController {
     @PostMapping(MINIAPP_PREFIX + "/team-appointments")
     public Result<String> createTeamAppointment(@RequestBody TeamAppointmentDTO appointmentDTO) {
         return appointmentService.createTeamAppointment(appointmentDTO);
+    }
+    
+    /**
+     * 管理后台端 - 更新团队预约
+     * @param teamAppointmentId 团队预约ID
+     * @param appointmentDTO 团队预约信息
+     * @return 更新结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/team-appointments/{teamAppointmentId}")
+    public Result<String> updateTeamAppointmentForAdmin(
+            @PathVariable Long teamAppointmentId,
+            @RequestBody TeamAppointmentDTO appointmentDTO) {
+        return appointmentService.updateTeamAppointment(teamAppointmentId, appointmentDTO);
     }
     
     /**
@@ -110,7 +132,10 @@ public class TeamAppointmentController {
      * @param size 每页大小
      * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @return 团队预约列表
      */
     @GetMapping(ADMIN_PREFIX + "/team-appointments")
@@ -119,8 +144,11 @@ public class TeamAppointmentController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String teamName,
             @RequestParam(required = false) String contactPerson,
-            @RequestParam(required = false) String status) {
-        return appointmentService.getAdminTeamAppointments(page, size, teamName, contactPerson, status);
+            @RequestParam(required = false) String contactPhone,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        return appointmentService.getAdminTeamAppointments(page, size, teamName, contactPerson, contactPhone, status, startTime, endTime);
     }
     
     /**
@@ -174,13 +202,17 @@ public class TeamAppointmentController {
     @PostMapping(ADMIN_PREFIX + "/team-appointments/import")
     public Result<String> importTeamAppointmentForAdmin(@RequestParam("file") MultipartFile file) {
         try {
-            String fileUrl = fileUploadUtil.uploadFile(file);
-            // 这里简化处理，实际应该解析文件内容并保存到数据库
-            return Result.success("导入成功", "文件已上传并解析，文件路径：" + fileUrl);
-        } catch (IOException e) {
-            return Result.error("文件上传失败：" + e.getMessage());
+
+
+
+            // 解析Excel文件
+            List<TeamAppointment> teamAppointments = excelParserUtil.parseTeamAppointmentExcel(file);
+            
+            // 调用服务层批量保存
+            return appointmentService.batchSaveTeamAppointments(teamAppointments);
         } catch (Exception e) {
-            return Result.error("文件上传失败：" + e.getMessage());
+            return Result.error("文件解析失败：" + e.getMessage());
+
         }
     }
 }

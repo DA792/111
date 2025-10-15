@@ -33,6 +33,16 @@ public class MinioService {
     }
 
     /**
+     * 检查存储桶是否存在，不存在则创建
+     */
+    public void createBucketIfNotExists(String bucketName) throws Exception {
+        boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
+        if (!exists) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
+        }
+    }
+
+    /**
      * 上传文件
      *
      * @param file 文件
@@ -57,11 +67,47 @@ public class MinioService {
     }
 
     /**
+     * 上传对象到指定存储桶
+     *
+     * @param bucketName 存储桶名称
+     * @param objectName 对象名称
+     * @param inputStream 输入流
+     * @param size 文件大小
+     * @param contentType 内容类型
+     */
+    public void putObject(String bucketName, String objectName, InputStream inputStream, long size, String contentType) throws Exception {
+        createBucketIfNotExists(bucketName);
+        minioClient.putObject(
+                PutObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectName)
+                        .stream(inputStream, size, -1)
+                        .contentType(contentType)
+                        .build()
+        );
+    }
+
+    /**
      * 删除文件
      *
      * @param objectName 对象名称
      */
     public void deleteFile(String objectName) throws Exception {
+        minioClient.removeObject(
+                RemoveObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(objectName)
+                        .build()
+        );
+    }
+    
+    /**
+     * 删除指定存储桶中的文件
+     *
+     * @param bucketName 存储桶名称
+     * @param objectName 对象名称
+     */
+    public void removeObject(String bucketName, String objectName) throws Exception {
         minioClient.removeObject(
                 RemoveObjectArgs.builder()
                         .bucket(bucketName)
@@ -99,6 +145,25 @@ public class MinioService {
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
                         .bucket(bucketName)
+                        .object(objectName)
+                        .expiry(expiry, java.util.concurrent.TimeUnit.SECONDS)
+                        .build()
+        );
+    }
+    
+    /**
+     * 生成预签名URL（临时访问），指定存储桶
+     *
+     * @param bucket 存储桶名称
+     * @param objectName 对象名称
+     * @param expiry 过期时间（秒）
+     * @return 预签名URL
+     */
+    public String getPresignedObjectUrl(String bucket, String objectName, int expiry) throws Exception {
+        return minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.GET)
+                        .bucket(bucket)
                         .object(objectName)
                         .expiry(expiry, java.util.concurrent.TimeUnit.SECONDS)
                         .build()

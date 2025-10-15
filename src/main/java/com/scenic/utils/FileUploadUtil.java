@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 /**
@@ -45,6 +46,19 @@ public class FileUploadUtil {
     }
 
     /**
+     * 上传对象到指定存储桶
+     *
+     * @param bucketName 存储桶名称
+     * @param objectName 对象名称
+     * @param inputStream 输入流
+     * @param size 文件大小
+     * @param contentType 内容类型
+     */
+    public void putObject(String bucketName, String objectName, InputStream inputStream, long size, String contentType) throws Exception {
+        minioService.putObject(bucketName, objectName, inputStream, size, contentType);
+    }
+
+    /**
      * 生成临时访问URL
      *
      * @param objectName 对象名称
@@ -54,6 +68,19 @@ public class FileUploadUtil {
      */
     public String getPresignedUrl(String objectName, int expiry) throws Exception {
         return minioService.getPresignedObjectUrl(objectName, expiry);
+    }
+    
+    /**
+     * 生成临时访问URL，指定存储桶
+     *
+     * @param bucket 存储桶名称
+     * @param objectName 对象名称
+     * @param expiry 过期时间（秒）
+     * @return 临时访问URL
+     * @throws Exception 异常
+     */
+    public String getPresignedUrl(String bucket, String objectName, int expiry) throws Exception {
+        return minioService.getPresignedObjectUrl(bucket, objectName, expiry);
     }
 
     /**
@@ -78,6 +105,23 @@ public class FileUploadUtil {
         try {
             // 使用MinIO删除
             minioService.deleteFile(filename);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 删除指定存储桶中的文件
+     *
+     * @param bucketName 存储桶名称
+     * @param objectName 对象名称
+     * @return 是否删除成功
+     */
+    public boolean removeObject(String bucketName, String objectName) {
+        try {
+            // 使用MinIO删除
+            minioService.removeObject(bucketName, objectName);
             return true;
         } catch (Exception e) {
             return false;

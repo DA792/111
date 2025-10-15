@@ -39,8 +39,6 @@
             <version>2.2.0</version>
         </dependency>
 
-    
-
         <!-- Spring Boot Starter Data Redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -78,8 +76,6 @@
             <artifactId>mysql-connector-java</artifactId>
             <scope>runtime</scope>
         </dependency>
-        
-        
         
         <!-- Spring Boot JDBC -->
         <dependency>
@@ -119,6 +115,19 @@
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
             <version>8.5.2</version>
+        </dependency>
+        
+        <!-- Apache POI for Excel processing -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
         </dependency>
     </dependencies>
 

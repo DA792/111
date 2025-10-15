@@ -29,7 +29,7 @@ public interface TeamAppointmentMapper {
      * @return 插入结果
      */
     @Insert("INSERT INTO team_appointment(team_name, contact_person, contact_phone, contact_email, " +
-            "number_of_people, scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, " +
+            "team_size, scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, " +
             "remark, status, create_time, update_time) " +
             "VALUES(#{teamName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, " +
             "#{numberOfPeople}, #{scenicSpotId}, #{scenicSpotName}, #{appointmentDate}, #{appointmentTime}, " +
@@ -44,7 +44,7 @@ public interface TeamAppointmentMapper {
      */
     @Update("UPDATE team_appointment SET team_name = #{teamName}, contact_person = #{contactPerson}, " +
             "contact_phone = #{contactPhone}, contact_email = #{contactEmail}, " +
-            "number_of_people = #{numberOfPeople}, scenic_spot_id = #{scenicSpotId}, " +
+            "team_size = #{numberOfPeople}, scenic_spot_id = #{scenicSpotId}, " +
             "scenic_spot_name = #{scenicSpotName}, appointment_date = #{appointmentDate}, " +
             "appointment_time = #{appointmentTime}, remark = #{remark}, status = #{status}, " +
             "update_time = #{updateTime} WHERE id = #{id}")
@@ -78,21 +78,30 @@ public interface TeamAppointmentMapper {
      * 管理员查询团队预约列表
      * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 团队预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @param offset 偏移量
      * @param limit 限制数量
      * @return 团队预约列表
      */
     List<TeamAppointment> selectForAdmin(@Param("teamName") String teamName, @Param("contactPerson") String contactPerson, 
-                                         @Param("status") String status, @Param("offset") int offset, @Param("limit") int limit);
+                                         @Param("contactPhone") String contactPhone, @Param("status") String status,
+                                         @Param("startTime") String startTime, @Param("endTime") String endTime,
+                                         @Param("offset") int offset, @Param("limit") int limit);
     
     /**
      * 管理员查询团队预约总数
      * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
+     * @param contactPhone 联系电话（可选）
      * @param status 团队预约状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param endTime 结束时间（可选）
      * @return 团队预约总数
      */
     int selectCountForAdmin(@Param("teamName") String teamName, @Param("contactPerson") String contactPerson, 
-                            @Param("status") String status);
+                            @Param("contactPhone") String contactPhone, @Param("status") String status,
+                            @Param("startTime") String startTime, @Param("endTime") String endTime);
 }
