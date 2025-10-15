@@ -1,18 +1,38 @@
 package com.scenic.entity.appointment;
 import java.time.LocalDateTime;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Size;
+
 /**
  * 团队成员实体类
  */
 public class TeamMember {
     private Long id;
     private Long teamAppointmentId;
+    
+    @NotBlank(message = "成员姓名不能为空")
+    @Size(max = 50, message = "成员姓名长度不能超过50个字符")
     private String name;
+    
+    @Pattern(regexp = "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$", message = "请输入正确的身份证号码")
     private String idCard;
+    
+    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "请输入正确的手机号码")
     private String phone;
+    
+    @Min(value = 0, message = "年龄不能小于0")
+    @Max(value = 150, message = "年龄不能大于150")
     private Integer age;
+    
     private String gender;
+    
+    @Size(max = 200, message = "备注长度不能超过200个字符")
     private String remark;
+    
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 

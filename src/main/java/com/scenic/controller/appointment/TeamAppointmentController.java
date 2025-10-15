@@ -3,7 +3,11 @@ package com.scenic.controller.appointment;
 import java.io.IOException;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,7 +63,16 @@ public class TeamAppointmentController {
      * @return 预约结果
      */
     @PostMapping(MINIAPP_PREFIX + "/team-appointments")
-    public Result<String> createTeamAppointment(@RequestBody TeamAppointmentDTO appointmentDTO) {
+    public Result<String> createTeamAppointment(@Valid @RequestBody TeamAppointmentDTO appointmentDTO,
+                                                BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<ObjectError> errors = bindingResult.getAllErrors();
+            StringBuilder errorMsg = new StringBuilder();
+            for (ObjectError error : errors) {
+                errorMsg.append(error.getDefaultMessage()).append("; ");
+            }
+            return Result.error("参数验证失败: " + errorMsg.toString());
+        }
         return appointmentService.createTeamAppointment(appointmentDTO);
     }
     
