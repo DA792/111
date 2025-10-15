@@ -86,4 +86,14 @@ public interface PhotoCheckInService {
      * @return 操作结果
      */
     Result<String> addPhotoCheckInForAdmin(String title, Long categoryId, MultipartFile photo);
+    
+    /**
+     * 管理后台端 - 更新照片打卡记录
+     * @param id 照片打卡记录ID
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件（可选）
+     * @return 操作结果
+     */
+    Result<String> updatePhotoCheckInForAdmin(Long id, String title, Long categoryId, MultipartFile photo);
 }

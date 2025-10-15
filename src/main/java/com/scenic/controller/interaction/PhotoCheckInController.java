@@ -148,6 +148,23 @@ public class PhotoCheckInController {
             @RequestParam("photo") MultipartFile photo) {
         return photoCheckInService.addPhotoCheckInForAdmin(title, categoryId, photo);
     }
+    
+    /**
+     * 管理后台端 - 编辑照片打卡记录
+     * @param id 照片打卡记录ID
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件（可选）
+     * @return 操作结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/photo-check-in/update/{id}")
+    public Result<String> updatePhotoCheckInsForAdmin(
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+        return photoCheckInService.updatePhotoCheckInForAdmin(id, title, categoryId, photo);
+    }
 
 
     /**
