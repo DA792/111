@@ -74,3 +74,10 @@ minio:
   access-key: admin
   secret-key: zssg0325
   bucket-name: user-avatars
+
+# 微信小程序配置
+wechat:
+  miniapp:
+    app-id: wx1234567890abcdef  # 替换为实际的小程序AppID
+    app-secret: abcdef1234567890abcdef1234567890  # 替换为实际的小程序AppSecret
+    code2-session-url: https://api.weixin.qq.com/sns/jscode2session
