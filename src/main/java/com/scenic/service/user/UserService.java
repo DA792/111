@@ -6,6 +6,9 @@ import com.scenic.dto.appointment.AppointmentResponseDTO;
 import com.scenic.dto.user.UserAppointmentPersonDTO;
 import com.scenic.dto.user.UserMessageDTO;
 import com.scenic.dto.user.UserPhotoDTO;
+import com.scenic.dto.user.WechatLoginRequestDTO;
+import com.scenic.dto.user.WechatLoginResponseDTO;
+import com.scenic.dto.user.WechatSessionDTO;
 import com.scenic.entity.user.User;
 
 /**
@@ -26,7 +29,48 @@ public interface UserService {
      * @param code 微信登录凭证
      * @return 登录结果
      */
-    Result<String> loginWithWeChat(String code);
+    Result<Object> loginWithWeChat(String code);
+    
+    /**
+     * 获取微信会话信息
+     *
+     * @param code 微信临时登录凭证
+     * @return 微信会话信息
+     */
+    WechatSessionDTO getWechatSession(String code);
+    
+    /**
+     * 微信小程序登录
+     *
+     * @param loginRequest 登录请求
+     * @return 登录响应
+     */
+    WechatLoginResponseDTO loginWithWeChat(WechatLoginRequestDTO loginRequest);
+    
+    /**
+     * 根据openid查询用户是否存在
+     *
+     * @param openid 微信openid
+     * @return 是否存在
+     */
+    boolean isUserExistByOpenid(String openid);
+    
+    /**
+     * 创建新用户
+     *
+     * @param openid 微信openid
+     * @param loginRequest 登录请求
+     * @return 用户ID
+     */
+    Long createUser(String openid, WechatLoginRequestDTO loginRequest);
+    
+    /**
+     * 获取用户信息
+     *
+     * @param openid 微信openid
+     * @return 登录响应
+     */
+    WechatLoginResponseDTO getUserInfo(String openid);
     
     /**
      * 用户注册
@@ -85,11 +129,11 @@ public interface UserService {
      * 查询用户列表
      * @param page 页码
      * @param size 每页大小
-     * @param userType 用户类型（必填）
-     * @param keyword 关键词搜索（可选，包含用户名、证件类型、证件号码、手机号字段的模糊搜索）
+     * @param username 用户名（可选）
+     * @param phone 电话（可选）
      * @return 用户列表
      */
-    Result<PageResult<User>> getUsers(int page, int size, int userType, String keyword);
+    Result<PageResult<User>> getUsers(int page, int size, String username, String phone);
     
     /**
      * 获取用户详情

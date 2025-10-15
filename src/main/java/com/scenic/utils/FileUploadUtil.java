@@ -1,45 +1,32 @@
 package com.scenic.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
-
-import javax.annotation.PostConstruct;
-
+import com.scenic.service.MinioService;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.UUID;
+
 /**
- * 文件上传工具类
+ * 文件上传工具类（仅支持MinIO）
  */
 @Component
 public class FileUploadUtil {
 
-    @Value("${file.upload.path:./uploads}")
-    private String uploadPath;
-
-    @PostConstruct
-    public void init() {
-        // 确保上传目录存在
-        File directory = new File(uploadPath);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-    }
+    @Autowired
+    private MinioService minioService;
 
     /**
-     * 上传文件
+     * 上传文件并返回永久访问URL
      *
      * @param file 文件
-     * @return 文件路径
-     * @throws IOException IO异常
+     * @return 文件访问URL
+     * @throws Exception 异常
      */
-    public String uploadFile(MultipartFile file) throws IOException {
+    public String uploadFile(MultipartFile file) throws Exception {
         if (file.isEmpty()) {
             throw new IOException("文件不能为空");
         }
@@ -54,14 +41,58 @@ public class FileUploadUtil {
         String extension = FilenameUtils.getExtension(originalFilename);
         String uniqueFilename = UUID.randomUUID().toString() + "." + extension;
 
-        // 构建文件保存路径
-        Path filePath = Paths.get(uploadPath, uniqueFilename);
+        // 使用MinIO存储并返回永久访问URL
+        return minioService.uploadFile(file, uniqueFilename);
+    }
 
-        // 保存文件
-        Files.write(filePath, file.getBytes());
+    /**
+     * 上传对象到指定存储桶
+     *
+     * @param bucketName 存储桶名称
+     * @param objectName 对象名称
+     * @param inputStream 输入流
+     * @param size 文件大小
+     * @param contentType 内容类型
+     */
+    public void putObject(String bucketName, String objectName, InputStream inputStream, long size, String contentType) throws Exception {
+        minioService.putObject(bucketName, objectName, inputStream, size, contentType);
+    }
 
-        // 返回相对路径
-        return uniqueFilename;
+    /**
+     * 生成临时访问URL
+     *
+     * @param objectName 对象名称
+     * @param expiry 过期时间（秒）
+     * @return 临时访问URL
+     * @throws Exception 异常
+     */
+    public String getPresignedUrl(String objectName, int expiry) throws Exception {
+        return minioService.getPresignedObjectUrl(objectName, expiry);
+    }
+    
+    /**
+     * 生成临时访问URL，指定存储桶
+     *
+     * @param bucket 存储桶名称
+     * @param objectName 对象名称
+     * @param expiry 过期时间（秒）
+     * @return 临时访问URL
+     * @throws Exception 异常
+     */
+    public String getPresignedUrl(String bucket, String objectName, int expiry) throws Exception {
+        return minioService.getPresignedObjectUrl(bucket, objectName, expiry);
+    }
+
+    /**
+     * 生成临时上传URL
+     *
+     * @param objectName 对象名称
+     * @param expiry 过期时间（秒）
+     * @return 临时上传URL
+     * @throws Exception 异常
+     */
+    public String getPresignedUploadUrl(String objectName, int expiry) throws Exception {
+        return minioService.getPresignedUploadUrl(objectName, expiry);
     }
 
     /**
@@ -72,20 +103,28 @@ public class FileUploadUtil {
      */
     public boolean deleteFile(String filename) {
         try {
-            Path filePath = Paths.get(uploadPath, filename);
-            return Files.deleteIfExists(filePath);
-        } catch (IOException e) {
+            // 使用MinIO删除
+            minioService.deleteFile(filename);
+            return true;
+        } catch (Exception e) {
             return false;
         }
     }
-
+    
     /**
-     * 获取文件完整路径
+     * 删除指定存储桶中的文件
      *
-     * @param filename 文件名
-     * @return 文件完整路径
+     * @param bucketName 存储桶名称
+     * @param objectName 对象名称
+     * @return 是否删除成功
      */
-    public String getFilePath(String filename) {
-        return Paths.get(uploadPath, filename).toString();
+    public boolean removeObject(String bucketName, String objectName) {
+        try {
+            // 使用MinIO删除
+            minioService.removeObject(bucketName, objectName);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

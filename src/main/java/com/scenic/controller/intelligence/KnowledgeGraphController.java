@@ -117,6 +117,8 @@ public class KnowledgeGraphController {
             return knowledgeGraphService.createKnowledgeGraph(knowledgeGraphDTO);
         } catch (IOException e) {
             return Result.error("文件上传失败: " + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("文件上传失败: " + e.getMessage());
         }
     }
     
@@ -130,7 +132,11 @@ public class KnowledgeGraphController {
     public Result<PageResult<KnowledgeGraphDTO>> getEnabledKnowledgeGraphs(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return knowledgeGraphService.getEnabledKnowledgeGraphs(page, size);
+        try {
+            return knowledgeGraphService.getEnabledKnowledgeGraphs(page, size);
+        } catch (Exception e) {
+            return Result.error("查询启用的知识图谱列表失败: " + e.getMessage());
+        }
     }
     
     /**

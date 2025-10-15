@@ -39,8 +39,6 @@
             <version>2.2.0</version>
         </dependency>
 
-    
-
         <!-- Spring Boot Starter Data Redis -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -79,8 +77,6 @@
             <scope>runtime</scope>
         </dependency>
         
-        
-        
         <!-- Spring Boot JDBC -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -104,6 +100,19 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.junit.vintage</groupId>
+                    <artifactId>junit-vintage-engine</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <!-- JUnit Jupiter -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
         
         <!-- PageHelper -->
@@ -119,7 +128,18 @@
             <artifactId>commons-io</artifactId>
             <version>2.11.0</version>
         </dependency>
+<<<<<<< HEAD
 
+=======
+        
+        <!-- MinIO客户端 -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.2</version>
+        </dependency>
+        
+>>>>>>> 791fcf2760b58949d8c1e05f2601678ca69c37f6
         <!-- Apache POI for Excel processing -->
         <dependency>
             <groupId>org.apache.poi</groupId>
