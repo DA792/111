@@ -120,6 +120,8 @@ public class KnowledgeBaseController {
             return knowledgeBaseService.createKnowledgeBase(knowledgeBaseDTO);
         } catch (IOException e) {
             return Result.error("文件上传失败: " + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("文件上传失败: " + e.getMessage());
         }
     }
     

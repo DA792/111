@@ -145,6 +145,11 @@ public class JwtUtil {
         redisTemplate.delete(redisKey);
     }
     
+    // 获取管理员密钥
+    public String getAdminSecret() {
+        return jwtConfig.getAdminSecret();
+    }
+    
     // 从JWT令牌中获取用户名
     public String getUsernameFromToken(String token, String secret) {
         return getClaimFromToken(token, Claims::getSubject, secret);

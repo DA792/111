@@ -88,6 +88,8 @@ public class TeamAppointmentController {
             return Result.success("文件上传成功", fileUrl);
         } catch (IOException e) {
             return Result.error("文件上传失败：" + e.getMessage());
+        } catch (Exception e) {
+            return Result.error("文件上传失败：" + e.getMessage());
         }
     }
     
@@ -200,6 +202,9 @@ public class TeamAppointmentController {
     @PostMapping(ADMIN_PREFIX + "/team-appointments/import")
     public Result<String> importTeamAppointmentForAdmin(@RequestParam("file") MultipartFile file) {
         try {
+
+
+
             // 解析Excel文件
             List<TeamAppointment> teamAppointments = excelParserUtil.parseTeamAppointmentExcel(file);
             
@@ -207,6 +212,7 @@ public class TeamAppointmentController {
             return appointmentService.batchSaveTeamAppointments(teamAppointments);
         } catch (Exception e) {
             return Result.error("文件解析失败：" + e.getMessage());
+
         }
     }
 }

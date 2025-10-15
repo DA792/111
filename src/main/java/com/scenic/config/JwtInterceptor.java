@@ -29,9 +29,10 @@ public class JwtInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String requestURI = request.getRequestURI();
         
-        // 放行管理后台登录接口和注册接口
+        // 放行管理后台登录接口、注册接口和头像API
         if (requestURI.equals("/api/manage/login") || 
-            requestURI.contains("/register")) {
+            requestURI.contains("/register") ||
+            requestURI.startsWith("/api/files/avatar/")) {
             return true;
         }
         
