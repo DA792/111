@@ -223,7 +223,7 @@ public class UserServiceImpl implements UserService {
                 existingUserResponse.setIsNewUser(false);
                 
                 // 生成新的JWT令牌
-                String token = jwtUtil.generateMiniAppToken(openid, userId);
+                String token = jwtUtil.generateMiniAppToken(userId, openid);
                 existingUserResponse.setToken(token);
                 
                 // 更新Redis中的会话信息
@@ -263,7 +263,7 @@ public class UserServiceImpl implements UserService {
             newUserResponse.setIsNewUser(true);
             
             // 生成JWT令牌
-            String token = jwtUtil.generateMiniAppToken(openid, userId);
+            String token = jwtUtil.generateMiniAppToken(userId, openid);
             newUserResponse.setToken(token);
             
             // 将会话信息存储到Redis中
@@ -277,7 +277,7 @@ public class UserServiceImpl implements UserService {
             existingUserResponse.setIsNewUser(false);
             
             // 生成JWT令牌
-            String token = jwtUtil.generateMiniAppToken(openid, user.getId());
+            String token = jwtUtil.generateMiniAppToken(user.getId(), openid);
             existingUserResponse.setToken(token);
             
             // 将会话信息存储到Redis中

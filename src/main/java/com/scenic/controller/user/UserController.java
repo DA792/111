@@ -57,7 +57,7 @@ public class UserController {
      * @return 登录结果
      */
     @PostMapping(MINIAPP_PREFIX + "/login/wechat")
-    public Result<String> loginWithWeChatForMiniapp(@RequestParam String code) {
+    public Result<Object> loginWithWeChatForMiniapp(@RequestParam String code) {
         return userService.loginWithWeChat(code);
     }
     
