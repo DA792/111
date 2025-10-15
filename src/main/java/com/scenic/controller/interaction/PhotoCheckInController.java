@@ -125,13 +125,28 @@ public class PhotoCheckInController {
         return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
     }
 
-        /**
+    /**
      * 管理后台端 - 获取当前照片打卡记录详情
      * @return 照片打卡记录列表
      */
     @GetMapping(ADMIN_PREFIX + "/photo-check-in/info/{photoCheckInId}")
     public Result<PhotoCheckInVO> getPhotoCheckInsInfoForAdmin(@PathVariable Long photoCheckInId) {
         return photoCheckInService.getPhotoCheckInsInfoForAdmin(photoCheckInId);
+    }
+
+    /**
+     * 管理后台端 - 新增照片打卡记录
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件
+     * @return 操作结果
+     */
+    @PostMapping(ADMIN_PREFIX + "/photo-check-in/add")
+    public Result<String> AddPhotoCheckInsForAdmin(
+            @RequestParam("title") String title,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam("photo") MultipartFile photo) {
+        return photoCheckInService.addPhotoCheckInForAdmin(title, categoryId, photo);
     }
 
 

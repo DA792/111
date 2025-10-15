@@ -2,6 +2,8 @@ package com.scenic.service.interaction;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
@@ -75,4 +77,13 @@ public interface PhotoCheckInService {
      * @return 照片打卡记录详情
      */
     Result<PhotoCheckInVO> getPhotoCheckInsInfoForAdmin(Long photoCheckInId);
+    
+    /**
+     * 管理后台端 - 新增照片打卡记录
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件
+     * @return 操作结果
+     */
+    Result<String> addPhotoCheckInForAdmin(String title, Long categoryId, MultipartFile photo);
 }

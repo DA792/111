@@ -9,6 +9,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.github.pagehelper.PageHelper;
 import com.scenic.common.dto.PageResult;
@@ -438,6 +439,98 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             return Result.success("获取成功", photoCheckInVO);
         } catch (Exception e) {
             return Result.error("获取照片打卡详情失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 管理后台端 - 新增照片打卡记录
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件
+     * @return 操作结果
+     */
+    @Override
+    public Result<String> addPhotoCheckInForAdmin(String title, Long categoryId, MultipartFile photo) {
+        try {
+            // 参数验证
+            if (title == null || title.trim().isEmpty()) {
+                return Result.error("标题不能为空");
+            }
+            if (categoryId == null) {
+                return Result.error("分类不能为空");
+            }
+            if (photo == null || photo.isEmpty()) {
+                return Result.error("照片不能为空");
+            }
+            
+            // 检查分类是否存在且启用
+            CheckinCategory category = checkinCategoryMapper.selectById(categoryId);
+            if (category == null || category.getStatus() != 1) {
+                return Result.error("指定的分类不存在或已禁用");
+            }
+            
+            // 上传文件
+            String originalFilename = photo.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                return Result.error("文件名不能为空");
+            }
+            
+            // 生成唯一文件名
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String uniqueFilename = java.util.UUID.randomUUID().toString() + fileExtension;
+            
+            // 保存文件到上传目录
+            java.nio.file.Path uploadPath = java.nio.file.Paths.get("./uploads", uniqueFilename);
+            java.nio.file.Files.createDirectories(uploadPath.getParent());
+            java.nio.file.Files.write(uploadPath, photo.getBytes());
+            
+            // 保存文件信息到resource_file表
+            ResourceFile resourceFile = new ResourceFile();
+            resourceFile.setFileName(originalFilename);
+            resourceFile.setFileKey(uniqueFilename);
+            resourceFile.setBucketName("local"); // 本地存储
+            resourceFile.setFileSize(photo.getSize());
+            resourceFile.setMimeType(photo.getContentType());
+            resourceFile.setFileType(1); // 1表示图片
+            resourceFile.setCreateTime(java.time.LocalDateTime.now());
+            resourceFile.setUpdateTime(java.time.LocalDateTime.now());
+            resourceFile.setCreateBy(1L); // 管理员ID
+            resourceFile.setUpdateBy(1L);
+            
+            resourceFileMapper.insert(resourceFile);
+            
+            // 创建照片打卡记录
+            PhotoCheckIn photoCheckIn = new PhotoCheckIn();
+            photoCheckIn.setTitle(title.trim());
+            photoCheckIn.setCategoryId(categoryId);
+            photoCheckIn.setPhotoId(resourceFile.getId());
+            photoCheckIn.setUserId(1L); // 管理员ID
+            photoCheckIn.setUserName("管理员");
+            photoCheckIn.setUserAvatar(""); // 默认头像
+            photoCheckIn.setContent(""); // 默认内容为空
+            photoCheckIn.setLikeCount(0);
+            photoCheckIn.setViewCount(0);
+            photoCheckIn.setStatus(1); // 启用状态
+            photoCheckIn.setVersion(0);
+            photoCheckIn.setDeleted(false);
+            photoCheckIn.setCreateTime(java.time.LocalDateTime.now());
+            photoCheckIn.setUpdateTime(java.time.LocalDateTime.now());
+            photoCheckIn.setCreateBy(1L);
+            photoCheckIn.setUpdateBy(1L);
+            
+            // 保存到数据库
+            photoCheckInMapper.insert(photoCheckIn);
+            
+            // 清除相关缓存
+            redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
+            redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + categoryId);
+            redisTemplate.delete(CHECKIN_CATEGORY_LIST_CACHE_KEY);
+            // 清除分页缓存
+            clearPageCaches();
+            
+            return Result.success("操作成功", "照片打卡记录添加成功，ID: " + photoCheckIn.getId());
+        } catch (Exception e) {
+            return Result.error("添加照片打卡记录失败：" + e.getMessage());
         }
     }
 }
