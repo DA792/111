@@ -19,13 +19,15 @@ import com.scenic.entity.appointment.ParkOpenTime;
 public interface ParkOpenTimeMapper {
     
     /**
-     * 插入开放时间配置
+     * 插入或更新开放时间配置
      * @param openTime 开放时间配置
      * @return 影响行数
      */
     @Insert("INSERT INTO park_open_time_config(config_date, is_closed, day_type, create_time, update_time, create_by, update_by) " +
-            "VALUES(#{configDate}, #{isClosed}, #{dayType}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
-    int insert(ParkOpenTime openTime);
+            "VALUES(#{configDate}, #{isClosed}, #{dayType}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}) " +
+            "ON DUPLICATE KEY UPDATE " +
+            "is_closed = VALUES(is_closed), day_type = VALUES(day_type), update_time = VALUES(update_time), update_by = VALUES(update_by)")
+    int insertOrUpdate(ParkOpenTime openTime);
     
     /**
      * 根据ID更新开放时间配置

@@ -16,7 +16,6 @@ import com.scenic.entity.appointment.TeamMember;
  * 团队预约DTO类
  */
 public class TeamAppointmentDTO {
-    @NotBlank(message = "预约编号不能为空")
     @Size(max = 50, message = "预约编号长度不超过50字符")
     private String appointmentNo;
     
@@ -44,12 +43,14 @@ public class TeamAppointmentDTO {
     @NotNull(message = "预约日期不能为空")
     private LocalDateTime appointmentDate;
     
-    private String appointmentTime;
+    private LocalDateTime appointmentTime;
     
     @Size(max = 500, message = "备注长度不能超过500个字符")
     private String remark;
     
     private String status; // 用于存储数字字符串，如"1"表示待审核
+    
+    private Long formFileId; // 表单文件ID
     
     private List<TeamMember> members;
     
@@ -131,11 +132,11 @@ public class TeamAppointmentDTO {
         this.appointmentDate = appointmentDate;
     }
 
-    public String getAppointmentTime() {
+    public LocalDateTime getAppointmentTime() {
         return appointmentTime;
     }
 
-    public void setAppointmentTime(String appointmentTime) {
+    public void setAppointmentTime(LocalDateTime appointmentTime) {
         this.appointmentTime = appointmentTime;
     }
 
@@ -171,6 +172,14 @@ public class TeamAppointmentDTO {
         this.createBy = createBy;
     }
 
+    public Long getFormFileId() {
+        return formFileId;
+    }
+
+    public void setFormFileId(Long formFileId) {
+        this.formFileId = formFileId;
+    }
+
     @Override
     public String toString() {
         return "TeamAppointmentDTO{" +
@@ -183,9 +192,10 @@ public class TeamAppointmentDTO {
                 ", scenicSpotId=" + scenicSpotId +
                 ", scenicSpotName='" + scenicSpotName + '\'' +
                 ", appointmentDate=" + appointmentDate +
-                ", appointmentTime='" + appointmentTime + '\'' +
+                ", appointmentTime=" + appointmentTime +
                 ", remark='" + remark + '\'' +
                 ", status='" + status + '\'' +
+                ", formFileId=" + formFileId +
                 ", members=" + members +
                 ", createBy='" + createBy + '\'' +
                 '}';

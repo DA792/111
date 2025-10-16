@@ -50,7 +50,7 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
     }
     
     /**
-     * 批量保存开放时间配置
+     * 批量保存开放时间配置（新增或更新）
      * @param openTimeList 开放时间配置列表
      * @return 保存结果
      */
@@ -70,8 +70,8 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
                 openTime.setCreateTime(java.time.LocalDateTime.now());
                 openTime.setUpdateTime(java.time.LocalDateTime.now());
                 
-                // 插入数据
-                parkOpenTimeMapper.insert(openTime);
+                // 插入或更新数据
+                parkOpenTimeMapper.insertOrUpdate(openTime);
             }
             
             return Result.success("开放时间配置保存成功");

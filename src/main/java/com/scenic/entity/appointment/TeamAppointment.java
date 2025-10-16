@@ -17,9 +17,10 @@ public class TeamAppointment {
     private Long scenicSpotId;
     private String scenicSpotName;
     private LocalDateTime appointmentDate;
-    private String appointmentTime;
+    private LocalDateTime appointmentTime;
     private String remark;
     private Integer status; // 预约状态：0-已取消，1-待审核，2-已完成
+    private Long formFileId; // 表单文件ID
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Long createBy;
@@ -116,11 +117,11 @@ public class TeamAppointment {
         this.appointmentDate = appointmentDate;
     }
 
-    public String getAppointmentTime() {
+    public LocalDateTime getAppointmentTime() {
         return appointmentTime;
     }
 
-    public void setAppointmentTime(String appointmentTime) {
+    public void setAppointmentTime(LocalDateTime appointmentTime) {
         this.appointmentTime = appointmentTime;
     }
 
@@ -164,6 +165,14 @@ public class TeamAppointment {
         this.createBy = createBy;
     }
 
+    public Long getFormFileId() {
+        return formFileId;
+    }
+
+    public void setFormFileId(Long formFileId) {
+        this.formFileId = formFileId;
+    }
+
     @Override
     public String toString() {
         return "TeamAppointment{" +
@@ -178,9 +187,10 @@ public class TeamAppointment {
                 ", scenicSpotId=" + scenicSpotId +
                 ", scenicSpotName='" + scenicSpotName + '\'' +
                 ", appointmentDate=" + appointmentDate +
-                ", appointmentTime='" + appointmentTime + '\'' +
+                ", appointmentTime=" + appointmentTime +
                 ", remark='" + remark + '\'' +
                 ", status='" + status + '\'' +
+                ", formFileId=" + formFileId +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", createBy=" + createBy +

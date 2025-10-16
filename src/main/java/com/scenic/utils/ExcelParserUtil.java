@@ -129,7 +129,18 @@ public class ExcelParserUtil {
             
             // 预约时间
             String appointmentTimeStr = getCellValueAsString(row.getCell(6));
-            teamAppointment.setAppointmentTime(appointmentTimeStr);
+            if (appointmentTimeStr != null && !appointmentTimeStr.isEmpty()) {
+                try {
+                    // 尝试解析为LocalDateTime
+                    teamAppointment.setAppointmentTime(LocalDateTime.parse(appointmentTimeStr));
+                } catch (Exception e) {
+                    // 如果解析失败，设置为当前时间
+                    teamAppointment.setAppointmentTime(LocalDateTime.now());
+                }
+            } else {
+                // 如果没有提供预约时间，设置为当前时间
+                teamAppointment.setAppointmentTime(LocalDateTime.now());
+            }
             
             // 备注
             teamAppointment.setRemark(getCellValueAsString(row.getCell(7)));

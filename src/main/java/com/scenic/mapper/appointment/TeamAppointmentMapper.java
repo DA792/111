@@ -41,7 +41,7 @@ public interface TeamAppointmentMapper {
             "team_size = #{numberOfPeople}, scenic_spot_id = #{scenicSpotId}, " +
             "scenic_spot_name = #{scenicSpotName}, appointment_date = #{appointmentDate}, " +
             "appointment_time = #{appointmentTime}, remarks = #{remark}, status = #{status}, " +
-            "update_time = #{updateTime} WHERE id = #{id}")
+            "form_file_id = #{formFileId}, update_time = #{updateTime} WHERE id = #{id}")
     int updateById(TeamAppointment teamAppointment);
     
     /**

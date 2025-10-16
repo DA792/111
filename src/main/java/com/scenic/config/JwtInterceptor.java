@@ -34,7 +34,8 @@ public class JwtInterceptor implements HandlerInterceptor {
         
         // 放行管理后台登录接口和注册接口
         if (requestURI.equals("/api/manage/login") || 
-            requestURI.contains("/register")) {
+            requestURI.contains("/register") ||
+            (requestURI.equals("/api/manage/users") && method.equals("POST"))) {
             System.out.println("放行登录或注册接口: " + requestURI);
             return true;
         }
