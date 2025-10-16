@@ -131,9 +131,10 @@ public interface UserService {
      * @param size 每页大小
      * @param username 用户名（可选）
      * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户列表
      */
-    Result<PageResult<User>> getUsers(int page, int size, String username, String phone);
+    Result<PageResult<User>> getUsers(int page, int size, String username, String phone, Integer userType);
     
     /**
      * 小程序端查询用户列表

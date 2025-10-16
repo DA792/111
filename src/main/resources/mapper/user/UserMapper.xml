@@ -41,6 +41,9 @@
             <if test="phone != null and phone != ''">
                 AND phone LIKE CONCAT('%', #{phone}, '%')
             </if>
+            <if test="userType != null">
+                AND user_type = #{userType}
+            </if>
         </where>
         LIMIT #{offset}, #{limit}
     </select>
@@ -55,6 +58,9 @@
             </if>
             <if test="phone != null and phone != ''">
                 AND phone LIKE CONCAT('%', #{phone}, '%')
+            </if>
+            <if test="userType != null">
+                AND user_type = #{userType}
             </if>
         </where>
     </select>

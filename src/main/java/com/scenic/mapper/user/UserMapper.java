@@ -72,10 +72,11 @@ public interface UserMapper {
      * @param limit 限制数量
      * @param username 用户名（可选）
      * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户列表
      */
     List<User> selectList(@Param("offset") int offset, @Param("limit") int limit, 
-                          @Param("username") String username, @Param("phone") String phone);
+                          @Param("username") String username, @Param("phone") String phone, @Param("userType") Integer userType);
     
     /**
      * 小程序端查询用户列表
@@ -91,9 +92,10 @@ public interface UserMapper {
      * 查询用户总数
      * @param username 用户名（可选）
      * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户总数
      */
-    int selectCount(@Param("username") String username, @Param("phone") String phone);
+    int selectCount(@Param("username") String username, @Param("phone") String phone, @Param("userType") Integer userType);
     
     /**
      * 小程序端查询用户总数

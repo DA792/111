@@ -291,6 +291,7 @@ public class UserController {
      * @param size 每页大小
      * @param username 用户名（可选）
      * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户列表
      */
     @GetMapping(ADMIN_PREFIX + "/users")
@@ -298,8 +299,9 @@ public class UserController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String username,
-            @RequestParam(required = false) String phone) {
-        return userService.getUsers(page, size, username, phone);
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) Integer userType) {
+        return userService.getUsers(page, size, username, phone, userType);
     }
     
     /**
@@ -352,5 +354,26 @@ public class UserController {
     @PutMapping(ADMIN_PREFIX + "/users/{userId}/reset-password")
     public Result<String> resetPasswordForAdmin(@PathVariable Long userId) {
         return userService.resetPassword(userId);
+    }
+    
+    /**
+     * 管理后台端 - 删除用户
+     * @param userId 用户ID
+     * @param updateBy 操作人ID
+     * @return 删除结果
+     */
+    @DeleteMapping(ADMIN_PREFIX + "/users/{userId}")
+    public Result<String> deleteUserForAdmin(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String updateBy) {
+        Long updateById = null;
+        if (updateBy != null && !updateBy.isEmpty()) {
+            try {
+                updateById = Long.parseLong(updateBy);
+            } catch (NumberFormatException e) {
+                // 忽略转换错误
+            }
+        }
+        return userService.deleteUser(userId);
     }
 }

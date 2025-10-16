@@ -610,14 +610,14 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
-    public Result<PageResult<User>> getUsers(int page, int size, String username, String phone) {
+    public Result<PageResult<User>> getUsers(int page, int size, String username, String phone, Integer userType) {
         try {
             // 实际项目中需要从数据库查询用户列表
             int offset = (page - 1) * size;
-            List<User> users = userMapper.selectList(offset, size, username, phone);
+            List<User> users = userMapper.selectList(offset, size, username, phone, userType);
             
             // 查询总数
-            int total = userMapper.selectCount(username, phone);
+            int total = userMapper.selectCount(username, phone, userType);
             
             return Result.success("查询成功", PageResult.of(total, size, page, users));
         } catch (Exception e) {
