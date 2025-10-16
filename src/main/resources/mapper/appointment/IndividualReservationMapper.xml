@@ -134,6 +134,42 @@
         </where>
     </select>
 
+    <!-- 根据证件号码和状态查询个人预约（分页） -->
+    <select id="selectByIdNumberAndStatus" resultMap="IndividualReservationResultMap">
+        SELECT 
+        ir.id, ir.reservation_no, ir.user_id, ir.scenic_id, ir.visit_date, ir.time_slot, 
+        ir.adult_count, ir.child_count, ir.total_count, ir.status, ir.verification_time, 
+        ir.operator_id, ir.verification_location, ir.device_info, ir.verification_remark, 
+        ir.cancel_time, ir.cancel_reason, ir.version, ir.deleted, ir.create_time, ir.update_time, 
+        ir.create_by, ir.update_by,
+        irp.name as contact_name, irp.id_type as contact_id_type, irp.id_number as contact_id_number, irp.phone as contact_phone
+        FROM individual_reservation ir
+        LEFT JOIN individual_reservation_person irp ON ir.id = irp.reservation_id AND irp.is_contact = 1 AND irp.deleted = 0
+        <where>
+            ir.deleted = 0
+            AND irp.id_number = #{idNumber}
+            <if test="status != null">
+                AND ir.status = #{status}
+            </if>
+        </where>
+        ORDER BY ir.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据证件号码和状态查询个人预约总数 -->
+    <select id="selectCountByIdNumberAndStatus" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM individual_reservation ir
+        LEFT JOIN individual_reservation_person irp ON ir.id = irp.reservation_id AND irp.is_contact = 1 AND irp.deleted = 0
+        <where>
+            ir.deleted = 0
+            AND irp.id_number = #{idNumber}
+            <if test="status != null">
+                AND ir.status = #{status}
+            </if>
+        </where>
+    </select>
+
     <!-- 更新个人预约信息（动态更新） -->
     <update id="updateById" parameterType="com.scenic.entity.appointment.IndividualReservation">
         UPDATE individual_reservation

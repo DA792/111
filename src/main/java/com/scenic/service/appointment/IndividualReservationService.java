@@ -92,4 +92,14 @@ public interface IndividualReservationService {
      */
     @Transactional(rollbackFor = Exception.class)
     Result<String> verifyReservation(Long id, Long operatorId, String verificationLocation, String deviceInfo, String verificationRemark, Long updateBy);
+    
+    /**
+     * 根据证件号码和状态查询个人预约（分页）
+     * @param idNumber 证件号码
+     * @param status 状态（可选）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 个人预约列表
+     */
+    Result<PageResult<IndividualReservation>> getReservationsByIdNumber(String idNumber, Integer status, int page, int size);
 }
