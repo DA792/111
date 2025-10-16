@@ -78,6 +78,16 @@ public interface UserMapper {
                           @Param("username") String username, @Param("phone") String phone);
     
     /**
+     * 小程序端查询用户列表
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @param nickname 昵称（可选）
+     * @return 用户列表
+     */
+    List<User> selectListForMiniapp(@Param("offset") int offset, @Param("limit") int limit, 
+                                    @Param("nickname") String nickname);
+    
+    /**
      * 查询用户总数
      * @param username 用户名（可选）
      * @param phone 电话（可选）
@@ -86,10 +96,24 @@ public interface UserMapper {
     int selectCount(@Param("username") String username, @Param("phone") String phone);
     
     /**
+     * 小程序端查询用户总数
+     * @param nickname 昵称（可选）
+     * @return 用户总数
+     */
+    int selectCountForMiniapp(@Param("nickname") String nickname);
+    
+    /**
      * 根据微信OpenID统计用户数量
      * @param openId 微信OpenID
      * @return 用户数量
      */
     @Select("SELECT COUNT(*) FROM user WHERE open_id = #{openId}")
     int countByOpenId(String openId);
+    
+    /**
+     * 根据ID列表查询用户
+     * @param ids 用户ID列表
+     * @return 用户列表
+     */
+    List<User> selectByIds(@Param("ids") List<Long> ids);
 }

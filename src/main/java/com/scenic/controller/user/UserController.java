@@ -72,6 +72,22 @@ public class UserController {
     }
     
     /**
+     * 小程序端 - 查询用户列表
+     * 用户可以查询其他用户的基本信息
+     * @param page 页码
+     * @param size 每页大小
+     * @param nickname 昵称（可选）
+     * @return 用户列表
+     */
+    @GetMapping(MINIAPP_PREFIX + "/users")
+    public Result<PageResult<User>> getUsersForMiniapp(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String nickname) {
+        return userService.getUsersForMiniapp(page, size, nickname);
+    }
+    
+    /**
      * 小程序端 - 获取用户信息
      * @param userId 用户ID
      * @return 用户信息
@@ -92,6 +108,31 @@ public class UserController {
             @PathVariable Long userId,
             @RequestBody User user) {
         return userService.updateUserInfo(userId, user);
+    }
+    
+    /**
+     * 小程序端 - 获取用户详情
+     * 用户可以查看其他用户的详细信息
+     * @param userId 用户ID
+     * @return 用户详情
+     */
+    @GetMapping(MINIAPP_PREFIX + "/users/{userId}/detail")
+    public Result<User> getUserDetailForMiniapp(@PathVariable Long userId) {
+        return userService.getUserDetailForMiniapp(userId);
+    }
+    
+    /**
+     * 小程序端 - 更新用户详情
+     * 用户可以编辑其他用户的详细信息
+     * @param userId 用户ID
+     * @param user 用户信息
+     * @return 更新结果
+     */
+    @PutMapping(MINIAPP_PREFIX + "/users/{userId}/detail")
+    public Result<String> updateUserDetailForMiniapp(
+            @PathVariable Long userId,
+            @RequestBody User user) {
+        return userService.updateUserDetailForMiniapp(userId, user);
     }
     
     /**
@@ -279,6 +320,28 @@ public class UserController {
     @PostMapping(ADMIN_PREFIX + "/users")
     public Result<String> createUserForAdmin(@RequestBody User user) {
         return userService.createUser(user);
+    }
+    
+    /**
+     * 管理后台端 - 更新用户信息
+     * @param userId 用户ID
+     * @param user 用户信息
+     * @return 更新结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/users/{userId}")
+    public Result<String> updateUserForAdmin(
+            @PathVariable Long userId,
+            @RequestBody User user,
+            @RequestParam(required = false) String updateBy) {
+        // 设置updateBy字段
+        if (updateBy != null && !updateBy.isEmpty()) {
+            try {
+                user.setUpdateBy(Long.parseLong(updateBy));
+            } catch (NumberFormatException e) {
+                // 忽略转换错误
+            }
+        }
+        return userService.updateUser(userId, user);
     }
     
     /**

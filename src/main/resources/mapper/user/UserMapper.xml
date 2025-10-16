@@ -58,4 +58,39 @@
             </if>
         </where>
     </select>
+    
+    <!-- 小程序端查询用户列表 -->
+    <select id="selectListForMiniapp" resultMap="UserResultMap">
+        SELECT 
+        <include refid="User_Column_List"/>
+        FROM user
+        <where>
+            <if test="nickname != null and nickname != ''">
+                real_name LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+        </where>
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 小程序端查询用户总数 -->
+    <select id="selectCountForMiniapp" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM user
+        <where>
+            <if test="nickname != null and nickname != ''">
+                real_name LIKE CONCAT('%', #{nickname}, '%')
+            </if>
+        </where>
+    </select>
+    
+    <!-- 根据ID列表查询用户 -->
+    <select id="selectByIds" resultMap="UserResultMap">
+        SELECT 
+        <include refid="User_Column_List"/>
+        FROM user
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

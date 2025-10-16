@@ -330,12 +330,18 @@ public class UserServiceImpl implements UserService {
         user.setRealName(loginRequest.getNickName());
         user.setUserType(1); // 普通用户
         user.setStatus(1); // 正常状态
+        // idType不再需要设置，数据表已修改为允许为空
         user.setRegisterTime(LocalDateTime.now());
         user.setLastLoginTime(LocalDateTime.now());
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
         user.setDeleted(0);
         user.setVersion(0);
+        
+        // 设置默认密码并加密
+        String defaultPassword = "123456"; // 默认密码
+        String encodedPassword = passwordUtil.encodePassword(defaultPassword);
+        user.setPassword(encodedPassword);
         
         // 保存用户
         userMapper.insert(user);
@@ -620,6 +626,21 @@ public class UserServiceImpl implements UserService {
     }
     
     @Override
+    public Result<PageResult<User>> getUsersForMiniapp(int page, int size, String nickname) {
+        try {
+            int offset = (page - 1) * size;
+            List<User> users = userMapper.selectListForMiniapp(offset, size, nickname);
+            
+            // 查询总数
+            int total = userMapper.selectCountForMiniapp(nickname);
+            
+            return Result.success("查询成功", PageResult.of(total, size, page, users));
+        } catch (Exception e) {
+            return Result.error("查询失败：" + e.getMessage());
+        }
+    }
+    
+    @Override
     public Result<User> getUserDetail(Long userId) {
         try {
             User user = userMapper.selectById(userId);
@@ -630,6 +651,77 @@ public class UserServiceImpl implements UserService {
             }
         } catch (Exception e) {
             return Result.error("获取失败：" + e.getMessage());
+        }
+    }
+    
+    @Override
+    public Result<User> getUserDetailForMiniapp(Long userId) {
+        try {
+            User user = userMapper.selectById(userId);
+            if (user != null) {
+                return Result.success("获取成功", user);
+            } else {
+                return Result.error("用户不存在");
+            }
+        } catch (Exception e) {
+            return Result.error("获取失败：" + e.getMessage());
+        }
+    }
+    
+    @Override
+    public Result<String> updateUserDetailForMiniapp(Long userId, User user) {
+        try {
+            User existingUser = userMapper.selectById(userId);
+            if (existingUser == null) {
+                return Result.error("用户不存在");
+            }
+            
+            // 只更新非空字段，避免覆盖已有数据
+            if (user.getUserName() != null) {
+                existingUser.setUserName(user.getUserName());
+            }
+            if (user.getRealName() != null) {
+                existingUser.setRealName(user.getRealName());
+            }
+            if (user.getIdType() != null) {
+                existingUser.setIdType(user.getIdType());
+            }
+            if (user.getIdNumber() != null) {
+                existingUser.setIdNumber(user.getIdNumber());
+            }
+            if (user.getPhone() != null) {
+                existingUser.setPhone(user.getPhone());
+            }
+            if (user.getEmail() != null) {
+                existingUser.setEmail(user.getEmail());
+            }
+            if (user.getAvatarFileId() != null) {
+                existingUser.setAvatarFileId(user.getAvatarFileId());
+            }
+            if (user.getOpenId() != null) {
+                existingUser.setOpenId(user.getOpenId());
+            }
+            if (user.getUserType() != null) {
+                existingUser.setUserType(user.getUserType());
+            }
+            if (user.getStatus() != null) {
+                existingUser.setStatus(user.getStatus());
+            }
+            if (user.getEnabled() != null) {
+                existingUser.setEnabled(user.getEnabled());
+            }
+            
+            // 更新时间
+            existingUser.setUpdateTime(java.time.LocalDateTime.now());
+            
+            int result = userMapper.updateById(existingUser);
+            if (result > 0) {
+                return Result.success("更新成功", "用户信息更新成功");
+            } else {
+                return Result.error("更新失败");
+            }
+        } catch (Exception e) {
+            return Result.error("更新失败：" + e.getMessage());
         }
     }
     
@@ -673,10 +765,48 @@ public class UserServiceImpl implements UserService {
                 return Result.error("用户不存在");
             }
             
-            // 更新用户信息
-            user.setId(userId);
-            user.setUpdateTime(java.time.LocalDateTime.now());
-            int result = userMapper.updateById(user);
+            // 只更新非空字段，避免覆盖已有数据
+            if (user.getUserName() != null) {
+                existingUser.setUserName(user.getUserName());
+            }
+            if (user.getRealName() != null) {
+                existingUser.setRealName(user.getRealName());
+            }
+            if (user.getIdType() != null) {
+                existingUser.setIdType(user.getIdType());
+            }
+            if (user.getIdNumber() != null) {
+                existingUser.setIdNumber(user.getIdNumber());
+            }
+            if (user.getPhone() != null) {
+                existingUser.setPhone(user.getPhone());
+            }
+            if (user.getEmail() != null) {
+                existingUser.setEmail(user.getEmail());
+            }
+            if (user.getAvatarFileId() != null) {
+                existingUser.setAvatarFileId(user.getAvatarFileId());
+            }
+            if (user.getOpenId() != null) {
+                existingUser.setOpenId(user.getOpenId());
+            }
+            if (user.getUserType() != null) {
+                existingUser.setUserType(user.getUserType());
+            }
+            if (user.getStatus() != null) {
+                existingUser.setStatus(user.getStatus());
+            }
+            if (user.getEnabled() != null) {
+                existingUser.setEnabled(user.getEnabled());
+            }
+            if (user.getUpdateBy() != null) {
+                existingUser.setUpdateBy(user.getUpdateBy());
+            }
+            
+            // 更新时间
+            existingUser.setUpdateTime(java.time.LocalDateTime.now());
+            
+            int result = userMapper.updateById(existingUser);
             if (result > 0) {
                 return Result.success("更新成功", "用户信息更新成功");
             } else {
