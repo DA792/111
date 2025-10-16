@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.user.UserFrequentMemberMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="UserFrequentMemberResultMap" type="com.scenic.entity.user.UserFrequentMember">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="id_type" property="idType" jdbcType="TINYINT"/>
+        <result column="id_number" property="idNumber" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="gender" property="gender" jdbcType="TINYINT"/>
+        <result column="is_default" property="isDefault" jdbcType="TINYINT"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="version" property="version" jdbcType="INTEGER"/>
+        <result column="deleted" property="deleted" jdbcType="TINYINT"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="BIGINT"/>
+        <result column="update_by" property="updateBy" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="UserFrequentMember_Column_List">
+        id, user_id, name, id_type, id_number, phone, gender, is_default, status, version, deleted, create_time, update_time, create_by, update_by
+    </sql>
+
+    <!-- 根据用户ID查询常用预约人列表（XML方式） -->
+    <select id="selectByUserId" resultMap="UserFrequentMemberResultMap">
+        SELECT 
+        <include refid="UserFrequentMember_Column_List"/>
+        FROM user_frequent_member
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY is_default DESC, create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据用户ID和姓名查询常用预约人列表（XML方式） -->
+    <select id="selectByName" resultMap="UserFrequentMemberResultMap">
+        SELECT 
+        <include refid="UserFrequentMember_Column_List"/>
+        FROM user_frequent_member
+        <where>
+            user_id = #{userId} AND deleted = 0
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 根据用户ID和姓名查询常用预约人总数（XML方式） -->
+    <select id="selectCountByName" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM user_frequent_member
+        <where>
+            user_id = #{userId} AND deleted = 0
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+    </select>
+</mapper>

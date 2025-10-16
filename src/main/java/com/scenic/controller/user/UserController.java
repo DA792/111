@@ -57,7 +57,7 @@ public class UserController {
      * @return 登录结果
      */
     @PostMapping(MINIAPP_PREFIX + "/login/wechat")
-    public Result<String> loginWithWeChatForMiniapp(@RequestParam String code) {
+    public Result<Object> loginWithWeChatForMiniapp(@RequestParam String code) {
         return userService.loginWithWeChat(code);
     }
     
@@ -69,6 +69,22 @@ public class UserController {
     @PostMapping(MINIAPP_PREFIX + "/register")
     public Result<String> registerForMiniapp(@RequestBody User user) {
         return userService.register(user);
+    }
+    
+    /**
+     * 小程序端 - 查询用户列表
+     * 用户可以查询其他用户的基本信息
+     * @param page 页码
+     * @param size 每页大小
+     * @param nickname 昵称（可选）
+     * @return 用户列表
+     */
+    @GetMapping(MINIAPP_PREFIX + "/users")
+    public Result<PageResult<User>> getUsersForMiniapp(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String nickname) {
+        return userService.getUsersForMiniapp(page, size, nickname);
     }
     
     /**
@@ -92,6 +108,31 @@ public class UserController {
             @PathVariable Long userId,
             @RequestBody User user) {
         return userService.updateUserInfo(userId, user);
+    }
+    
+    /**
+     * 小程序端 - 获取用户详情
+     * 用户可以查看其他用户的详细信息
+     * @param userId 用户ID
+     * @return 用户详情
+     */
+    @GetMapping(MINIAPP_PREFIX + "/users/{userId}/detail")
+    public Result<User> getUserDetailForMiniapp(@PathVariable Long userId) {
+        return userService.getUserDetailForMiniapp(userId);
+    }
+    
+    /**
+     * 小程序端 - 更新用户详情
+     * 用户可以编辑其他用户的详细信息
+     * @param userId 用户ID
+     * @param user 用户信息
+     * @return 更新结果
+     */
+    @PutMapping(MINIAPP_PREFIX + "/users/{userId}/detail")
+    public Result<String> updateUserDetailForMiniapp(
+            @PathVariable Long userId,
+            @RequestBody User user) {
+        return userService.updateUserDetailForMiniapp(userId, user);
     }
     
     /**
@@ -248,17 +289,19 @@ public class UserController {
      * 管理后台端 - 查询用户列表
      * @param page 页码
      * @param size 每页大小
-     * @param userType 用户类型（必填）
-     * @param keyword 关键词搜索（可选，包含用户名、证件类型、证件号码、手机号字段的模糊搜索）
+     * @param username 用户名（可选）
+     * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户列表
      */
     @GetMapping(ADMIN_PREFIX + "/users")
     public Result<PageResult<User>> getUsersForAdmin(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam int userType,
-            @RequestParam(required = false) String keyword) {
-        return userService.getUsers(page, size, userType, keyword);
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) Integer userType) {
+        return userService.getUsers(page, size, username, phone, userType);
     }
     
     /**
@@ -274,13 +317,33 @@ public class UserController {
     /**
      * 管理后台端 - 创建用户
      * @param user 用户信息
-     * @param createBy 创建人ID
      * @return 创建结果
      */
     @PostMapping(ADMIN_PREFIX + "/users")
-    public Result<String> createUserForAdmin(@RequestBody User user, @RequestParam Long createBy) {
-        user.setCreateBy(createBy);
+    public Result<String> createUserForAdmin(@RequestBody User user) {
         return userService.createUser(user);
+    }
+    
+    /**
+     * 管理后台端 - 更新用户信息
+     * @param userId 用户ID
+     * @param user 用户信息
+     * @return 更新结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/users/{userId}")
+    public Result<String> updateUserForAdmin(
+            @PathVariable Long userId,
+            @RequestBody User user,
+            @RequestParam(required = false) String updateBy) {
+        // 设置updateBy字段
+        if (updateBy != null && !updateBy.isEmpty()) {
+            try {
+                user.setUpdateBy(Long.parseLong(updateBy));
+            } catch (NumberFormatException e) {
+                // 忽略转换错误
+            }
+        }
+        return userService.updateUser(userId, user);
     }
     
     /**
@@ -294,27 +357,23 @@ public class UserController {
     }
     
     /**
-     * 管理后台端 - 更新用户信息
-     * @param userId 用户ID
-     * @param user 用户信息
-     * @param updateBy 更新人ID
-     * @return 更新结果
-     */
-    @PutMapping(ADMIN_PREFIX + "/users/{userId}")
-    public Result<String> updateUserForAdmin(@PathVariable Long userId, @RequestBody User user, @RequestParam Long updateBy) {
-        user.setUpdateBy(updateBy);
-        return userService.updateUser(userId, user);
-    }
-    
-    /**
      * 管理后台端 - 删除用户
      * @param userId 用户ID
-     * @param updateBy 更新人ID
+     * @param updateBy 操作人ID
      * @return 删除结果
      */
     @DeleteMapping(ADMIN_PREFIX + "/users/{userId}")
-    public Result<String> deleteUserForAdmin(@PathVariable Long userId, @RequestParam Long updateBy) {
-        // 这里可以将updateBy传递给service层，用于记录操作人
+    public Result<String> deleteUserForAdmin(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String updateBy) {
+        Long updateById = null;
+        if (updateBy != null && !updateBy.isEmpty()) {
+            try {
+                updateById = Long.parseLong(updateBy);
+            } catch (NumberFormatException e) {
+                // 忽略转换错误
+            }
+        }
         return userService.deleteUser(userId);
     }
 }

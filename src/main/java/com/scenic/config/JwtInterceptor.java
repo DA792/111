@@ -32,11 +32,10 @@ public class JwtInterceptor implements HandlerInterceptor {
         
         System.out.println("JWT拦截器处理请求: " + method + " " + requestURI);
         
-        // 放行管理后台登录接口和注册接口
+        // 放行管理后台登录接口、注册接口和头像API
         if (requestURI.equals("/api/manage/login") || 
             requestURI.contains("/register") ||
-            (requestURI.equals("/api/manage/users") && method.equals("POST"))) {
-            System.out.println("放行登录或注册接口: " + requestURI);
+            requestURI.startsWith("/api/files/avatar/")) {
             return true;
         }
         
@@ -66,8 +65,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String token = authHeader.substring(7);
         
         // 验证管理后台JWT令牌
-        if (requestURI.startsWith(adminPrefix)) {
-            System.out.println("验证管理后台令牌: " + requestURI);
+        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/")) {
             if (!jwtUtil.validateAdminToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"timestamp\":\"" + java.time.Instant.now() + "\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"未授权：管理后台认证令牌无效或已过期\",\"path\":\"" + requestURI + "\"}");

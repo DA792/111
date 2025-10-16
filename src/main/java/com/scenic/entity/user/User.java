@@ -24,6 +24,7 @@ public class User {
     private Integer deleted;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Boolean enabled;
     private Long createBy;
     private Long updateBy;
 
@@ -175,6 +176,14 @@ public class User {
         this.updateTime = updateTime;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+    
     public Long getCreateBy() {
         return createBy;
     }
@@ -212,8 +221,7 @@ public class User {
                 ", deleted=" + deleted +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
-                ", createBy=" + createBy +
-                ", updateBy=" + updateBy +
+                ", enabled=" + enabled +
                 '}';
     }
 }

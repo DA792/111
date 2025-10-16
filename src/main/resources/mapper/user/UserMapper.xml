@@ -35,15 +35,16 @@
         <include refid="User_Column_List"/>
         FROM user
         <where>
-            user_type = #{userType}
-            <if test="keyword != null and keyword != ''">
-                AND (user_name LIKE CONCAT('%', #{keyword}, '%')
-                OR id_type LIKE CONCAT('%', #{keyword}, '%')
-                OR id_number LIKE CONCAT('%', #{keyword}, '%')
-                OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            <if test="username != null and username != ''">
+                user_name LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="phone != null and phone != ''">
+                AND phone LIKE CONCAT('%', #{phone}, '%')
+            </if>
+            <if test="userType != null">
+                AND user_type = #{userType}
             </if>
         </where>
-        ORDER BY create_time DESC
         LIMIT #{offset}, #{limit}
     </select>
 
@@ -52,69 +53,50 @@
         SELECT COUNT(*)
         FROM user
         <where>
-            user_type = #{userType}
-            <if test="keyword != null and keyword != ''">
-                AND (user_name LIKE CONCAT('%', #{keyword}, '%')
-                OR id_type LIKE CONCAT('%', #{keyword}, '%')
-                OR id_number LIKE CONCAT('%', #{keyword}, '%')
-                OR phone LIKE CONCAT('%', #{keyword}, '%'))
+            <if test="username != null and username != ''">
+                user_name LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="phone != null and phone != ''">
+                AND phone LIKE CONCAT('%', #{phone}, '%')
+            </if>
+            <if test="userType != null">
+                AND user_type = #{userType}
             </if>
         </where>
     </select>
     
-    <!-- 动态更新用户信息（只更新非空字段） -->
-    <update id="updateByIdSelective" parameterType="com.scenic.entity.user.User">
-        UPDATE user
-        <set>
-            <if test="userName != null and userName != ''">
-                user_name = #{userName},
+    <!-- 小程序端查询用户列表 -->
+    <select id="selectListForMiniapp" resultMap="UserResultMap">
+        SELECT 
+        <include refid="User_Column_List"/>
+        FROM user
+        <where>
+            <if test="nickname != null and nickname != ''">
+                real_name LIKE CONCAT('%', #{nickname}, '%')
             </if>
-            <if test="password != null and password != ''">
-                password = #{password},
+        </where>
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 小程序端查询用户总数 -->
+    <select id="selectCountForMiniapp" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM user
+        <where>
+            <if test="nickname != null and nickname != ''">
+                real_name LIKE CONCAT('%', #{nickname}, '%')
             </if>
-            <if test="realName != null and realName != ''">
-                real_name = #{realName},
-            </if>
-            <if test="idType != null and idType != ''">
-                id_type = #{idType},
-            </if>
-            <if test="idNumber != null and idNumber != ''">
-                id_number = #{idNumber},
-            </if>
-            <if test="phone != null and phone != ''">
-                phone = #{phone},
-            </if>
-            <if test="email != null and email != ''">
-                email = #{email},
-            </if>
-            <if test="avatarFileId != null">
-                avatar_file_id = #{avatarFileId},
-            </if>
-            <if test="openId != null and openId != ''">
-                open_id = #{openId},
-            </if>
-            <if test="userType != null">
-                user_type = #{userType},
-            </if>
-            <if test="status != null">
-                status = #{status},
-            </if>
-            <if test="registerTime != null">
-                register_time = #{registerTime},
-            </if>
-            <if test="lastLoginTime != null">
-                last_login_time = #{lastLoginTime},
-            </if>
-            <if test="deleted != null">
-                deleted = #{deleted},
-            </if>
-            <if test="updateTime != null">
-                update_time = #{updateTime},
-            </if>
-            <if test="updateBy != null">
-                update_by = #{updateBy},
-            </if>
-        </set>
-        WHERE id = #{id}
-    </update>
+        </where>
+    </select>
+    
+    <!-- 根据ID列表查询用户 -->
+    <select id="selectByIds" resultMap="UserResultMap">
+        SELECT 
+        <include refid="User_Column_List"/>
+        FROM user
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

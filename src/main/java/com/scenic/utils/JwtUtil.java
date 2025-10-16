@@ -39,7 +39,7 @@ public class JwtUtil {
     public String generateAdminToken(String username, Long userId) {
         String redisKey = ADMIN_TOKEN_KEY_PREFIX + userId;
         
-        // 棣查是否已存在有效的Token
+        // 检查是否已存在有效的Token
         String existingToken = redisTemplate.opsForValue().get(redisKey);
         if (existingToken != null) {
             // 验证现有Token是否仍然有效
@@ -58,9 +58,6 @@ public class JwtUtil {
         // 生成JWT令牌
         String token = createToken(claims, username, jwtConfig.getAdminSecret(), jwtConfig.getAdminExpiration());
         
-        // 生成唯一的tokenId
-        String tokenId = UUID.randomUUID().toString();
-        
         // 将token存储到Redis中
         redisTemplate.opsForValue().set(redisKey, token, jwtConfig.getAdminExpiration(), TimeUnit.MILLISECONDS);
         
@@ -76,6 +73,26 @@ public class JwtUtil {
         
         // 生成JWT令牌
         String token = createToken(claims, openId, jwtConfig.getMiniappSecret(), jwtConfig.getMiniappExpiration());
+        
+        // 生成唯一的tokenId
+        String tokenId = UUID.randomUUID().toString();
+        
+        // 将token存储到Redis中
+        String redisKey = MINIAPP_TOKEN_KEY_PREFIX + userId;
+        redisTemplate.opsForValue().set(redisKey, token, jwtConfig.getMiniappExpiration(), TimeUnit.MILLISECONDS);
+        
+        return token;
+    }
+    
+    // 生成微信小程序用户JWT令牌
+    public String generateMiniAppToken(Long userId, String openid) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("openid", openid);
+        claims.put("userId", userId);
+        claims.put("role", "user");
+        
+        // 生成JWT令牌
+        String token = createToken(claims, openid, jwtConfig.getMiniappSecret(), jwtConfig.getMiniappExpiration());
         
         // 生成唯一的tokenId
         String tokenId = UUID.randomUUID().toString();
@@ -143,6 +160,11 @@ public class JwtUtil {
     public void invalidateMiniappToken(Long userId) {
         String redisKey = MINIAPP_TOKEN_KEY_PREFIX + userId;
         redisTemplate.delete(redisKey);
+    }
+    
+    // 获取管理员密钥
+    public String getAdminSecret() {
+        return jwtConfig.getAdminSecret();
     }
     
     // 从JWT令牌中获取用户名
