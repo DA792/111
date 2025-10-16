@@ -5,8 +5,9 @@
     <!-- 结果映射 -->
     <resultMap id="TeamAppointmentResultMap" type="com.scenic.entity.appointment.TeamAppointment">
         <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="appointment_no" property="appointmentNo" jdbcType="VARCHAR"/>
         <result column="team_name" property="teamName" jdbcType="VARCHAR"/>
-        <result column="contact_person" property="contactPerson" jdbcType="VARCHAR"/>
+        <result column="team_leader" property="contactPerson" jdbcType="VARCHAR"/>
         <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
         <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
         <result column="team_size" property="numberOfPeople" jdbcType="INTEGER"/>
@@ -14,16 +15,18 @@
         <result column="scenic_spot_name" property="scenicSpotName" jdbcType="VARCHAR"/>
         <result column="appointment_date" property="appointmentDate" jdbcType="TIMESTAMP"/>
         <result column="appointment_time" property="appointmentTime" jdbcType="VARCHAR"/>
-        <result column="remark" property="remark" jdbcType="VARCHAR"/>
-        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="remarks" property="remark" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="form_file_id" property="formFileId" jdbcType="BIGINT"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="BIGINT"/>
     </resultMap>
 
     <!-- 查询字段 -->
     <sql id="TeamAppointment_Column_List">
-        id, team_name, team_leader as contact_person, contact_phone, contact_email, team_size, 
-        scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, remarks as remark, status, create_time, update_time
+        id, appointment_no, team_name, team_leader, contact_phone, contact_email, team_size, 
+        scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, remarks, status, form_file_id, create_time, update_time, create_by
     </sql>
 
     <!-- 管理员查询团队预约列表 -->
@@ -36,7 +39,7 @@
                 team_name LIKE CONCAT('%', #{teamName}, '%')
             </if>
             <if test="contactPerson != null and contactPerson != ''">
-                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+                AND team_leader LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
             <if test="contactPhone != null and contactPhone != ''">
                 AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
@@ -64,7 +67,7 @@
                 team_name LIKE CONCAT('%', #{teamName}, '%')
             </if>
             <if test="contactPerson != null and contactPerson != ''">
-                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+                AND team_leader LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
             <if test="contactPhone != null and contactPhone != ''">
                 AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
@@ -80,4 +83,17 @@
             </if>
         </where>
     </select>
+    
+    <!-- 插入团队预约 -->
+    <insert id="insert" parameterType="com.scenic.entity.appointment.TeamAppointment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO team_appointment(
+            appointment_no, user_id, team_name, team_leader, contact_phone, contact_email, 
+            team_size, scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, 
+            remarks, status, form_file_id, create_time, update_time, create_by
+        ) VALUES(
+            #{appointmentNo}, #{userId}, #{teamName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, 
+            #{numberOfPeople}, #{scenicSpotId}, #{scenicSpotName}, #{appointmentDate}, #{appointmentTime}, 
+            #{remark}, #{status}, #{formFileId}, #{createTime}, #{updateTime}, #{createBy}
+        )
+    </insert>
 </mapper>

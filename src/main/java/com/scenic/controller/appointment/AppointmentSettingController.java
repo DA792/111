@@ -14,9 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 import com.scenic.common.dto.Result;
 import com.scenic.entity.appointment.AppointmentSetting;
 import com.scenic.service.appointment.AppointmentSettingService;
+import com.scenic.service.MainConfigService;
 
 /**
  * 预约设置控制器
@@ -34,6 +37,9 @@ public class AppointmentSettingController {
     
     @Autowired
     private AppointmentSettingService appointmentSettingService;
+    
+    @Autowired
+    private MainConfigService mainConfigService;
     
     /**
      * 小程序端 - 获取预约所需的关键设置
@@ -131,5 +137,45 @@ public class AppointmentSettingController {
     @GetMapping(ADMIN_PREFIX + "/appointment-settings/daily-stats")
     public Result<Map<String, Object>> getDailyAppointmentStatsForAdmin(@RequestParam String date) {
         return appointmentSettingService.getDailyAppointmentStats(date);
+    }
+    
+    /**
+     * 管理后台端 - 获取预约项目配置
+     * @return 预约项目配置
+     */
+    @GetMapping(ADMIN_PREFIX + "/appointment-settings/project-config")
+    public Result<Map<String, Object>> getAppointmentProjectConfig() {
+        return mainConfigService.getAppointmentProjectConfig();
+    }
+    
+    /**
+     * 管理后台端 - 保存预约项目配置
+     * @param configs 配置映射
+     * @return 保存结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/appointment-settings/project-config")
+    public Result<String> saveAppointmentProjectConfig(@RequestBody Map<String, String> configs) {
+        // 默认用户ID为1，实际应用中应该从JWT token中获取
+        return mainConfigService.saveAppointmentProjectConfig(configs, 1L);
+    }
+    
+    /**
+     * 管理后台端 - 获取预约规则配置
+     * @return 预约规则配置
+     */
+    @GetMapping(ADMIN_PREFIX + "/appointment-settings/rule-config")
+    public Result<Map<String, Object>> getAppointmentRuleConfig() {
+        return mainConfigService.getAppointmentRuleConfig();
+    }
+    
+    /**
+     * 管理后台端 - 保存预约规则配置
+     * @param configJson 配置JSON
+     * @return 保存结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/appointment-settings/rule-config")
+    public Result<String> saveAppointmentRuleConfig(@RequestBody String configJson) {
+        // 默认用户ID为1，实际应用中应该从JWT token中获取
+        return mainConfigService.saveAppointmentRuleConfig(configJson, 1L);
     }
 }

@@ -5,15 +5,14 @@
     <!-- 结果映射 -->
     <resultMap id="ActivityAppointmentResultMap" type="com.scenic.entity.appointment.ActivityAppointment">
         <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="activity_name" property="activityName" jdbcType="VARCHAR"/>
-        <result column="contact_person" property="contactPerson" jdbcType="VARCHAR"/>
+        <result column="activity_title" property="activityName" jdbcType="VARCHAR"/>
+        <result column="team_leader" property="contactPerson" jdbcType="VARCHAR"/>
         <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
         <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
         <result column="activity_id" property="activityId" jdbcType="BIGINT"/>
-        <result column="activity_date" property="activityDate" jdbcType="TIMESTAMP"/>
-        <result column="activity_time" property="activityTime" jdbcType="VARCHAR"/>
-        <result column="number_of_people" property="numberOfPeople" jdbcType="INTEGER"/>
-        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="registration_time" property="activityDate" jdbcType="TIMESTAMP"/>
+        <result column="team_size" property="numberOfPeople" jdbcType="INTEGER"/>
+        <result column="remarks" property="remark" jdbcType="VARCHAR"/>
         <result column="status" property="status" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
@@ -21,21 +20,21 @@
 
     <!-- 查询字段 -->
     <sql id="ActivityAppointment_Column_List">
-        id, activity_name, contact_person, contact_phone, contact_email, activity_id, 
-        activity_date, activity_time, number_of_people, remark, status, create_time, update_time
+        id, activity_title, team_leader, contact_phone, contact_email, activity_id, 
+        registration_time, team_size, remarks, status, create_time, update_time
     </sql>
 
     <!-- 管理员查询活动预约列表 -->
     <select id="selectForAdmin" resultMap="ActivityAppointmentResultMap">
         SELECT 
         <include refid="ActivityAppointment_Column_List"/>
-        FROM activity_appointment
+        FROM activity_registration
         <where>
             <if test="activityName != null and activityName != ''">
-                activity_name LIKE CONCAT('%', #{activityName}, '%')
+                activity_title LIKE CONCAT('%', #{activityName}, '%')
             </if>
             <if test="contactPerson != null and contactPerson != ''">
-                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+                AND team_leader LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
             <if test="contactPhone != null and contactPhone != ''">
                 AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
@@ -44,10 +43,10 @@
                 AND status = #{status}
             </if>
             <if test="startTime != null and startTime != ''">
-                AND activity_date <![CDATA[>=]]> #{startTime}
+                AND registration_time <![CDATA[>=]]> #{startTime}
             </if>
             <if test="endTime != null and endTime != ''">
-                AND activity_date <![CDATA[<=]]> #{endTime}
+                AND registration_time <![CDATA[<=]]> #{endTime}
             </if>
         </where>
         ORDER BY create_time DESC
@@ -57,13 +56,13 @@
     <!-- 管理员查询活动预约总数 -->
     <select id="selectCountForAdmin" resultType="java.lang.Integer">
         SELECT COUNT(*)
-        FROM activity_appointment
+        FROM activity_registration
         <where>
             <if test="activityName != null and activityName != ''">
-                activity_name LIKE CONCAT('%', #{activityName}, '%')
+                activity_title LIKE CONCAT('%', #{activityName}, '%')
             </if>
             <if test="contactPerson != null and contactPerson != ''">
-                AND contact_person LIKE CONCAT('%', #{contactPerson}, '%')
+                AND team_leader LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
             <if test="contactPhone != null and contactPhone != ''">
                 AND contact_phone LIKE CONCAT('%', #{contactPhone}, '%')
@@ -72,11 +71,88 @@
                 AND status = #{status}
             </if>
             <if test="startTime != null and startTime != ''">
-                AND activity_date <![CDATA[>=]]> #{startTime}
+                AND registration_time <![CDATA[>=]]> #{startTime}
             </if>
             <if test="endTime != null and endTime != ''">
-                AND activity_date <![CDATA[<=]]> #{endTime}
+                AND registration_time <![CDATA[<=]]> #{endTime}
             </if>
         </where>
+    </select>
+    
+    <!-- 根据ID查询活动预约 -->
+    <select id="selectById" resultMap="ActivityAppointmentResultMap" parameterType="java.lang.Long">
+        SELECT 
+        <include refid="ActivityAppointment_Column_List"/>
+        FROM activity_registration
+        WHERE id = #{id}
+    </select>
+    
+    <!-- 插入活动预约 -->
+    <insert id="insert" parameterType="com.scenic.entity.appointment.ActivityAppointment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO activity_registration(
+            activity_title, team_leader, contact_phone, contact_email, activity_id,
+            registration_time, activity_time, team_size, remarks, status, create_time, update_time
+        ) VALUES(
+            #{activityName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, #{activityId},
+            #{activityDate}, #{activityTime}, #{numberOfPeople}, #{remark}, #{status}, #{createTime}, #{updateTime}
+        )
+    </insert>
+    
+    <!-- 更新活动预约信息 -->
+    <update id="updateById" parameterType="com.scenic.entity.appointment.ActivityAppointment">
+        UPDATE activity_registration
+        <set>
+            <if test="activityName != null and activityName != ''">
+                activity_title = #{activityName},
+            </if>
+            <if test="contactPerson != null and contactPerson != ''">
+                team_leader = #{contactPerson},
+            </if>
+            <if test="contactPhone != null and contactPhone != ''">
+                contact_phone = #{contactPhone},
+            </if>
+            <if test="contactEmail != null and contactEmail != ''">
+                contact_email = #{contactEmail},
+            </if>
+            <if test="activityId != null">
+                activity_id = #{activityId},
+            </if>
+            <if test="activityDate != null">
+                registration_time = #{activityDate},
+            </if>
+            <if test="activityTime != null and activityTime != ''">
+                activity_time = #{activityTime},
+            </if>
+            <if test="numberOfPeople != null">
+                team_size = #{numberOfPeople},
+            </if>
+            <if test="remark != null and remark != ''">
+                remarks = #{remark},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            update_time = #{updateTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据ID删除活动预约 -->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM activity_registration WHERE id = #{id}
+    </delete>
+    
+    <!-- 查询活动预约列表 -->
+    <select id="selectList" resultMap="ActivityAppointmentResultMap">
+        SELECT 
+        <include refid="ActivityAppointment_Column_List"/>
+        FROM activity_registration
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 查询活动预约总数 -->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM activity_registration
     </select>
 </mapper>
