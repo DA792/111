@@ -148,7 +148,7 @@ public class PhotoCheckInController {
             @RequestParam("photo") MultipartFile photo) {
         return photoCheckInService.addPhotoCheckInForAdmin(title, categoryId, photo);
     }
-    
+        
     /**
      * 管理后台端 - 编辑照片打卡记录
      * @param id 照片打卡记录ID

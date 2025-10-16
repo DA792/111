@@ -2,6 +2,7 @@ package com.scenic.service.interaction.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -65,9 +66,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     private static final String CHECKIN_CATEGORY_LIST_CACHE_KEY = "checkin_category:list";
     
     // 缓存过期时间（分钟）
-    private static final int PAGE_CACHE_EXPIRE_MINUTES = 5;
+    private static final int PAGE_CACHE_EXPIRE_MINUTES = 1; // 减少页面缓存过期时间，使新增或编辑的数据更快显示
     private static final int EMPTY_RESULT_CACHE_EXPIRE_MINUTES = 2;
-    private static final int CATEGORY_LIST_CACHE_EXPIRE_MINUTES = 30;
+    private static final int CATEGORY_LIST_CACHE_EXPIRE_MINUTES = 10; // 减少分类列表缓存过期时间
     
     /**
      * 上传照片打卡
@@ -160,8 +161,11 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
                 redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                 redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
+                redisTemplate.delete(CHECKIN_CATEGORY_LIST_CACHE_KEY);
                 // 清除分页缓存
                 clearPageCaches();
+                
+                System.out.println("点赞照片打卡后清除缓存完成");
                 
                 return Result.success("操作成功", "点赞成功");
             }
@@ -195,8 +199,11 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                     redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
                     redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                     redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
+                    redisTemplate.delete(CHECKIN_CATEGORY_LIST_CACHE_KEY);
                     // 清除分页缓存
                     clearPageCaches();
+                    
+                    System.out.println("取消点赞照片打卡后清除缓存完成");
                     
                     return Result.success("操作成功", "取消点赞成功");
                 } else {
@@ -232,8 +239,11 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
                 redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photo.getCategoryId());
                 redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photo.getUserId());
+                redisTemplate.delete(CHECKIN_CATEGORY_LIST_CACHE_KEY);
                 // 清除分页缓存
                 clearPageCaches();
+                
+                System.out.println("删除照片打卡记录后清除缓存完成");
                 
                 return Result.success("操作成功", "照片已删除");
             }
@@ -333,8 +343,17 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      * 使用模式匹配清除所有分页相关的缓存
      */
     private void clearPageCaches() {
-        // 清除所有分页缓存
-        redisTemplate.delete(PHOTO_CHECK_IN_PAGE_CACHE_PREFIX + "*");
+        try {
+            // 获取所有匹配的键
+            Set<String> keys = redisTemplate.keys(PHOTO_CHECK_IN_PAGE_CACHE_PREFIX + "*");
+            if (keys != null && !keys.isEmpty()) {
+                // 批量删除匹配的键
+                redisTemplate.delete(keys);
+                System.out.println("已清除" + keys.size() + "个分页缓存");
+            }
+        } catch (Exception e) {
+            System.err.println("清除分页缓存失败：" + e.getMessage());
+        }
     }
 
     
@@ -620,9 +639,12 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             // 清除相关缓存
             redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
             redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + categoryId);
+            redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + userId);
             redisTemplate.delete(CHECKIN_CATEGORY_LIST_CACHE_KEY);
             // 清除分页缓存
             clearPageCaches();
+            
+            System.out.println("新增照片打卡记录后清除缓存完成");
             
             return Result.success("操作成功", "照片打卡记录添加成功，ID: " + photoCheckIn.getId());
         } catch (Exception e) {
@@ -765,10 +787,13 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
             redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + oldCategoryId);
             redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + categoryId);
+            redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + userId);
             redisTemplate.delete(CHECKIN_CATEGORY_LIST_CACHE_KEY);
             redisTemplate.delete(PHOTO_CHECK_IN_CACHE_PREFIX + id);
             // 清除分页缓存
             clearPageCaches();
+            
+            System.out.println("更新照片打卡记录后清除缓存完成");
             
             return Result.success("操作成功", "照片打卡记录更新成功，ID: " + id);
         } catch (Exception e) {
