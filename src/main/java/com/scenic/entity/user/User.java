@@ -25,6 +25,8 @@ public class User {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Boolean enabled;
+    private Long createBy;
+    private Long updateBy;
 
     // 构造函数
     public User() {}
@@ -180,6 +182,22 @@ public class User {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+    
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
     }
 
     @Override

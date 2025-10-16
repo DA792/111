@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.scenic.mapper.content.ProtectedReservationInfoMapper">
+
+    <!-- 保护区介绍结果映射 -->
+    <resultMap id="protectedReservationInfoResultMap" type="com.scenic.entity.content.ProtectedReservationInfo">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content_type" property="contentType"/>
+        <result column="content_category" property="contentCategory"/>
+        <result column="rich_content" property="richContent"/>
+        <result column="plain_text" property="plainText"/>
+        <result column="content_image_ids" property="contentImageIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="carousel_file_ids" property="carouselFileIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="gallery_file_ids" property="galleryFileIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="audio_file_ids" property="audioFileIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="deleted" property="deleted"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, title, content_type, content_category, rich_content, plain_text,
+        content_image_ids, carousel_file_ids, gallery_file_ids, audio_file_ids,
+        deleted, create_time, update_time, create_by, update_by
+    </sql>
+
+    <!-- 根据删除标记查询保护区介绍列表 -->
+    <select id="selectByDeleted" parameterType="java.lang.Byte" resultMap="protectedReservationInfoResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM protected_reservation_info
+        WHERE deleted = #{deleted}
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据标题模糊查询保护区介绍列表 -->
+    <select id="selectByTitle" parameterType="java.lang.String" resultMap="protectedReservationInfoResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM protected_reservation_info
+        WHERE title LIKE CONCAT('%', #{title}, '%')
+        AND (deleted = 0 OR deleted IS NULL)
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据内容类型查询保护区介绍列表 -->
+    <select id="selectByContentType" parameterType="java.lang.Byte" resultMap="protectedReservationInfoResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM protected_reservation_info
+        WHERE content_type = #{contentType}
+        AND (deleted = 0 OR deleted IS NULL)
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据内容分类查询保护区介绍列表 -->
+    <select id="selectByContentCategory" parameterType="java.lang.Byte" resultMap="protectedReservationInfoResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM protected_reservation_info
+        WHERE content_category = #{contentCategory}
+        AND (deleted = 0 OR deleted IS NULL)
+        ORDER BY create_time DESC
+    </select>
+    
+    <!-- 分页查询保护区介绍列表（增强版，支持发布人、发布时间、内容类型搜索） -->
+    <select id="selectPageEnhanced" resultType="com.scenic.dto.content.ProtectedReservationInfoEnhancedDTO">
+        SELECT 
+            pri.id,
+            pri.title,
+            pri.content_type as contentType,
+            pri.content_category as contentCategory,
+            pri.rich_content as richContent,
+            pri.plain_text as plainText,
+            pri.content_image_ids as contentImageIds,
+            pri.carousel_file_ids as carouselFileIds,
+            pri.gallery_file_ids as galleryFileIds,
+            pri.audio_file_ids as audioFileIds,
+            pri.deleted,
+            pri.create_time as createTime,
+            pri.update_time as updateTime,
+            pri.create_by as createBy,
+            pri.update_by as updateBy,
+            u.real_name as creatorName
+        FROM protected_reservation_info pri
+        LEFT JOIN user u ON pri.create_by = u.id
+        <where>
+            pri.deleted = 0
+            <if test="title != null and title != ''">
+                AND pri.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="creatorName != null and creatorName != ''">
+                AND u.real_name LIKE CONCAT('%', #{creatorName}, '%')
+            </if>
+            <if test="startTime != null">
+                AND pri.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND pri.create_time &lt;= #{endTime}
+            </if>
+            <if test="contentType != null">
+                AND pri.content_type = #{contentType}
+            </if>
+        </where>
+        ORDER BY pri.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <!-- 查询保护区介绍总数（增强版，支持发布人、发布时间、内容类型搜索） -->
+    <select id="selectCountEnhanced" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM protected_reservation_info pri
+        LEFT JOIN user u ON pri.create_by = u.id
+        <where>
+            pri.deleted = 0
+            <if test="title != null and title != ''">
+                AND pri.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="creatorName != null and creatorName != ''">
+                AND u.real_name LIKE CONCAT('%', #{creatorName}, '%')
+            </if>
+            <if test="startTime != null">
+                AND pri.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND pri.create_time &lt;= #{endTime}
+            </if>
+            <if test="contentType != null">
+                AND pri.content_type = #{contentType}
+            </if>
+        </where>
+    </select>
+
+</mapper>

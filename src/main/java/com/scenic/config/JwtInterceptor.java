@@ -53,7 +53,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String token = authHeader.substring(7);
         
         // 验证管理后台JWT令牌
-        if (requestURI.startsWith(adminPrefix)) {
+        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/")) {
             if (!jwtUtil.validateAdminToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("未授权：管理后台认证令牌无效或已过期");

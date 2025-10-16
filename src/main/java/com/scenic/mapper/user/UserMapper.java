@@ -72,18 +72,37 @@ public interface UserMapper {
      * @param limit 限制数量
      * @param username 用户名（可选）
      * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户列表
      */
     List<User> selectList(@Param("offset") int offset, @Param("limit") int limit, 
-                          @Param("username") String username, @Param("phone") String phone);
+                          @Param("username") String username, @Param("phone") String phone, @Param("userType") Integer userType);
+    
+    /**
+     * 小程序端查询用户列表
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @param nickname 昵称（可选）
+     * @return 用户列表
+     */
+    List<User> selectListForMiniapp(@Param("offset") int offset, @Param("limit") int limit, 
+                                    @Param("nickname") String nickname);
     
     /**
      * 查询用户总数
      * @param username 用户名（可选）
      * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户总数
      */
-    int selectCount(@Param("username") String username, @Param("phone") String phone);
+    int selectCount(@Param("username") String username, @Param("phone") String phone, @Param("userType") Integer userType);
+    
+    /**
+     * 小程序端查询用户总数
+     * @param nickname 昵称（可选）
+     * @return 用户总数
+     */
+    int selectCountForMiniapp(@Param("nickname") String nickname);
     
     /**
      * 根据微信OpenID统计用户数量
@@ -92,4 +111,11 @@ public interface UserMapper {
      */
     @Select("SELECT COUNT(*) FROM user WHERE open_id = #{openId}")
     int countByOpenId(String openId);
+    
+    /**
+     * 根据ID列表查询用户
+     * @param ids 用户ID列表
+     * @return 用户列表
+     */
+    List<User> selectByIds(@Param("ids") List<Long> ids);
 }

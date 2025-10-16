@@ -8,20 +8,23 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * RestTemplate配置类
+ * 用于配置HTTP请求的超时时间
  */
 @Configuration
 public class RestTemplateConfig {
-    
+
     @Bean
-    public RestTemplate restTemplate(ClientHttpRequestFactory factory) {
-        return new RestTemplate(factory);
+    public RestTemplate restTemplate() {
+        return new RestTemplate(clientHttpRequestFactory());
     }
-    
+
     @Bean
-    public ClientHttpRequestFactory simpleClientHttpRequestFactory() {
+    public ClientHttpRequestFactory clientHttpRequestFactory() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setReadTimeout(5000); // 读取超时时间5秒
-        factory.setConnectTimeout(5000); // 连接超时时间5秒
+        // 设置连接超时时间为15秒
+        factory.setConnectTimeout(15000);
+        // 设置读取超时时间为15秒
+        factory.setReadTimeout(15000);
         return factory;
     }
 }

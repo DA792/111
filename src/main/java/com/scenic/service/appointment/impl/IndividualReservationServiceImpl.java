@@ -425,4 +425,44 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             return Result.error("预约核销异常：" + e.getMessage());
         }
     }
+    
+    /**
+     * 根据证件号码和状态查询个人预约（分页）
+     * @param idNumber 证件号码
+     * @param status 状态（可选）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 个人预约列表
+     */
+    @Override
+    public Result<PageResult<IndividualReservation>> getReservationsByIdNumber(String idNumber, Integer status, int page, int size) {
+        try {
+            // 分页查询
+            List<IndividualReservation> reservations = individualReservationMapper.selectByIdNumberAndStatus(idNumber, status, (page - 1) * size, size);
+            
+            // 获取总数
+            int total = individualReservationMapper.selectCountByIdNumberAndStatus(idNumber, status);
+            
+            // 为每个预约记录填充详细信息
+            for (IndividualReservation reservation : reservations) {
+                // 获取主联系人信息
+                IndividualReservationPerson mainContact = individualReservationMapper.selectMainContactByReservationId(reservation.getId());
+                if (mainContact != null) {
+                    reservation.setContactName(mainContact.getName());
+                    reservation.setContactIdType(mainContact.getIdType());
+                    reservation.setContactIdNumber(mainContact.getIdNumber());
+                    reservation.setContactPhone(mainContact.getPhone());
+                }
+                
+                // 获取所有预约人员信息
+                List<IndividualReservationPerson> reservationPersons = individualReservationMapper.selectReservationPersonsByReservationId(reservation.getId());
+                reservation.setReservationPersons(reservationPersons);
+            }
+            
+            PageResult<IndividualReservation> pageResult = PageResult.of(total, size, page, reservations);
+            return Result.success("查询成功", pageResult);
+        } catch (Exception e) {
+            return Result.error("查询异常：" + e.getMessage());
+        }
+    }
 }
