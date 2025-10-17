@@ -155,6 +155,25 @@ public interface IndividualReservationMapper {
     IndividualReservationPerson selectMainContactByReservationId(Long reservationId);
     
     /**
+     * 插入个人预约人员
+     * @param person 个人预约人员信息
+     * @return 插入结果
+     */
+    @Insert("INSERT INTO individual_reservation_person(reservation_id, name, id_type, id_number, phone, " +
+            "person_type, is_contact, visit_date, time_slot, version, deleted, create_time, update_time, create_by, update_by) " +
+            "VALUES(#{reservationId}, #{name}, #{idType}, #{idNumber}, #{phone}, " +
+            "#{personType}, #{isContact}, #{visitDate}, #{timeSlot}, #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insertPerson(IndividualReservationPerson person);
+    
+    /**
+     * 批量插入个人预约人员
+     * @param persons 个人预约人员列表
+     * @return 插入结果
+     */
+    int insertPersonsBatch(@Param("persons") List<IndividualReservationPerson> persons);
+    
+    /**
      * 根据预约ID查询所有预约人员信息
      * @param reservationId 预约ID
      * @return 预约人员列表

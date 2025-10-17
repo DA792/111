@@ -64,6 +64,11 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             // 4. 插入预约记录
             int result = individualReservationMapper.insert(reservation);
             
+            // 5. 再插入主预约人和同行预约人信息到individual_reservation_person表
+            if (result > 0) {
+                insertReservationPersons(reservation);
+            }
+            
             if (result > 0) {
                 log.info("预约创建成功，预约编号: {}", reservation.getReservationNo());
                 return Result.success("预约创建成功", reservation.getReservationNo());
@@ -121,6 +126,42 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
         }
         if (reservation.getStatus() == null) {
             reservation.setStatus(0); // 0-未开始
+        }
+    }
+    
+    /**
+     * 插入预约人员信息（主预约人和同行预约人）
+     * @param reservation 预约信息
+     */
+    private void insertReservationPersons(IndividualReservation reservation) {
+        if (reservation.getReservationPersons() != null && !reservation.getReservationPersons().isEmpty()) {
+            // 设置预约人员的公共字段
+            for (IndividualReservationPerson person : reservation.getReservationPersons()) {
+                person.setReservationId(reservation.getId());
+                person.setVisitDate(reservation.getVisitDate());
+                person.setTimeSlot(reservation.getTimeSlot());
+                if (person.getVersion() == null) {
+                    person.setVersion(0);
+                }
+                if (person.getDeleted() == null) {
+                    person.setDeleted(0);
+                }
+                if (person.getCreateTime() == null) {
+                    person.setCreateTime(LocalDateTime.now());
+                }
+                if (person.getUpdateTime() == null) {
+                    person.setUpdateTime(LocalDateTime.now());
+                }
+                if (person.getCreateBy() == null) {
+                    person.setCreateBy(reservation.getCreateBy());
+                }
+                if (person.getUpdateBy() == null) {
+                    person.setUpdateBy(reservation.getUpdateBy());
+                }
+            }
+            
+            // 批量插入预约人员
+            individualReservationMapper.insertPersonsBatch(reservation.getReservationPersons());
         }
     }
     
