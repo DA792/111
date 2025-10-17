@@ -43,6 +43,8 @@ public class ActivityServiceImpl implements ActivityService {
             activity.setContent(activityDTO.getContent());
             activity.setLocation(activityDTO.getLocation());
             activity.setEnabled(true);
+            activity.setStartTime(activityDTO.getStartTime());
+            activity.setEndTime(activityDTO.getEndTime());
             activity.setCreateTime(LocalDateTime.now());
             activity.setUpdateTime(LocalDateTime.now());
             
@@ -131,6 +133,8 @@ public class ActivityServiceImpl implements ActivityService {
                 activity.setTitle(activityDTO.getTitle());
                 activity.setContent(activityDTO.getContent());
                 activity.setLocation(activityDTO.getLocation());
+                activity.setStartTime(activityDTO.getStartTime());
+                activity.setEndTime(activityDTO.getEndTime());
                 activity.setUpdateTime(LocalDateTime.now());
                 
                 activityMapper.updateById(activity);
@@ -191,9 +195,12 @@ public class ActivityServiceImpl implements ActivityService {
         dto.setTitle(activity.getTitle());
         dto.setContent(activity.getContent());
         dto.setLocation(activity.getLocation());
+        dto.setSuitableCrowd(activity.getSuitableCrowd());
         dto.setEnabled(activity.getEnabled());
         dto.setCreateTime(activity.getCreateTime());
         dto.setUpdateTime(activity.getUpdateTime());
+        dto.setStartTime(activity.getStartTime());
+        dto.setEndTime(activity.getEndTime());
         return dto;
     }
 }

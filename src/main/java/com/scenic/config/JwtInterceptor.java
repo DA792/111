@@ -108,4 +108,3 @@ public class JwtInterceptor implements HandlerInterceptor {
         userContextUtil.clear();
     }
 }
-}

@@ -59,7 +59,7 @@ public class AppointmentDataServiceImpl implements AppointmentDataService {
             Integer individualReserveStatus = Integer.parseInt(projectConfigMap.get("individual_reserve_status").toString());
             Integer teamReserveStatus = Integer.parseInt(projectConfigMap.get("team_reserve_status").toString());
             
-            // 查询预约数据
+            // 查询预约数据 - 使用配置中的预约项目状态
             List<Map<String, Object>> dataList = appointmentDataMapper.getEnterReservationData(
                     year, month, dailyLimit, individualReserveStatus, teamReserveStatus);
             

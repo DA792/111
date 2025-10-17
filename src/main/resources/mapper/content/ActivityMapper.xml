@@ -8,14 +8,18 @@
         <result column="title" property="title" jdbcType="VARCHAR"/>
         <result column="content" property="content" jdbcType="VARCHAR"/>
         <result column="location" property="location" jdbcType="VARCHAR"/>
+        <result column="suitable_crowd" property="suitableCrowd" jdbcType="VARCHAR"/>
         <result column="status" property="enabled" jdbcType="TINYINT"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="start_time" property="startTime" jdbcType="DATE"/>
+        <result column="end_time" property="endTime" jdbcType="DATE"/>
+        <result column="team_limit" property="teamLimit" jdbcType="VARCHAR"/>
     </resultMap>
 
     <!-- 查询字段 -->
     <sql id="Activity_Column_List">
-        id, title, content, location, status as enabled, create_time, update_time
+        id, title, content, location, suitable_crowd, status as enabled, create_time, update_time, start_time, end_time, team_limit
     </sql>
 
     <!-- 管理员查询活动列表 -->
