@@ -28,7 +28,7 @@ public interface ActivityMapper {
      * @param activity 活动信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO activity(title, summary, content, image_url, start_time, end_time, price, max_participants, current_participants, location, enabled, create_time, update_time) " +
+    @Insert("INSERT INTO activity(title, summary, content, image_url, start_time, end_time, price, team_limit, current_participants, location, status, create_time, update_time) " +
             "VALUES(#{title}, #{summary}, #{content}, #{imageUrl}, #{startTime}, #{endTime}, #{price}, #{maxParticipants}, #{currentParticipants}, #{location}, #{enabled}, #{createTime}, #{updateTime})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Activity activity);
@@ -39,8 +39,8 @@ public interface ActivityMapper {
      * @return 更新结果
      */
     @Update("UPDATE activity SET title = #{title}, summary = #{summary}, content = #{content}, image_url = #{imageUrl}, " +
-            "start_time = #{startTime}, end_time = #{endTime}, price = #{price}, max_participants = #{maxParticipants}, " +
-            "current_participants = #{currentParticipants}, location = #{location}, enabled = #{enabled}, update_time = #{updateTime} WHERE id = #{id}")
+            "start_time = #{startTime}, end_time = #{endTime}, price = #{price}, team_limit = #{maxParticipants}, " +
+            "current_participants = #{currentParticipants}, location = #{location}, status = #{enabled}, update_time = #{updateTime} WHERE id = #{id}")
     int updateById(Activity activity);
     
     /**
@@ -89,6 +89,6 @@ public interface ActivityMapper {
      * 查询所有启用的活动
      * @return 活动列表
      */
-    @Select("SELECT * FROM activity WHERE enabled = 1 ORDER BY create_time DESC")
+    @Select("SELECT * FROM activity WHERE status = 1 ORDER BY create_time DESC")
     List<Activity> selectAllEnabled();
 }

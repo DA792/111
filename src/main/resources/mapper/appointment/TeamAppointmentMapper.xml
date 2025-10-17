@@ -48,10 +48,10 @@
                 AND status = #{status}
             </if>
             <if test="startTime != null and startTime != ''">
-                AND appointment_time <![CDATA[>=]]> #{startTime}
+                AND appointment_date <![CDATA[>=]]> #{startTime}
             </if>
             <if test="endTime != null and endTime != ''">
-                AND appointment_time <![CDATA[<=]]> #{endTime}
+                AND appointment_date <![CDATA[<=]]> #{endTime}
             </if>
         </where>
         ORDER BY create_time DESC
@@ -76,10 +76,10 @@
                 AND status = #{status}
             </if>
             <if test="startTime != null and startTime != ''">
-                AND appointment_time <![CDATA[>=]]> #{startTime}
+                AND appointment_date <![CDATA[>=]]> #{startTime}
             </if>
             <if test="endTime != null and endTime != ''">
-                AND appointment_time <![CDATA[<=]]> #{endTime}
+                AND appointment_date <![CDATA[<=]]> #{endTime}
             </if>
         </where>
     </select>

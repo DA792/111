@@ -1,4 +1,4 @@
-evpackage com.scenic.dto.appointment;
+package com.scenic.dto.appointment;
 
 import java.util.Date;
 

@@ -62,6 +62,13 @@ public interface AppointmentService {
     Result<String> createActivityAppointment(ActivityAppointmentDTO appointmentDTO);
     
     /**
+     * 管理后台端新增活动预约
+     * @param appointmentDTO 活动预约信息
+     * @return 新增结果
+     */
+    Result<String> createActivityAppointmentForAdmin(ActivityAppointmentDTO appointmentDTO);
+    
+    /**
      * 上传团队预约文件
      * @param file 上传的文件
      * @return 上传结果

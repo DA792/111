@@ -6,23 +6,16 @@
     <resultMap id="ActivityResultMap" type="com.scenic.entity.content.Activity">
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="title" property="title" jdbcType="VARCHAR"/>
-        <result column="summary" property="summary" jdbcType="VARCHAR"/>
         <result column="content" property="content" jdbcType="VARCHAR"/>
-        <result column="image_url" property="imageUrl" jdbcType="VARCHAR"/>
-        <result column="start_time" property="startTime" jdbcType="TIMESTAMP"/>
-        <result column="end_time" property="endTime" jdbcType="TIMESTAMP"/>
-        <result column="price" property="price" jdbcType="DECIMAL"/>
-        <result column="max_participants" property="maxParticipants" jdbcType="INTEGER"/>
-        <result column="current_participants" property="currentParticipants" jdbcType="INTEGER"/>
         <result column="location" property="location" jdbcType="VARCHAR"/>
-        <result column="enabled" property="enabled" jdbcType="BIT"/>
+        <result column="status" property="enabled" jdbcType="TINYINT"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <!-- 查询字段 -->
     <sql id="Activity_Column_List">
-        id, title, summary, content, image_url, start_time, end_time, price, max_participants, current_participants, location, enabled, create_time, update_time
+        id, title, content, location, status as enabled, create_time, update_time
     </sql>
 
     <!-- 管理员查询活动列表 -->
@@ -35,7 +28,7 @@
                 title LIKE CONCAT('%', #{title}, '%')
             </if>
             <if test="enabled != null">
-                AND enabled = #{enabled}
+                AND status = #{enabled}
             </if>
         </where>
         ORDER BY create_time DESC
@@ -51,8 +44,17 @@
                 title LIKE CONCAT('%', #{title}, '%')
             </if>
             <if test="enabled != null">
-                AND enabled = #{enabled}
+                AND status = #{enabled}
             </if>
         </where>
+    </select>
+    
+    <!-- 查询所有启用的活动 -->
+    <select id="selectAllEnabled" resultMap="ActivityResultMap">
+        SELECT 
+        <include refid="Activity_Column_List"/>
+        FROM activity
+        WHERE status = 1
+        ORDER BY create_time DESC
     </select>
 </mapper>

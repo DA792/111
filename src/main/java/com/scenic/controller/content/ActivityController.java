@@ -72,7 +72,7 @@ public class ActivityController {
             // 处理文件上传
             if (file != null && !file.isEmpty()) {
                 String imageUrl = fileUploadUtil.uploadFile(file);
-                activityDTO.setImageUrl(imageUrl);
+                // 由于imageUrl字段已被移除，这里不再设置
             }
             
             return activityService.addActivity(activityDTO);

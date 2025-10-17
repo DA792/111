@@ -40,14 +40,7 @@ public class ActivityServiceImpl implements ActivityService {
         try {
             Activity activity = new Activity();
             activity.setTitle(activityDTO.getTitle());
-            activity.setSummary(activityDTO.getSummary());
             activity.setContent(activityDTO.getContent());
-            activity.setImageUrl(activityDTO.getImageUrl());
-            activity.setStartTime(activityDTO.getStartTime());
-            activity.setEndTime(activityDTO.getEndTime());
-            activity.setPrice(activityDTO.getPrice());
-            activity.setMaxParticipants(activityDTO.getMaxParticipants());
-            activity.setCurrentParticipants(activityDTO.getCurrentParticipants());
             activity.setLocation(activityDTO.getLocation());
             activity.setEnabled(true);
             activity.setCreateTime(LocalDateTime.now());
@@ -136,13 +129,7 @@ public class ActivityServiceImpl implements ActivityService {
             Activity activity = activityMapper.selectById(id);
             if (activity != null && activity.getEnabled()) {
                 activity.setTitle(activityDTO.getTitle());
-                activity.setSummary(activityDTO.getSummary());
                 activity.setContent(activityDTO.getContent());
-                activity.setImageUrl(activityDTO.getImageUrl());
-                activity.setStartTime(activityDTO.getStartTime());
-                activity.setEndTime(activityDTO.getEndTime());
-                activity.setPrice(activityDTO.getPrice());
-                activity.setMaxParticipants(activityDTO.getMaxParticipants());
                 activity.setLocation(activityDTO.getLocation());
                 activity.setUpdateTime(LocalDateTime.now());
                 
@@ -202,14 +189,7 @@ public class ActivityServiceImpl implements ActivityService {
         ActivityDTO dto = new ActivityDTO();
         dto.setId(activity.getId());
         dto.setTitle(activity.getTitle());
-        dto.setSummary(activity.getSummary());
         dto.setContent(activity.getContent());
-        dto.setImageUrl(activity.getImageUrl());
-        dto.setStartTime(activity.getStartTime());
-        dto.setEndTime(activity.getEndTime());
-        dto.setPrice(activity.getPrice());
-        dto.setMaxParticipants(activity.getMaxParticipants());
-        dto.setCurrentParticipants(activity.getCurrentParticipants());
         dto.setLocation(activity.getLocation());
         dto.setEnabled(activity.getEnabled());
         dto.setCreateTime(activity.getCreateTime());

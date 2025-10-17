@@ -39,6 +39,16 @@ public class ActivityAppointmentController {
     private AppointmentService appointmentService;
     
     /**
+     * 管理后台端 - 新增活动预约
+     * @param appointmentDTO 活动预约信息
+     * @return 新增结果
+     */
+    @PostMapping(ADMIN_PREFIX + "/activity-appointments")
+    public Result<String> createActivityAppointmentForAdmin(@RequestBody ActivityAppointmentDTO appointmentDTO) {
+        return appointmentService.createActivityAppointmentForAdmin(appointmentDTO);
+    }
+    
+    /**
      * 小程序端 - 创建活动预约
      * @param appointmentDTO 活动预约信息
      * @return 预约结果

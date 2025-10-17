@@ -21,7 +21,7 @@
     <!-- 查询字段 -->
     <sql id="ActivityAppointment_Column_List">
         id, activity_title, team_leader, contact_phone, contact_email, activity_id, 
-        registration_time, team_size, remarks, status, create_time, update_time
+        registration_time, activity_time, team_size, remarks, status, create_time, update_time
     </sql>
 
     <!-- 管理员查询活动预约列表 -->
@@ -93,8 +93,8 @@
             activity_title, team_leader, contact_phone, contact_email, activity_id,
             registration_time, activity_time, team_size, remarks, status, create_time, update_time
         ) VALUES(
-            #{activityName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, #{activityId},
-            #{activityDate}, #{activityTime}, #{numberOfPeople}, #{remark}, #{status}, #{createTime}, #{updateTime}
+            #{activityName, jdbcType=VARCHAR}, #{contactPerson, jdbcType=VARCHAR}, #{contactPhone, jdbcType=VARCHAR}, #{contactEmail, jdbcType=VARCHAR}, #{activityId, jdbcType=BIGINT},
+            #{activityDate, jdbcType=TIMESTAMP}, #{activityTime, jdbcType=VARCHAR}, #{numberOfPeople, jdbcType=INTEGER}, #{remark, jdbcType=VARCHAR}, #{status, jdbcType=INTEGER}, #{createTime, jdbcType=TIMESTAMP}, #{updateTime, jdbcType=TIMESTAMP}
         )
     </insert>
     

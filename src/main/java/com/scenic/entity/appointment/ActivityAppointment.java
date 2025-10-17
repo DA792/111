@@ -15,7 +15,7 @@ public class ActivityAppointment {
     private String activityTime;
     private Integer numberOfPeople;
     private String remark;
-    private String status;
+    private Integer status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
@@ -103,11 +103,11 @@ public class ActivityAppointment {
         this.remark = remark;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 

@@ -66,11 +66,11 @@
             DATE(a.registration_time) AS reserve_date,  -- 活动预约日期
             a.activity_title AS activity_name,          -- 活动名称
             -- 假设活动表（activity）存储活动人数上限，通过子查询获取
-            (SELECT max_participants FROM activity WHERE id = a.activity_id) AS activity_limit,
+            (SELECT team_limit FROM activity WHERE id = a.activity_id) AS activity_limit,
             COUNT(a.id) AS booked_count,
             CASE 
                 WHEN p.is_closed = 1 THEN '不开放'  -- 日期闭园则不开放
-                WHEN COUNT(a.id) >= (SELECT max_participants FROM activity WHERE id = a.activity_id) THEN '已满'  -- 对比活动上限
+                WHEN COUNT(a.id) >= (SELECT team_limit FROM activity WHERE id = a.activity_id) THEN '已满'  -- 对比活动上限
                 ELSE CONCAT('已预约', COUNT(a.id), '/', (SELECT max_participants FROM activity WHERE id = a.activity_id))
             END AS reserve_status,
             (p.is_closed = 0) AS is_open

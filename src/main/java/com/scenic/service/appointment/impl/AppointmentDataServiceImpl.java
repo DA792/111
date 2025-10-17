@@ -69,9 +69,32 @@ public class AppointmentDataServiceImpl implements AppointmentDataService {
                 AppointmentDataDTO dto = new AppointmentDataDTO();
                 dto.setReserveDate((java.util.Date) data.get("reserve_date"));
                 dto.setReserveStatus((String) data.get("reserve_status"));
-                dto.setBookedCount(((Number) data.get("booked_count")).intValue());
-                dto.setTotalLimit(((Number) data.get("total_limit")).intValue());
-                dto.setIsOpen((Boolean) data.get("is_open"));
+                
+                // 安全处理booked_count字段
+                Object bookedCountObj = data.get("booked_count");
+                if (bookedCountObj instanceof Number) {
+                    dto.setBookedCount(((Number) bookedCountObj).intValue());
+                } else {
+                    dto.setBookedCount(0);
+                }
+                
+                // 安全处理total_limit字段
+                Object totalLimitObj = data.get("total_limit");
+                if (totalLimitObj instanceof Number) {
+                    dto.setTotalLimit(((Number) totalLimitObj).intValue());
+                } else {
+                    dto.setTotalLimit(0);
+                }
+                
+                // 修复类型转换问题：将数字类型转换为Boolean类型
+                Object isOpenObj = data.get("is_open");
+                if (isOpenObj instanceof Boolean) {
+                    dto.setIsOpen((Boolean) isOpenObj);
+                } else if (isOpenObj instanceof Number) {
+                    dto.setIsOpen(((Number) isOpenObj).intValue() == 1);
+                } else {
+                    dto.setIsOpen(Boolean.FALSE);
+                }
                 resultList.add(dto);
             }
             
@@ -117,8 +140,23 @@ public class AppointmentDataServiceImpl implements AppointmentDataService {
                     dto.setActivityLimit(((Number) activityLimitObj).intValue());
                 }
                 
-                dto.setBookedCount(((Number) data.get("booked_count")).intValue());
-                dto.setIsOpen((Boolean) data.get("is_open"));
+                // 安全处理booked_count字段
+                Object bookedCountObj = data.get("booked_count");
+                if (bookedCountObj instanceof Number) {
+                    dto.setBookedCount(((Number) bookedCountObj).intValue());
+                } else {
+                    dto.setBookedCount(0);
+                }
+                
+                // 修复类型转换问题：将数字类型转换为Boolean类型
+                Object isOpenObj = data.get("is_open");
+                if (isOpenObj instanceof Boolean) {
+                    dto.setIsOpen((Boolean) isOpenObj);
+                } else if (isOpenObj instanceof Number) {
+                    dto.setIsOpen(((Number) isOpenObj).intValue() == 1);
+                } else {
+                    dto.setIsOpen(Boolean.FALSE);
+                }
                 resultList.add(dto);
             }
             
