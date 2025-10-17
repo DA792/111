@@ -123,8 +123,15 @@ public class FileController {
             String token = authHeader.substring(7);
             
             // 验证token有效性
-            if (!jwtUtil.validateAdminToken(token)) {
-                return Result.error("未授权：认证令牌无效或已过期");
+            // 先尝试验证管理员令牌
+            boolean isValidToken = jwtUtil.validateAdminToken(token);
+            
+            // 如果管理员令牌验证失败，再尝试验证小程序用户令牌
+            if (!isValidToken) {
+                isValidToken = jwtUtil.validateMiniappToken(token);
+                if (!isValidToken) {
+                    return Result.error("未授权：认证令牌无效或已过期");
+                }
             }
             
             // 根据用户ID获取用户头像文件信息

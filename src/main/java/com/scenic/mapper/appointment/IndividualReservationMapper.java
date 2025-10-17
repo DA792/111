@@ -182,4 +182,25 @@ public interface IndividualReservationMapper {
      * @return 总数
      */
     int selectCountForAdmin(@Param("userId") Long userId, @Param("scenicId") Long scenicId, @Param("status") Integer status);
+    
+    /**
+     * 根据证件号码和状态查询个人预约（分页）
+     * @param idNumber 证件号码
+     * @param status 状态（可选）
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 个人预约列表
+     */
+    List<IndividualReservation> selectByIdNumberAndStatus(@Param("idNumber") String idNumber, 
+                                                         @Param("status") Integer status,
+                                                         @Param("offset") int offset, 
+                                                         @Param("limit") int limit);
+    
+    /**
+     * 根据证件号码和状态查询个人预约总数
+     * @param idNumber 证件号码
+     * @param status 状态（可选）
+     * @return 总数
+     */
+    int selectCountByIdNumberAndStatus(@Param("idNumber") String idNumber, @Param("status") Integer status);
 }

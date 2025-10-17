@@ -131,9 +131,19 @@ public interface UserService {
      * @param size 每页大小
      * @param username 用户名（可选）
      * @param phone 电话（可选）
+     * @param userType 用户类型（可选）
      * @return 用户列表
      */
-    Result<PageResult<User>> getUsers(int page, int size, String username, String phone);
+    Result<PageResult<User>> getUsers(int page, int size, String username, String phone, Integer userType);
+    
+    /**
+     * 小程序端查询用户列表
+     * @param page 页码
+     * @param size 每页大小
+     * @param nickname 昵称（可选）
+     * @return 用户列表
+     */
+    Result<PageResult<User>> getUsersForMiniapp(int page, int size, String nickname);
     
     /**
      * 获取用户详情
@@ -141,6 +151,21 @@ public interface UserService {
      * @return 用户详情
      */
     Result<User> getUserDetail(Long userId);
+    
+    /**
+     * 小程序端获取用户详情
+     * @param userId 用户ID
+     * @return 用户详情
+     */
+    Result<User> getUserDetailForMiniapp(Long userId);
+    
+    /**
+     * 小程序端更新用户详情
+     * @param userId 用户ID
+     * @param user 用户信息
+     * @return 更新结果
+     */
+    Result<String> updateUserDetailForMiniapp(Long userId, User user);
     
     /**
      * 创建用户

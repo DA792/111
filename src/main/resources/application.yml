@@ -8,6 +8,17 @@ spring:
     password: 
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      # 连接池最大连接数
+      maximum-pool-size: 20
+      # 最小空闲连接数
+      minimum-idle: 5
+      # 连接超时时间（毫秒）
+      connection-timeout: 15000
+      # 空闲连接超时时间（毫秒）
+      idle-timeout: 600000
+      # 连接最大生存时间（毫秒）
+      max-lifetime: 1800000
   
   redis:
     host: 192.168.77.2
@@ -19,7 +30,7 @@ spring:
         max-wait: -1
         max-idle: 8
         min-idle: 0
-    timeout: 3000
+    timeout: 15000  # 增加Redis超时时间到15秒，与RestTemplate一致
 
 # MyBatis配置
 mybatis:
@@ -79,6 +90,6 @@ minio:
 # 微信小程序配置
 wechat:
   miniapp:
-    app-id: wx1234567890abcdef  # 替换为实际的小程序AppID
-    app-secret: abcdef1234567890abcdef1234567890  # 替换为实际的小程序AppSecret
-    code2-session-url: https://api.weixin.qq.com/sns/jscode2session
+    appId: wx78d1148e7f4afff9  # 实际的小程序AppID
+    appSecret: 426d87b3961af6093b8d1beb66d2c141  # 实际的小程序AppSecret
+    code2SessionUrl: https://api.weixin.qq.com/sns/jscode2session

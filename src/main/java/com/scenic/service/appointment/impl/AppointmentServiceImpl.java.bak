@@ -182,7 +182,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             // 设置状态，如果DTO中提供了状态则使用，否则使用默认的1(待审核)
-            if (appointmentDTO.getStatus() != null && !appointmentDTO.getStatus().isEmpty()) {
+            if (appointmentDTO.getStatus() != null) {
                 teamAppointment.setStatus(Integer.valueOf(appointmentDTO.getStatus()));
             } else {
                 teamAppointment.setStatus(1); // 1表示待审核
@@ -292,10 +292,10 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             for (ActivityAppointment activityAppointment : activityAppointments) {
                 try {
-                    // 设置默认值
-                    if (activityAppointment.getStatus() == null || activityAppointment.getStatus().isEmpty()) {
-                        activityAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
-                    }
+            // 设置默认值
+            if (activityAppointment.getStatus() == null) {
+                activityAppointment.setStatus(1); // 1表示待审核
+            }
                     if (activityAppointment.getCreateTime() == null) {
                         activityAppointment.setCreateTime(LocalDateTime.now());
                     }
@@ -387,7 +387,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             activityAppointment.setActivityTime(appointmentDTO.getActivityTime());
             activityAppointment.setNumberOfPeople(appointmentDTO.getNumberOfPeople());
             activityAppointment.setRemark(appointmentDTO.getRemark());
-            activityAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
+            activityAppointment.setStatus(1); // 1表示待审核
             activityAppointment.setCreateTime(LocalDateTime.now());
             activityAppointment.setUpdateTime(LocalDateTime.now());
             
@@ -713,7 +713,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             // 更新活动预约状态
-            activityAppointment.setStatus(status);
+            activityAppointment.setStatus(Integer.valueOf(status));
             activityAppointment.setUpdateTime(LocalDateTime.now());
             activityAppointmentMapper.updateById(activityAppointment);
             
@@ -792,8 +792,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     
     /**
      * 管理员查询团队预约列表
-     * @param page 页码
-     * @param size 每页大小
+     * @param currentPage 页码
+     * @param pageSize 每页大小
      * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
      * @param contactPhone 联系电话（可选）
@@ -804,18 +804,18 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public Result<PageResult<TeamAppointment>> getAdminTeamAppointments(
-            int page, int size, String teamName, String contactPerson, String contactPhone, 
+            int currentPage, int pageSize, String teamName, String contactPerson, String contactPhone, 
             String status, String startTime, String endTime) {
         try {
             // 分页获取团队预约记录
             List<TeamAppointment> filteredTeamAppointments = teamAppointmentMapper.selectForAdmin(
-                teamName, contactPerson, contactPhone, status, startTime, endTime, (page - 1) * size, size);
+                teamName, contactPerson, contactPhone, status, startTime, endTime, (currentPage - 1) * pageSize, pageSize);
             
             // 获取总数
             int total = teamAppointmentMapper.selectCountForAdmin(
                 teamName, contactPerson, contactPhone, status, startTime, endTime);
             
-            PageResult<TeamAppointment> pageResult = PageResult.of(total, size, page, filteredTeamAppointments);
+            PageResult<TeamAppointment> pageResult = PageResult.of(total, pageSize, currentPage, filteredTeamAppointments);
             return Result.success("查询成功", pageResult);
         } catch (Exception e) {
             return Result.error("查询失败：" + e.getMessage());
