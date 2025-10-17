@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+1<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.scenic.mapper.appointment.ActivityAppointmentMapper">
 
@@ -13,7 +13,7 @@
         <result column="registration_time" property="activityDate" jdbcType="TIMESTAMP"/>
         <result column="team_size" property="numberOfPeople" jdbcType="INTEGER"/>
         <result column="remarks" property="remark" jdbcType="VARCHAR"/>
-        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
     </resultMap>
