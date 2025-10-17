@@ -1,5 +1,5 @@
 server:
-  port: 10039
+  port: 10032
 
 spring:
   datasource:
@@ -31,6 +31,14 @@ spring:
         max-idle: 8
         min-idle: 0
     timeout: 15000  # 增加Redis超时时间到15秒，与RestTemplate一致
+    
+  # Jackson配置
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    date-format: yyyy-MM-dd
+    time-zone: GMT+8
+    default-property-inclusion: non_null
 
 # MyBatis配置
 mybatis:
