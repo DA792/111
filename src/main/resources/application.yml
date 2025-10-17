@@ -1,5 +1,5 @@
 server:
-  port: 10039
+  port: 10032
 
 spring:
   datasource:
