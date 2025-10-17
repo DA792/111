@@ -524,7 +524,6 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             
             // 构造新的分类对象
             CheckinCategory newCategory = new CheckinCategory();
-            newCategory.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
             newCategory.setName(categoryName);
             newCategory.setDescription(""); // 默认描述为空
             newCategory.setSortOrder(0); // 默认排序为0
