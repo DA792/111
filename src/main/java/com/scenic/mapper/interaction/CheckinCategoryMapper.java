@@ -50,8 +50,7 @@ public interface CheckinCategoryMapper {
      * @param category 打卡分类
      * @return 插入结果
      */
-    @Insert("INSERT INTO checkin_category(name, description, sort_order, status, version, create_time, update_time, create_by, update_by) " +
-            "VALUES(#{name}, #{description}, #{sortOrder}, #{status}, #{version}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
+    @Insert("INSERT INTO checkin_category(id, name, description, sort_order, status, version, create_time, update_time, create_by, update_by) " +
+            "VALUES(#{id}, #{name}, #{description}, #{sortOrder}, #{status}, #{version}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
     int insert(CheckinCategory category);
 }
