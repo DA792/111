@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 文件控制器
@@ -41,13 +42,119 @@ public class FileController {
      * 上传文件（后端上传）
      *
      * @param file 文件
-     * @return 文件访问URL
+     * @param type 文件类型（可选，默认为0-其他）
+     * @return 包含文件ID和URL的对象
      */
     @PostMapping("/upload")
-    public Result<String> uploadFile(@RequestParam("file") MultipartFile file) {
+    public Result<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file, 
+                                                 @RequestParam(value = "type", defaultValue = "0") String typeStr,
+                                                 HttpServletRequest request) {
+        // 将字符串类型转换为整数类型
+        Integer type = 0; // 默认为0-其他
+        if (typeStr != null && !typeStr.isEmpty()) {
+            try {
+                type = Integer.parseInt(typeStr);
+            } catch (NumberFormatException e) {
+                // 如果无法解析为整数，则根据字符串值设置相应的类型
+                switch (typeStr.toLowerCase()) {
+                    case "image":
+                        type = 1; // 1-图片
+                        break;
+                    case "video":
+                        type = 2; // 2-视频
+                        break;
+                    case "audio":
+                        type = 3; // 3-音频
+                        break;
+                    default:
+                        type = 0; // 0-其他
+                }
+            }
+        }
         try {
-            String fileUrl = fileUploadUtil.uploadFile(file);
-            return Result.success(fileUrl);
+            if (file.isEmpty()) {
+                return Result.error("文件不能为空");
+            }
+            
+            // 获取当前登录用户ID
+            Long currentUserId = null;
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                try {
+                    // 验证令牌是否有效
+                    if (jwtUtil.validateAdminToken(token)) {
+                        // 使用公共方法从令牌中获取userId
+                        currentUserId = jwtUtil.getClaimFromToken(token, claims -> claims.get("userId", Long.class), jwtUtil.getAdminSecret());
+                        System.out.println("当前登录用户ID: " + currentUserId);
+                    } else {
+                        System.err.println("令牌无效");
+                    }
+                } catch (Exception e) {
+                    System.err.println("获取用户ID失败: " + e.getMessage());
+                }
+            }
+            
+            // 如果无法获取用户ID，使用默认测试用户ID
+            if (currentUserId == null) {
+                currentUserId = 1741502342987124736L; // 使用测试用户ID
+                System.out.println("使用默认测试用户ID: " + currentUserId);
+            }
+            
+            // 获取文件原始名称
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                return Result.error("文件名不能为空");
+            }
+            
+            // 获取文件扩展名
+            String extension = "";
+            if (originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            
+            // 生成唯一文件名
+            String fileKey = UUID.randomUUID().toString() + extension;
+            
+            // 根据文件类型选择不同的存储桶
+            String bucketName = "files"; // 默认存储桶
+            if (type == 2 || "video".equalsIgnoreCase(typeStr)) {
+                bucketName = "content-management"; // 视频文件存储桶
+            }
+            
+            // 上传到MinIO
+            try (InputStream inputStream = file.getInputStream()) {
+                fileUploadUtil.putObject(bucketName, fileKey, inputStream, file.getSize(), file.getContentType());
+            }
+            
+            // 保存文件信息到数据库
+            ResourceFile resourceFile = new ResourceFile();
+            resourceFile.setFileName(originalFilename);
+            resourceFile.setFileKey(fileKey);
+            resourceFile.setBucketName(bucketName);
+            resourceFile.setFileSize(file.getSize());
+            resourceFile.setMimeType(file.getContentType());
+            resourceFile.setFileType(type); // 文件类型：0-其他，1-图片，2-视频，3-音频
+            resourceFile.setUploadUserId(currentUserId); // 设置上传用户ID
+            resourceFile.setIsTemp(0);
+            resourceFile.setCreateTime(LocalDateTime.now());
+            resourceFile.setUpdateTime(LocalDateTime.now());
+            resourceFile.setCreateBy(currentUserId); // 设置创建者ID
+            resourceFile.setUpdateBy(currentUserId); // 设置更新者ID
+            
+            // 保存文件记录
+            resourceFileMapper.insert(resourceFile);
+            Long fileId = resourceFile.getId();
+            
+            // 获取文件URL
+            String fileUrl = fileUploadUtil.getPresignedUrl(bucketName, fileKey, 3600);
+            
+            // 返回文件ID和URL
+            Map<String, Object> result = new HashMap<>();
+            result.put("fileId", fileId);
+            result.put("url", fileUrl);
+            
+            return Result.success(result);
         } catch (Exception e) {
             return Result.error("文件上传失败: " + e.getMessage());
         }

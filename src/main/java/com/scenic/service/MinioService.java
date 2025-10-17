@@ -43,14 +43,26 @@ public class MinioService {
     }
 
     /**
-     * 上传文件
+     * 上传文件到默认桶
      *
      * @param file 文件
      * @param objectName 对象名称
      * @return 文件访问URL
      */
     public String uploadFile(MultipartFile file, String objectName) throws Exception {
-        createBucketIfNotExists();
+        return uploadFileToBucket(bucketName, file, objectName);
+    }
+    
+    /**
+     * 上传文件到指定桶
+     *
+     * @param bucketName 存储桶名称
+     * @param file 文件
+     * @param objectName 对象名称
+     * @return 文件访问URL
+     */
+    public String uploadFileToBucket(String bucketName, MultipartFile file, String objectName) throws Exception {
+        createBucketIfNotExists(bucketName);
         
         try (InputStream inputStream = file.getInputStream()) {
             minioClient.putObject(
@@ -63,7 +75,7 @@ public class MinioService {
             );
         }
         
-        return getObjectUrl(objectName);
+        return getObjectUrl(bucketName, objectName);
     }
 
     /**
@@ -123,6 +135,17 @@ public class MinioService {
      * @return 文件访问URL
      */
     public String getObjectUrl(String objectName) throws Exception {
+        return getObjectUrl(bucketName, objectName);
+    }
+    
+    /**
+     * 获取指定桶中文件的访问URL（永久URL）
+     *
+     * @param bucketName 存储桶名称
+     * @param objectName 对象名称
+     * @return 文件访问URL
+     */
+    public String getObjectUrl(String bucketName, String objectName) throws Exception {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)

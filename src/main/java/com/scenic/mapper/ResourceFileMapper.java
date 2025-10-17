@@ -6,8 +6,12 @@ import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.apache.ibatis.annotations.Results;
+import org.apache.ibatis.annotations.Result;
+import org.apache.ibatis.annotations.Delete;
 
 import com.scenic.entity.ResourceFile;
+import java.util.List;
 
 @Mapper
 public interface ResourceFileMapper {
@@ -63,6 +67,22 @@ public interface ResourceFileMapper {
      * @param id 文件资源ID
      * @return 删除结果
      */
-    @Update("DELETE FROM resource_file WHERE id = #{id}")
+    @Delete("DELETE FROM resource_file WHERE id = #{id}")
     int deleteById(Long id);
+    
+    /**
+     * 根据ID列表删除文件资源记录
+     * @param ids 文件资源ID列表
+     * @return 删除结果
+     */
+    @Delete("<script>DELETE FROM resource_file WHERE id IN <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    int deleteByIds(@Param("ids") List<Long> ids);
+    
+    /**
+     * 根据文件类型查询最新上传的文件
+     * @param fileType 文件类型（1-图片 2-视频 3-文档 4-其他）
+     * @return 文件资源信息
+     */
+    @Select("SELECT * FROM resource_file WHERE file_type = #{fileType} ORDER BY create_time DESC LIMIT 1")
+    ResourceFile selectLatestVideoByType(Integer fileType);
 }

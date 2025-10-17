@@ -8,6 +8,7 @@ import com.scenic.common.dto.PageResult;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 保护区介绍服务接口
@@ -15,18 +16,19 @@ import java.util.List;
 public interface ProtectedReservationInfoService extends IService<ProtectedReservationInfo> {
     
     /**
-     * 保存保护区介绍
-     * @param dto 保护区介绍DTO
-     * @return 是否保存成功
-     */
-    boolean saveProtectedReservationInfo(ProtectedReservationInfoDTO dto);
-    
-    /**
      * 更新保护区介绍
      * @param dto 保护区介绍DTO
      * @return 是否更新成功
      */
     boolean updateProtectedReservationInfo(ProtectedReservationInfoDTO dto);
+    
+    /**
+     * 更新保护区介绍（支持视频文件上传）
+     * @param dto 保护区介绍DTO
+     * @param videoFiles 视频文件数组
+     * @return 是否更新成功
+     */
+    boolean updateProtectedReservationInfo(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles);
     
     /**
      * 根据ID删除保护区介绍
@@ -88,4 +90,49 @@ public interface ProtectedReservationInfoService extends IService<ProtectedReser
      * @return 保护区介绍列表
      */
     List<ProtectedReservationInfoDTO> getProtectedReservationInfoByContentCategory(Byte contentCategory);
+    
+    /**
+     * 保存保护区介绍（包含文件上传处理）
+     * @param dto 保护区介绍DTO
+     * @param videoFiles 视频文件数组
+     * @return 是否保存成功
+     * @throws Exception 异常
+     */
+    boolean saveProtectedReservationInfoWithFiles(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles) throws Exception;
+    
+    /**
+     * 处理视频文件上传
+     * @param videoFiles 视频文件数组
+     * @return 视频文件ID列表
+     * @throws Exception 异常
+     */
+    List<Long> processVideoFiles(MultipartFile[] videoFiles) throws Exception;
+    
+    /**
+     * 处理视频文件上传（带用户ID）
+     * @param videoFiles 视频文件数组
+     * @param userId 上传用户ID
+     * @return 视频文件ID列表
+     * @throws Exception 异常
+     */
+    List<Long> processVideoFiles(MultipartFile[] videoFiles, Long userId) throws Exception;
+    
+    /**
+     * 处理音频文件上传
+     * @param audioFiles 音频文件数组
+     * @param userId 上传用户ID
+     * @return 音频文件ID列表
+     * @throws Exception 异常
+     */
+    List<Long> processAudioFiles(MultipartFile[] audioFiles, Long userId) throws Exception;
+    
+    /**
+     * 处理照片文件上传
+     * @param photoFiles 照片文件数组
+     * @param userId 上传用户ID
+     * @return 照片文件ID列表
+     * @throws Exception 异常
+     */
+    List<Long> processPhotoFiles(MultipartFile[] photoFiles, Long userId) throws Exception;
+    
 }

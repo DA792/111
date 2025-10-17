@@ -19,6 +19,7 @@ public class ProtectedReservationInfoDTO {
     private List<Long> carouselFileIds; // 轮播图文件ID列表
     private List<Long> galleryFileIds; // 画廊文件ID列表
     private List<Long> audioFileIds; // 音频文件ID列表
+    private List<Long> videoFileIds; // 视频文件ID列表
     private Byte deleted; // 删除标记
     private LocalDateTime createTime; // 创建时间
     private LocalDateTime updateTime; // 更新时间
@@ -107,6 +108,14 @@ public class ProtectedReservationInfoDTO {
 
     public void setAudioFileIds(List<Long> audioFileIds) {
         this.audioFileIds = audioFileIds;
+    }
+
+    public List<Long> getVideoFileIds() {
+        return videoFileIds;
+    }
+
+    public void setVideoFileIds(List<Long> videoFileIds) {
+        this.videoFileIds = videoFileIds;
     }
 
     public Byte getDeleted() {

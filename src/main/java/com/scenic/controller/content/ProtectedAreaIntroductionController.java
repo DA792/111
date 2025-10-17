@@ -69,60 +69,6 @@ public class ProtectedAreaIntroductionController {
         return protectedAreaIntroductionService.getProtectedAreaIntroductionById(id);
     }
     
-    /**
-     * 管理后台端 - 新增保护区介绍
-     * @param imageFile 图片文件
-     * @param audioFile 音频文件
-     * @param videoFile 视频文件
-     * @param title 标题
-     * @param content 内容
-     * @param language 语言
-     * @param sortOrder 排序
-     * @return 操作结果
-     */
-    @PostMapping(ADMIN_PREFIX + "/protected-area-introduction/add")
-    public Result<String> addProtectedAreaIntroduction(
-            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-            @RequestParam(value = "audioFile", required = false) MultipartFile audioFile,
-            @RequestParam(value = "videoFile", required = false) MultipartFile videoFile,
-            @RequestParam("title") String title,
-            @RequestParam("content") String content,
-            @RequestParam("language") String language,
-            @RequestParam("sortOrder") Integer sortOrder) {
-        
-        try {
-            // 处理文件上传
-            String imageUrl = null;
-            if (imageFile != null && !imageFile.isEmpty()) {
-                imageUrl = fileUploadUtil.uploadFile(imageFile);
-            }
-            
-            String audioUrl = null;
-            if (audioFile != null && !audioFile.isEmpty()) {
-                audioUrl = fileUploadUtil.uploadFile(audioFile);
-            }
-            
-            String videoUrl = null;
-            if (videoFile != null && !videoFile.isEmpty()) {
-                videoUrl = fileUploadUtil.uploadFile(videoFile);
-            }
-            
-            ProtectedAreaIntroductionDTO introductionDTO = new ProtectedAreaIntroductionDTO();
-            introductionDTO.setTitle(title);
-            introductionDTO.setContent(content);
-            introductionDTO.setLanguage(language);
-            introductionDTO.setImageUrl(imageUrl);
-            introductionDTO.setAudioUrl(audioUrl);
-            introductionDTO.setVideoUrl(videoUrl);
-            introductionDTO.setSortOrder(sortOrder);
-            
-            return protectedAreaIntroductionService.addProtectedAreaIntroduction(introductionDTO);
-        } catch (IOException e) {
-            return Result.error("文件上传失败：" + e.getMessage());
-        } catch (Exception e) {
-            return Result.error("新增失败：" + e.getMessage());
-        }
-    }
     
     /**
      * 管理后台端 - 获取所有保护区介绍
