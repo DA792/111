@@ -1,5 +1,5 @@
 server:
-  port: 10032
+  port: 10039
 
 spring:
   datasource:
@@ -93,6 +93,7 @@ minio:
   access-key: admin
   secret-key: zssg0325
   bucket-name: user-avatars
+  photo-checkin-bucket: photo-checkin
 
 # 微信小程序配置
 wechat:

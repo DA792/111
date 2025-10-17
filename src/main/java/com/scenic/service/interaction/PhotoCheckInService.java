@@ -2,8 +2,14 @@ package com.scenic.service.interaction;
 
 import java.util.List;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
+import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
+import com.scenic.entity.interaction.vo.CheckinCategoryVO;
+import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 
 /**
  * 拍照打卡服务接口
@@ -21,21 +27,8 @@ public interface PhotoCheckInService {
      * 获取所有照片打卡记录
      * @return 照片打卡记录列表
      */
-    Result<List<PhotoCheckInDTO>> getAllPhotoCheckIns();
+    PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO);
     
-    /**
-     * 根据分类获取照片打卡记录
-     * @param category 分类
-     * @return 照片打卡记录列表
-     */
-    Result<List<PhotoCheckInDTO>> getPhotoCheckInsByCategory(String category);
-    
-    /**
-     * 根据用户ID获取照片打卡记录
-     * @param userId 用户ID
-     * @return 照片打卡记录列表
-     */
-    Result<List<PhotoCheckInDTO>> getPhotoCheckInsByUserId(Long userId);
     
     /**
      * 点赞照片打卡
@@ -57,12 +50,50 @@ public interface PhotoCheckInService {
      * @return 操作结果
      */
     Result<String> deletePhotoCheckIn(Long photoCheckInId);
+
+    /**
+     * 获取打卡分类列表
+     * @return 分类列表
+     */
+    Result<List<CheckinCategoryVO>> getCategoryList();
     
     /**
-     * 管理端 - 修改照片打卡分类
-     * @param photoCheckInId 照片打卡ID
-     * @param category 新分类
+     * 删除打卡分类（软删除）
+     * @param categoryId 分类ID
      * @return 操作结果
      */
-    Result<String> updatePhotoCheckInCategory(Long photoCheckInId, String category);
+    Result<String> deleteCategory(Long categoryId);
+    
+    /**
+     * 新增打卡分类
+     * @param categoryName 分类名称
+     * @return 操作结果
+     */
+    Result<String> addCategory(String categoryName);
+    
+    /**
+     * 管理后台端 - 获取当前照片打卡记录详情
+     * @param photoCheckInId 照片打卡ID
+     * @return 照片打卡记录详情
+     */
+    Result<PhotoCheckInVO> getPhotoCheckInsInfoForAdmin(Long photoCheckInId);
+    
+    /**
+     * 管理后台端 - 新增照片打卡记录
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件
+     * @return 操作结果
+     */
+    Result<String> addPhotoCheckInForAdmin(String title, Long categoryId, MultipartFile photo);
+    
+    /**
+     * 管理后台端 - 更新照片打卡记录
+     * @param id 照片打卡记录ID
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件（可选）
+     * @return 操作结果
+     */
+    Result<String> updatePhotoCheckInForAdmin(Long id, String title, Long categoryId, MultipartFile photo);
 }

@@ -7,55 +7,78 @@
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="user_id" property="userId" jdbcType="BIGINT"/>
         <result column="user_name" property="userName" jdbcType="VARCHAR"/>
-        <result column="photo_url" property="photoUrl" jdbcType="VARCHAR"/>
-        <result column="description" property="description" jdbcType="VARCHAR"/>
-        <result column="category" property="category" jdbcType="VARCHAR"/>
-        <result column="latitude" property="latitude" jdbcType="DECIMAL"/>
-        <result column="longitude" property="longitude" jdbcType="DECIMAL"/>
-        <result column="likes" property="likes" jdbcType="INTEGER"/>
-        <result column="enabled" property="enabled" jdbcType="BIT"/>
+        <result column="user_avatar" property="userAvatar" jdbcType="VARCHAR"/>
+        <result column="title" property="title" jdbcType="VARCHAR"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="category_id" property="categoryId" jdbcType="BIGINT"/>
+        <result column="category_name" property="categoryName" jdbcType="VARCHAR"/>
+        <result column="like_count" property="likeCount" jdbcType="INTEGER"/>
+        <result column="view_count" property="viewCount" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="version" property="version" jdbcType="INTEGER"/>
+        <result column="deleted" property="deleted" jdbcType="TINYINT"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="BIGINT"/>
+        <result column="update_by" property="updateBy" jdbcType="BIGINT"/>
+        <result column="photo_id" property="photoId" jdbcType="BIGINT"/>
     </resultMap>
 
     <!-- 查询字段 -->
     <sql id="PhotoCheckIn_Column_List">
-        id, user_id, user_name, photo_url, description, category, latitude, longitude, likes, enabled, create_time, update_time
+        pc.id, pc.user_id, pc.user_name, pc.user_avatar, pc.title, pc.content, pc.category_id, cc.name as category_name, pc.like_count, pc.view_count, pc.status, pc.version, pc.deleted, pc.create_time, pc.update_time, pc.create_by, pc.update_by, pc.photo_id
     </sql>
+
+    <!-- 根据ID查询照片打卡详情（包含分类名称） -->
+    <select id="selectById" resultMap="PhotoCheckInResultMap">
+        SELECT 
+        <include refid="PhotoCheckIn_Column_List"/>
+        FROM photo_checkin pc
+        LEFT JOIN checkin_category cc ON pc.category_id = cc.id
+        WHERE pc.id = #{id} AND pc.deleted = 0
+    </select>
 
     <!-- 管理员查询照片打卡列表 -->
     <select id="selectForAdmin" resultMap="PhotoCheckInResultMap">
         SELECT 
         <include refid="PhotoCheckIn_Column_List"/>
-        FROM photo_check_in
+        FROM photo_checkin pc
+        LEFT JOIN checkin_category cc ON pc.category_id = cc.id
         <where>
+            pc.deleted = 0
+            <if test="title != null and title != ''">
+                AND title LIKE CONCAT('%', #{title}, '%')
+            </if>
             <if test="userName != null and userName != ''">
-                user_name LIKE CONCAT('%', #{userName}, '%')
+                AND user_name LIKE CONCAT('%', #{userName}, '%')
             </if>
-            <if test="category != null and category != ''">
-                AND category = #{category}
+            <if test="categoryId != null">
+                AND pc.category_id = #{categoryId}
             </if>
-            <if test="enabled != null">
-                AND enabled = #{enabled}
+            <if test="createTime != null">
+                AND DATE(pc.create_time) = DATE(#{createTime})
             </if>
         </where>
-        ORDER BY create_time DESC
-        LIMIT #{offset}, #{limit}
+        ORDER BY pc.create_time DESC
     </select>
 
     <!-- 管理员查询照片打卡总数 -->
     <select id="selectCountForAdmin" resultType="java.lang.Integer">
         SELECT COUNT(*)
-        FROM photo_check_in
+        FROM photo_checkin
         <where>
+            deleted = 0
+            <if test="title != null and title != ''">
+                AND title LIKE CONCAT('%', #{title}, '%')
+            </if>
             <if test="userName != null and userName != ''">
-                user_name LIKE CONCAT('%', #{userName}, '%')
+                AND user_name LIKE CONCAT('%', #{userName}, '%')
             </if>
-            <if test="category != null and category != ''">
-                AND category = #{category}
+            <if test="categoryId != null">
+                AND category_id = #{categoryId}
             </if>
-            <if test="enabled != null">
-                AND enabled = #{enabled}
+            <if test="createTime != null">
+                AND DATE(create_time) = DATE(#{createTime})
             </if>
         </where>
     </select>
