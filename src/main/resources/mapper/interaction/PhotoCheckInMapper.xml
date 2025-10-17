@@ -26,7 +26,7 @@
 
     <!-- 查询字段 -->
     <sql id="PhotoCheckIn_Column_List">
-        pc.id, pc.user_id, pc.user_name, pc.user_avatar, pc.title, pc.content, pc.category_id, cc.name as category_name, pc.like_count, pc.view_count, pc.status, pc.version, pc.deleted, pc.create_time, pc.update_time, pc.create_by, pc.update_by, pc.photo_id
+        pc.id, pc.user_id, pc.user_name, pc.user_avatar, pc.title, pc.content, pc.category_id, CASE WHEN cc.status = 0 THEN '' ELSE cc.name END as category_name, pc.like_count, pc.view_count, pc.status, pc.version, pc.deleted, pc.create_time, pc.update_time, pc.create_by, pc.update_by, pc.photo_id
     </sql>
 
     <!-- 根据ID查询照片打卡详情（包含分类名称） -->
