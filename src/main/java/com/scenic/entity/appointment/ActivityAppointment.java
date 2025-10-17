@@ -140,7 +140,7 @@ public class ActivityAppointment {
                 ", activityTime='" + activityTime + '\'' +
                 ", numberOfPeople=" + numberOfPeople +
                 ", remark='" + remark + '\'' +
-                ", status='" + status + '\'' +
+                ", status=" + status +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 '}';

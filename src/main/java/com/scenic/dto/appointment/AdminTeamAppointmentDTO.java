@@ -55,6 +55,8 @@ public class AdminTeamAppointmentDTO {
     @Size(max = 500, message = "管理员备注长度不能超过500个字符")
     private String adminRemarks;
     
+    private String checkInTime;
+    
     private Integer status;
     
     private List<TeamMember> members;
@@ -177,6 +179,14 @@ public class AdminTeamAppointmentDTO {
         this.adminRemarks = adminRemarks;
     }
 
+    public String getCheckInTime() {
+        return checkInTime;
+    }
+
+    public void setCheckInTime(String checkInTime) {
+        this.checkInTime = checkInTime;
+    }
+
     public Integer getStatus() {
         return status;
     }
@@ -218,6 +228,7 @@ public class AdminTeamAppointmentDTO {
                 ", formFileId='" + formFileId + '\'' +
                 ", remarks='" + remarks + '\'' +
                 ", adminRemarks='" + adminRemarks + '\'' +
+                ", checkInTime='" + checkInTime + '\'' +
                 ", status=" + status +
                 ", members=" + members +
                 ", createBy='" + createBy + '\'' +

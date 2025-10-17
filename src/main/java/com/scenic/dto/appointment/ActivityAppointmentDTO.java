@@ -4,17 +4,18 @@ import java.time.LocalDateTime;
 
 /**
  * 活动预约DTO类
+ * 与activity_registration表字段对应
  */
 public class ActivityAppointmentDTO {
-    private String activityName;
-    private String contactPerson;
-    private String contactPhone;
-    private String contactEmail;
-    private Long activityId;
-    private LocalDateTime activityDate;
-    private String activityTime;
-    private Integer numberOfPeople;
-    private String remark;
+    private String activityName;      // 对应 activity_title
+    private String contactPerson;     // 对应 team_leader
+    private String contactPhone;      // 对应 contact_phone
+    private String contactEmail;      // 对应 contact_email
+    private Long activityId;          // 对应 activity_id
+    private LocalDateTime activityDate; // 对应 registration_time
+    private String activityTime;      // 对应 activity_time
+    private Integer numberOfPeople;   // 对应 team_size
+    private String remark;            // 对应 remarks
 
     // 构造函数
     public ActivityAppointmentDTO() {}

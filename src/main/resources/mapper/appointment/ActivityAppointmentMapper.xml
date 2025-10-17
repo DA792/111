@@ -11,6 +11,7 @@
         <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
         <result column="activity_id" property="activityId" jdbcType="BIGINT"/>
         <result column="registration_time" property="activityDate" jdbcType="TIMESTAMP"/>
+        <result column="activity_time" property="activityTime" jdbcType="VARCHAR"/>
         <result column="team_size" property="numberOfPeople" jdbcType="INTEGER"/>
         <result column="remarks" property="remark" jdbcType="VARCHAR"/>
         <result column="status" property="status" jdbcType="INTEGER"/>
@@ -129,7 +130,7 @@
             <if test="remark != null and remark != ''">
                 remarks = #{remark},
             </if>
-            <if test="status != null and status != ''">
+            <if test="status != null">
                 status = #{status},
             </if>
             update_time = #{updateTime}

@@ -17,8 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.appointment.ActivityAppointmentDTO;
+import com.scenic.dto.content.ActivityDTO;
 import com.scenic.entity.appointment.ActivityAppointment;
 import com.scenic.service.appointment.AppointmentService;
+import com.scenic.service.content.ActivityService;
 import com.scenic.utils.ExcelParserUtil;
 
 /**
@@ -37,6 +39,9 @@ public class ActivityAppointmentController {
     
     @Autowired
     private AppointmentService appointmentService;
+    
+    @Autowired
+    private ActivityService activityService;
     
     /**
      * 管理后台端 - 新增活动预约
@@ -186,5 +191,15 @@ public class ActivityAppointmentController {
         } catch (Exception e) {
             return Result.error("文件解析失败：" + e.getMessage());
         }
+    }
+    
+    /**
+     * 管理后台端 - 获取所有活动列表（用于预约选择）
+     * @return 活动列表
+     */
+    @GetMapping(ADMIN_PREFIX + "/activity/list-for-appointment")
+    public Result<List<ActivityDTO>> getActivityListForAppointment() {
+        // 获取所有活动，包括禁用的活动，用于预约选择
+        return activityService.getAllActivities();
     }
 }

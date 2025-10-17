@@ -355,7 +355,18 @@ public class AppointmentServiceImpl implements AppointmentService {
             existingTeamAppointment.setAppointmentDate(appointmentDTO.getAppointmentDate());
             existingTeamAppointment.setAppointmentTime(appointmentDTO.getAppointmentTime());
             existingTeamAppointment.setRemark(appointmentDTO.getRemark());
+            existingTeamAppointment.setAdminRemarks(appointmentDTO.getAdminRemarks());
+            existingTeamAppointment.setCheckInTime(appointmentDTO.getCheckInTime());
             existingTeamAppointment.setUpdateTime(LocalDateTime.now());
+            
+            // 处理状态字段
+            if (appointmentDTO.getStatus() != null && !appointmentDTO.getStatus().isEmpty()) {
+                try {
+                    existingTeamAppointment.setStatus(Integer.valueOf(appointmentDTO.getStatus()));
+                } catch (NumberFormatException e) {
+                    // 如果转换失败，保持原有状态
+                }
+            }
             
             // 保存团队预约主表记录
             teamAppointmentMapper.updateById(existingTeamAppointment);
@@ -375,6 +386,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional(rollbackFor = Exception.class)
     public Result<String> createActivityAppointmentForAdmin(ActivityAppointmentDTO appointmentDTO) {
         try {
+            System.out.println("DEBUG: 接收到的预约数据: " + appointmentDTO);
+            
             // 校验联系人电话合法性（简化处理）
             if (appointmentDTO.getContactPhone() == null || appointmentDTO.getContactPhone().isEmpty()) {
                 return Result.error("联系电话不能为空");
@@ -401,11 +414,16 @@ public class AppointmentServiceImpl implements AppointmentService {
             activityAppointment.setCreateTime(LocalDateTime.now());
             activityAppointment.setUpdateTime(LocalDateTime.now());
             
+            System.out.println("DEBUG: 准备插入的活动预约数据: " + activityAppointment);
+            
             // 保存活动预约主表记录
-            activityAppointmentMapper.insert(activityAppointment);
+            int result = activityAppointmentMapper.insert(activityAppointment);
+            System.out.println("DEBUG: 插入结果: " + result);
             
             return Result.success("预约成功", "ACT" + activityAppointment.getId());
         } catch (Exception e) {
+            System.err.println("预约失败异常: " + e.getMessage());
+            e.printStackTrace();
             return Result.error("预约失败：" + e.getMessage());
         }
     }
