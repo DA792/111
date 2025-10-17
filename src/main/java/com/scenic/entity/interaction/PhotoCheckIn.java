@@ -1,28 +1,69 @@
 package com.scenic.entity.interaction;
 
 import java.time.LocalDateTime;
+import javax.persistence.*;
 
-/**
- * 拍照打卡实体类
- */
+@Entity
+@Table(name = "photo_checkin")
 public class PhotoCheckIn {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long userId; // 用户ID
-    private String userName; // 用户名
-    private String photoUrl; // 照片URL
-    private String description; // 描述
-    private String category; // 分类
-    private Double latitude; // 纬度
-    private Double longitude; // 经度
-    private Integer likes; // 点赞数
-    private Boolean enabled; // 是否启用
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Column(name = "user_name", length = 100)
+    private String userName;
+
+    @Column(name = "user_avatar", length = 1024)
+    private String userAvatar;
+
+    @Column(name = "title", length = 100)
+    private String title;
+
+    @Column(name = "content", length = 1000)
+    private String content;
+
+    @Column(name = "category_id")
+    private Long categoryId;
+    
+    @Transient
+    private String categoryName;
+
+    @Column(name = "like_count", nullable = false, columnDefinition = "int default 0")
+    private Integer likeCount = 0;
+
+    @Column(name = "view_count", nullable = false, columnDefinition = "int default 0")
+    private Integer viewCount = 0;
+
+    @Column(name = "status", nullable = false, columnDefinition = "tinyint default 1")
+    private Integer status = 1;
+
+    @Version
+    @Column(name = "version", nullable = false, columnDefinition = "int default 0")
+    private Integer version = 0;
+
+    @Column(name = "deleted", nullable = false, columnDefinition = "tinyint default 0")
+    private Boolean deleted = false;
+
+    @Column(name = "create_time", nullable = false, updatable = false, columnDefinition = "datetime default CURRENT_TIMESTAMP")
     private LocalDateTime createTime;
+
+    @Column(name = "update_time", nullable = false, columnDefinition = "datetime default CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updateTime;
 
-    // 构造函数
-    public PhotoCheckIn() {}
+    @Column(name = "create_by")
+    private Long createBy;
 
-    // Getter 和 Setter 方法
+    @Column(name = "update_by")
+    private Long updateBy;
+
+    @Column(name = "photo_id", columnDefinition = "bigint COMMENT '照片ID'")
+    private Long photoId;
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -47,60 +88,84 @@ public class PhotoCheckIn {
         this.userName = userName;
     }
 
-    public String getPhotoUrl() {
-        return photoUrl;
+    public String getUserAvatar() {
+        return userAvatar;
     }
 
-    public void setPhotoUrl(String photoUrl) {
-        this.photoUrl = photoUrl;
+    public void setUserAvatar(String userAvatar) {
+        this.userAvatar = userAvatar;
     }
 
-    public String getDescription() {
-        return description;
+    public String getTitle() {
+        return title;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public String getCategory() {
-        return category;
+    public String getContent() {
+        return content;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setContent(String content) {
+        this.content = content;
     }
 
-    public Double getLatitude() {
-        return latitude;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 
-    public Double getLongitude() {
-        return longitude;
+    public String getCategoryName() {
+        return categoryName;
     }
 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
     }
 
-    public Integer getLikes() {
-        return likes;
+    public Integer getLikeCount() {
+        return likeCount;
     }
 
-    public void setLikes(Integer likes) {
-        this.likes = likes;
+    public void setLikeCount(Integer likeCount) {
+        this.likeCount = likeCount;
     }
 
-    public Boolean getEnabled() {
-        return enabled;
+    public Integer getViewCount() {
+        return viewCount;
     }
 
-    public void setEnabled(Boolean enabled) {
-        this.enabled = enabled;
+    public void setViewCount(Integer viewCount) {
+        this.viewCount = viewCount;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 
     public LocalDateTime getCreateTime() {
@@ -119,21 +184,39 @@ public class PhotoCheckIn {
         this.updateTime = updateTime;
     }
 
-    @Override
-    public String toString() {
-        return "PhotoCheckIn{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", userName='" + userName + '\'' +
-                ", photoUrl='" + photoUrl + '\'' +
-                ", description='" + description + '\'' +
-                ", category='" + category + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", likes=" + likes +
-                ", enabled=" + enabled +
-                ", createTime=" + createTime +
-                ", updateTime=" + updateTime +
-                '}';
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
+    }
+
+    public Long getPhotoId() {
+        return photoId;
+    }
+
+    public void setPhotoId(Long photoId) {
+        this.photoId = photoId;
+    }
+
+    // 实体生命周期回调（可选）
+    @PrePersist
+    protected void onCreate() {
+        createTime = LocalDateTime.now();
+        updateTime = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updateTime = LocalDateTime.now();
     }
 }
