@@ -1,5 +1,6 @@
 package com.scenic.mapper.interaction;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Delete;
@@ -20,7 +21,6 @@ public interface PhotoCheckInMapper {
      * @param id 照片打卡ID
      * @return 照片打卡信息
      */
-    @Select("SELECT * FROM photo_check_in WHERE id = #{id}")
     PhotoCheckIn selectById(Long id);
     
     /**
@@ -28,8 +28,8 @@ public interface PhotoCheckInMapper {
      * @param photoCheckIn 照片打卡信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO photo_check_in(user_id, user_name, photo_url, description, category, latitude, longitude, likes, enabled, create_time, update_time) " +
-            "VALUES(#{userId}, #{userName}, #{photoUrl}, #{description}, #{category}, #{latitude}, #{longitude}, #{likes}, #{enabled}, #{createTime}, #{updateTime})")
+    @Insert("INSERT INTO photo_checkin(user_id, user_name, user_avatar, title, content, category_id, photo_id, like_count, view_count, status, version, deleted, create_time, update_time, create_by, update_by) " +
+            "VALUES(#{userId}, #{userName}, #{userAvatar}, #{title}, #{content}, #{categoryId}, #{photoId}, #{likeCount}, #{viewCount}, #{status}, #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(PhotoCheckIn photoCheckIn);
     
@@ -38,16 +38,17 @@ public interface PhotoCheckInMapper {
      * @param photoCheckIn 照片打卡信息
      * @return 更新结果
      */
-    @Update("UPDATE photo_check_in SET user_name = #{userName}, photo_url = #{photoUrl}, description = #{description}, category = #{category}, " +
-            "latitude = #{latitude}, longitude = #{longitude}, likes = #{likes}, enabled = #{enabled}, update_time = #{updateTime} WHERE id = #{id}")
+    @Update("UPDATE photo_checkin SET user_name = #{userName}, user_avatar = #{userAvatar}, title = #{title}, content = #{content}, " +
+            "category_id = #{categoryId}, photo_id = #{photoId}, like_count = #{likeCount}, view_count = #{viewCount}, " +
+            "status = #{status}, version = #{version}, deleted = #{deleted}, update_time = #{updateTime}, update_by = #{updateBy} WHERE id = #{id}")
     int updateById(PhotoCheckIn photoCheckIn);
     
     /**
-     * 根据ID删除照片打卡
+     * 根据ID删除照片打卡（逻辑删除）
      * @param id 照片打卡ID
      * @return 删除结果
      */
-    @Delete("DELETE FROM photo_check_in WHERE id = #{id}")
+    @Update("UPDATE photo_checkin SET deleted = 1, update_time = NOW() WHERE id = #{id}")
     int deleteById(Long id);
     
     /**
@@ -55,28 +56,8 @@ public interface PhotoCheckInMapper {
      * @param userId 用户ID
      * @return 删除结果
      */
-    @Delete("DELETE FROM photo_check_in WHERE user_id = #{userId}")
+    @Delete("DELETE FROM photo_checkin WHERE user_id = #{userId}")
     int deleteByUserId(Long userId);
-    
-    /**
-     * 根据分类查询照片打卡列表
-     * @param category 分类
-     * @param offset 偏移量
-     * @param limit 限制数量
-     * @return 照片打卡列表
-     */
-    @Select("SELECT * FROM photo_check_in WHERE category = #{category} AND enabled = 1 ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
-    List<PhotoCheckIn> selectByCategory(@Param("category") String category, @Param("offset") int offset, @Param("limit") int limit);
-    
-    /**
-     * 根据用户ID查询照片打卡列表
-     * @param userId 用户ID
-     * @param offset 偏移量
-     * @param limit 限制数量
-     * @return 照片打卡列表
-     */
-    @Select("SELECT * FROM photo_check_in WHERE user_id = #{userId} ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
-    List<PhotoCheckIn> selectByUserId(@Param("userId") Long userId, @Param("offset") int offset, @Param("limit") int limit);
     
     /**
      * 查询照片打卡列表
@@ -84,14 +65,14 @@ public interface PhotoCheckInMapper {
      * @param limit 限制数量
      * @return 照片打卡列表
      */
-    @Select("SELECT * FROM photo_check_in WHERE enabled = 1 ORDER BY likes DESC, create_time DESC LIMIT #{offset}, #{limit}")
+    @Select("SELECT * FROM photo_checkin WHERE status = 1 AND deleted = 0 ORDER BY like_count DESC, create_time DESC LIMIT #{offset}, #{limit}")
     List<PhotoCheckIn> selectList(@Param("offset") int offset, @Param("limit") int limit);
     
     /**
      * 查询照片打卡总数
      * @return 照片打卡总数
      */
-    @Select("SELECT COUNT(*) FROM photo_check_in WHERE enabled = 1")
+    @Select("SELECT COUNT(*) FROM photo_checkin WHERE status = 1 AND deleted = 0")
     int selectCount();
     
     /**
@@ -99,7 +80,7 @@ public interface PhotoCheckInMapper {
      * @param category 分类
      * @return 照片打卡总数
      */
-    @Select("SELECT COUNT(*) FROM photo_check_in WHERE category = #{category} AND enabled = 1")
+    @Select("SELECT COUNT(*) FROM photo_checkin WHERE category_id = #{category} AND status = 1 AND deleted = 0")
     int selectCountByCategory(@Param("category") String category);
     
     /**
@@ -107,34 +88,36 @@ public interface PhotoCheckInMapper {
      * @param userId 用户ID
      * @return 照片打卡总数
      */
-    @Select("SELECT COUNT(*) FROM photo_check_in WHERE user_id = #{userId}")
+    @Select("SELECT COUNT(*) FROM photo_checkin WHERE user_id = #{userId} AND deleted = 0")
     int selectCountByUserId(@Param("userId") Long userId);
     
     /**
      * 管理员查询照片打卡列表
+     * @param title 标题（可选）
      * @param userName 用户名（可选）
-     * @param category 分类（可选）
-     * @param enabled 是否启用（可选）
+     * @param categoryId 分类ID（可选）
+     * @param createTime 创建时间（可选）
      * @param offset 偏移量
      * @param limit 限制数量
      * @return 照片打卡列表
      */
-    List<PhotoCheckIn> selectForAdmin(@Param("userName") String userName, @Param("category") String category, @Param("enabled") Boolean enabled, @Param("offset") int offset, @Param("limit") int limit);
+    List<PhotoCheckIn> selectForAdmin(@Param("title") String title, @Param("userName") String userName, @Param("categoryId") Long categoryId, @Param("createTime") LocalDateTime createTime, @Param("offset") int offset, @Param("limit") int limit);
     
     /**
      * 管理员查询照片打卡总数
+     * @param title 标题（可选）
      * @param userName 用户名（可选）
-     * @param category 分类（可选）
-     * @param enabled 是否启用（可选）
+     * @param categoryId 分类ID（可选）
+     * @param createTime 创建时间（可选）
      * @return 照片打卡总数
      */
-    int selectCountForAdmin(@Param("userName") String userName, @Param("category") String category, @Param("enabled") Boolean enabled);
+    int selectCountForAdmin(@Param("title") String title, @Param("userName") String userName, @Param("categoryId") Long categoryId, @Param("createTime") LocalDateTime createTime);
     
     /**
      * 查询所有照片打卡
      * @return 照片打卡列表
      */
-    @Select("SELECT * FROM photo_check_in WHERE enabled = 1 ORDER BY likes DESC, create_time DESC")
+    @Select("SELECT * FROM photo_checkin WHERE status = 1 AND deleted = 0 ORDER BY like_count DESC, create_time DESC")
     List<PhotoCheckIn> selectAll();
     
     /**
@@ -142,7 +125,7 @@ public interface PhotoCheckInMapper {
      * @param id 照片打卡ID
      * @return 更新结果
      */
-    @Update("UPDATE photo_check_in SET likes = likes + 1, update_time = #{updateTime} WHERE id = #{id}")
+    @Update("UPDATE photo_checkin SET like_count = like_count + 1, update_time = #{updateTime} WHERE id = #{id}")
     int incrementLikes(@Param("id") Long id, @Param("updateTime") java.time.LocalDateTime updateTime);
     
     /**
@@ -150,6 +133,6 @@ public interface PhotoCheckInMapper {
      * @param id 照片打卡ID
      * @return 更新结果
      */
-    @Update("UPDATE photo_check_in SET likes = likes - 1, update_time = #{updateTime} WHERE id = #{id} AND likes > 0")
+    @Update("UPDATE photo_checkin SET like_count = like_count - 1, update_time = #{updateTime} WHERE id = #{id} AND like_count > 0")
     int decrementLikes(@Param("id") Long id, @Param("updateTime") java.time.LocalDateTime updateTime);
 }

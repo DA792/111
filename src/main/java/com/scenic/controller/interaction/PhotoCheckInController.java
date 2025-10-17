@@ -16,8 +16,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.scenic.common.dto.Result;
 import com.scenic.dto.interaction.PhotoCheckInDTO;
+import com.scenic.dto.interaction.PhotoCheckInQueryDTO;
+import com.scenic.entity.interaction.vo.CheckinCategoryVO;
+import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 import com.scenic.service.interaction.PhotoCheckInService;
 import com.scenic.utils.FileUploadUtil;
+import com.scenic.common.dto.PageResult;
 
 /**
  * 照片打卡控制器
@@ -38,6 +42,10 @@ public class PhotoCheckInController {
     
     @Autowired
     private FileUploadUtil fileUploadUtil;
+
+
+
+    
     
     /**
      * 小程序端 - 上传照片打卡
@@ -84,18 +92,8 @@ public class PhotoCheckInController {
      * @return 照片打卡记录列表
      */
     @GetMapping(MINIAPP_PREFIX + "/photo-check-in/list")
-    public Result<List<PhotoCheckInDTO>> getAllPhotoCheckInsForMiniapp() {
-        return photoCheckInService.getAllPhotoCheckIns();
-    }
-    
-    /**
-     * 小程序端 - 根据分类获取照片打卡记录
-     * @param category 分类
-     * @return 照片打卡记录列表
-     */
-    @GetMapping(MINIAPP_PREFIX + "/photo-check-in/category/{category}")
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByCategoryForMiniapp(@PathVariable String category) {
-        return photoCheckInService.getPhotoCheckInsByCategory(category);
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckInsForMiniapp(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
+        return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
     }
     
     /**
@@ -123,30 +121,52 @@ public class PhotoCheckInController {
      * @return 照片打卡记录列表
      */
     @GetMapping(ADMIN_PREFIX + "/photo-check-in/list")
-    public Result<List<PhotoCheckInDTO>> getAllPhotoCheckInsForAdmin() {
-        return photoCheckInService.getAllPhotoCheckIns();
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckInsForAdmin(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
+        return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
     }
-    
+
     /**
-     * 管理后台端 - 根据分类获取照片打卡记录
-     * @param category 分类
+     * 管理后台端 - 获取当前照片打卡记录详情
      * @return 照片打卡记录列表
      */
-    @GetMapping(ADMIN_PREFIX + "/photo-check-in/category/{category}")
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByCategoryForAdmin(@PathVariable String category) {
-        return photoCheckInService.getPhotoCheckInsByCategory(category);
+    @GetMapping(ADMIN_PREFIX + "/photo-check-in/info/{photoCheckInId}")
+    public Result<PhotoCheckInVO> getPhotoCheckInsInfoForAdmin(@PathVariable Long photoCheckInId) {
+        return photoCheckInService.getPhotoCheckInsInfoForAdmin(photoCheckInId);
     }
-    
+
     /**
-     * 管理后台端 - 根据用户ID获取照片打卡记录
-     * @param userId 用户ID
-     * @return 照片打卡记录列表
+     * 管理后台端 - 新增照片打卡记录
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件
+     * @return 操作结果
      */
-    @GetMapping(ADMIN_PREFIX + "/photo-check-in/user/{userId}")
-    public Result<List<PhotoCheckInDTO>> getPhotoCheckInsByUserId(@PathVariable Long userId) {
-        return photoCheckInService.getPhotoCheckInsByUserId(userId);
+    @PostMapping(ADMIN_PREFIX + "/photo-check-in/add")
+    public Result<String> AddPhotoCheckInsForAdmin(
+            @RequestParam("title") String title,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam("photo") MultipartFile photo) {
+        return photoCheckInService.addPhotoCheckInForAdmin(title, categoryId, photo);
     }
-    
+        
+    /**
+     * 管理后台端 - 编辑照片打卡记录
+     * @param id 照片打卡记录ID
+     * @param title 标题
+     * @param categoryId 分类ID
+     * @param photo 照片文件（可选）
+     * @return 操作结果
+     */
+    @PutMapping(ADMIN_PREFIX + "/photo-check-in/update/{id}")
+    public Result<String> updatePhotoCheckInsForAdmin(
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+        return photoCheckInService.updatePhotoCheckInForAdmin(id, title, categoryId, photo);
+    }
+
+
     /**
      * 管理后台端 - 删除照片打卡记录
      * @param photoCheckInId 照片打卡ID
@@ -156,17 +176,35 @@ public class PhotoCheckInController {
     public Result<String> deletePhotoCheckIn(@PathVariable Long photoCheckInId) {
         return photoCheckInService.deletePhotoCheckIn(photoCheckInId);
     }
-    
+
+
     /**
-     * 管理后台端 - 修改照片打卡分类
-     * @param photoCheckInId 照片打卡ID
-     * @param category 新分类
+     * 管理后台端 - 获取拍照打卡分类列表
+     * @return 分类列表
+     */
+    @GetMapping(ADMIN_PREFIX + "/photo-check-in/categoryList")
+    public Result<List<CheckinCategoryVO>> getCategoryList() {
+        return photoCheckInService.getCategoryList();
+    }
+
+    /**
+     * 管理后台端 - 新增拍照打卡分类
+     * @param categoryName 分类名
      * @return 操作结果
      */
-    @PutMapping(ADMIN_PREFIX + "/photo-check-in/update-category/{photoCheckInId}")
-    public Result<String> updatePhotoCheckInCategory(
-            @PathVariable Long photoCheckInId,
-            @RequestParam("category") String category) {
-        return photoCheckInService.updatePhotoCheckInCategory(photoCheckInId, category);
+    @PostMapping(ADMIN_PREFIX + "/photo-check-in/category/add")
+    public Result<String> addCategory(String categoryName) {
+        return photoCheckInService.addCategory(categoryName);
     }
+
+    /**
+     * 管理后台端 - 删除拍照打卡分类
+     * @param categoryId 分类ID
+     * @return 操作结果
+     */
+    @DeleteMapping(ADMIN_PREFIX + "/photo-check-in/category/delete/{categoryId}")
+    public Result<String> deleteCategory(@PathVariable Long categoryId) {
+        return photoCheckInService.deleteCategory(categoryId);
+    }
+    
 }

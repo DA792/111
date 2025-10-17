@@ -21,6 +21,9 @@ public class MinioService {
 
     @Value("${minio.bucket-name}")
     private String bucketName;
+    
+    @Value("${minio.photo-checkin-bucket:photo-checkin}")
+    private String photoCheckinBucket;
 
     /**
      * 检查存储桶是否存在，不存在则创建
@@ -64,6 +67,30 @@ public class MinioService {
         }
         
         return getObjectUrl(objectName);
+    }
+
+    /**
+     * 上传拍照打卡文件到专门的存储桶
+     *
+     * @param file 文件
+     * @param objectName 对象名称
+     * @return 文件访问URL
+     */
+    public String uploadPhotoCheckinFile(MultipartFile file, String objectName) throws Exception {
+        createBucketIfNotExists(photoCheckinBucket);
+        
+        try (InputStream inputStream = file.getInputStream()) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(photoCheckinBucket)
+                            .object(objectName)
+                            .stream(inputStream, file.getSize(), -1)
+                            .contentType(file.getContentType())
+                            .build()
+            );
+        }
+        
+        return getPresignedObjectUrl(photoCheckinBucket, objectName, 7 * 24 * 3600); // 7天有效期
     }
 
     /**
