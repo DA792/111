@@ -16,6 +16,7 @@ public class ActivityAppointmentDTO {
     private String activityTime;      // 对应 activity_time
     private Integer numberOfPeople;   // 对应 team_size
     private String remark;            // 对应 remarks
+    private Long createBy;            // 创建者ID
 
     // 构造函数
     public ActivityAppointmentDTO() {}
@@ -105,6 +106,15 @@ public class ActivityAppointmentDTO {
                 ", activityTime='" + activityTime + '\'' +
                 ", numberOfPeople=" + numberOfPeople +
                 ", remark='" + remark + '\'' +
+                ", createBy=" + createBy +
                 '}';
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 }

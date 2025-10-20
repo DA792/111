@@ -18,6 +18,7 @@ public class ActivityAppointment {
     private Integer status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long createBy;
 
     // 构造函数
     public ActivityAppointment() {}
@@ -143,6 +144,15 @@ public class ActivityAppointment {
                 ", status=" + status +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
+                ", createBy=" + createBy +
                 '}';
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 }

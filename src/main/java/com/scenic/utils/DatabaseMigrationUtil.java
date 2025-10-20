@@ -28,6 +28,9 @@ public class DatabaseMigrationUtil implements CommandLineRunner {
     public void run(String... args) throws Exception {
         // 执行添加activity_time字段的SQL脚本
         executeSqlFile("src/main/resources/sql/add_activity_time_column.sql");
+        
+        // 执行添加create_by字段到activity_registration表的SQL脚本
+        executeSqlFile("src/main/resources/sql/add_activity_registration_create_by_column.sql");
     }
 
     /**

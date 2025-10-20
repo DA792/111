@@ -61,6 +61,8 @@ public class TeamAppointmentDTO {
     private List<TeamMember> members;
     
     private String createBy;
+    
+    private Long updateBy;
 
     // 构造函数
     public TeamAppointmentDTO() {}
@@ -218,6 +220,14 @@ public class TeamAppointmentDTO {
         this.checkInTime = checkInTime;
     }
 
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
+    }
+
     @Override
     public String toString() {
         return "TeamAppointmentDTO{" +
@@ -239,6 +249,7 @@ public class TeamAppointmentDTO {
                 ", checkInTime=" + checkInTime +
                 ", members=" + members +
                 ", createBy='" + createBy + '\'' +
+                ", updateBy=" + updateBy +
                 '}';
     }
 }
