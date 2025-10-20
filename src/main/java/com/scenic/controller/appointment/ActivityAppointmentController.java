@@ -17,8 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.appointment.ActivityAppointmentDTO;
+import com.scenic.dto.content.ActivityDTO;
 import com.scenic.entity.appointment.ActivityAppointment;
 import com.scenic.service.appointment.AppointmentService;
+import com.scenic.service.content.ActivityService;
 import com.scenic.utils.ExcelParserUtil;
 
 /**
@@ -37,6 +39,19 @@ public class ActivityAppointmentController {
     
     @Autowired
     private AppointmentService appointmentService;
+    
+    @Autowired
+    private ActivityService activityService;
+    
+    /**
+     * 管理后台端 - 新增活动预约
+     * @param appointmentDTO 活动预约信息
+     * @return 新增结果
+     */
+    @PostMapping(ADMIN_PREFIX + "/activity-appointments")
+    public Result<String> createActivityAppointmentForAdmin(@RequestBody ActivityAppointmentDTO appointmentDTO) {
+        return appointmentService.createActivityAppointmentForAdmin(appointmentDTO);
+    }
     
     /**
      * 小程序端 - 创建活动预约
@@ -125,7 +140,7 @@ public class ActivityAppointmentController {
      */
     @PutMapping(ADMIN_PREFIX + "/activity-appointments/{id}")
     public Result<String> updateActivityAppointmentForAdmin(@PathVariable Long id, @RequestBody ActivityAppointmentDTO appointmentDTO) {
-        // 复用审核接口实现更新功能
+        // 调用服务层更新活动预约
         return appointmentService.updateActivityAppointment(id, appointmentDTO);
     }
     
@@ -176,5 +191,15 @@ public class ActivityAppointmentController {
         } catch (Exception e) {
             return Result.error("文件解析失败：" + e.getMessage());
         }
+    }
+    
+    /**
+     * 管理后台端 - 获取所有活动列表（用于预约选择）
+     * @return 活动列表
+     */
+    @GetMapping(ADMIN_PREFIX + "/activity/list-for-appointment")
+    public Result<List<ActivityDTO>> getActivityListForAppointment() {
+        // 获取所有活动，包括禁用的活动，用于预约选择
+        return activityService.getAllActivities();
     }
 }

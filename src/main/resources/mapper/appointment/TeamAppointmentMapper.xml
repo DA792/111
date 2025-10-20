@@ -6,6 +6,7 @@
     <resultMap id="TeamAppointmentResultMap" type="com.scenic.entity.appointment.TeamAppointment">
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="appointment_no" property="appointmentNo" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
         <result column="team_name" property="teamName" jdbcType="VARCHAR"/>
         <result column="team_leader" property="contactPerson" jdbcType="VARCHAR"/>
         <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
@@ -14,19 +15,23 @@
         <result column="scenic_spot_id" property="scenicSpotId" jdbcType="BIGINT"/>
         <result column="scenic_spot_name" property="scenicSpotName" jdbcType="VARCHAR"/>
         <result column="appointment_date" property="appointmentDate" jdbcType="TIMESTAMP"/>
-        <result column="appointment_time" property="appointmentTime" jdbcType="VARCHAR"/>
+        <result column="appointment_time" property="appointmentTime" jdbcType="TIMESTAMP"/>
         <result column="remarks" property="remark" jdbcType="VARCHAR"/>
-        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
         <result column="form_file_id" property="formFileId" jdbcType="BIGINT"/>
+        <result column="admin_remarks" property="adminRemarks" jdbcType="VARCHAR"/>
+        <result column="check_in_time" property="checkInTime" jdbcType="TIMESTAMP"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
         <result column="create_by" property="createBy" jdbcType="BIGINT"/>
+        <result column="update_by" property="updateBy" jdbcType="BIGINT"/>
     </resultMap>
 
     <!-- 查询字段 -->
     <sql id="TeamAppointment_Column_List">
         id, appointment_no, team_name, team_leader, contact_phone, contact_email, team_size, 
-        scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, remarks, status, form_file_id, create_time, update_time, create_by
+        scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, remarks, status, form_file_id, 
+        admin_remarks, check_in_time, create_time, update_time, create_by, update_by
     </sql>
 
     <!-- 管理员查询团队预约列表 -->
@@ -48,10 +53,10 @@
                 AND status = #{status}
             </if>
             <if test="startTime != null and startTime != ''">
-                AND appointment_time <![CDATA[>=]]> #{startTime}
+                AND appointment_date <![CDATA[>=]]> #{startTime}
             </if>
             <if test="endTime != null and endTime != ''">
-                AND appointment_time <![CDATA[<=]]> #{endTime}
+                AND appointment_date <![CDATA[<=]]> #{endTime}
             </if>
         </where>
         ORDER BY create_time DESC
@@ -76,10 +81,10 @@
                 AND status = #{status}
             </if>
             <if test="startTime != null and startTime != ''">
-                AND appointment_time <![CDATA[>=]]> #{startTime}
+                AND appointment_date <![CDATA[>=]]> #{startTime}
             </if>
             <if test="endTime != null and endTime != ''">
-                AND appointment_time <![CDATA[<=]]> #{endTime}
+                AND appointment_date <![CDATA[<=]]> #{endTime}
             </if>
         </where>
     </select>
@@ -89,11 +94,48 @@
         INSERT INTO team_appointment(
             appointment_no, user_id, team_name, team_leader, contact_phone, contact_email, 
             team_size, scenic_spot_id, scenic_spot_name, appointment_date, appointment_time, 
-            remarks, status, form_file_id, create_time, update_time, create_by
+            remarks, status, form_file_id, admin_remarks, check_in_time, create_time, update_time, create_by, update_by
         ) VALUES(
             #{appointmentNo}, #{userId}, #{teamName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, 
             #{numberOfPeople}, #{scenicSpotId}, #{scenicSpotName}, #{appointmentDate}, #{appointmentTime}, 
-            #{remark}, #{status}, #{formFileId}, #{createTime}, #{updateTime}, #{createBy}
+            #{remark}, #{status}, #{formFileId}, #{adminRemarks}, #{checkInTime}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}
         )
     </insert>
+    
+    <!-- 更新团队预约 -->
+    <update id="updateById" parameterType="com.scenic.entity.appointment.TeamAppointment">
+        UPDATE team_appointment
+        <set>
+            <if test="teamName != null">team_name = #{teamName},</if>
+            <if test="contactPerson != null">team_leader = #{contactPerson},</if>
+            <if test="contactPhone != null">contact_phone = #{contactPhone},</if>
+            <if test="contactEmail != null">contact_email = #{contactEmail},</if>
+            <if test="numberOfPeople != null">team_size = #{numberOfPeople},</if>
+            <if test="scenicSpotId != null">scenic_spot_id = #{scenicSpotId},</if>
+            <if test="scenicSpotName != null">scenic_spot_name = #{scenicSpotName},</if>
+            <if test="appointmentDate != null">appointment_date = #{appointmentDate},</if>
+            <if test="appointmentTime != null">appointment_time = #{appointmentTime},</if>
+            <if test="remark != null">remarks = #{remark},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="formFileId != null">form_file_id = #{formFileId},</if>
+            <if test="adminRemarks != null">admin_remarks = #{adminRemarks},</if>
+            <if test="checkInTime != null">check_in_time = #{checkInTime},</if>
+            update_time = NOW(),
+            <if test="updateBy != null">update_by = #{updateBy}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <!-- 根据ID查询团队预约 -->
+    <select id="selectById" resultMap="TeamAppointmentResultMap">
+        SELECT 
+        <include refid="TeamAppointment_Column_List"/>
+        FROM team_appointment
+        WHERE id = #{id}
+    </select>
+    
+    <!-- 删除团队预约 -->
+    <delete id="deleteById">
+        DELETE FROM team_appointment WHERE id = #{id}
+    </delete>
 </mapper>

@@ -54,7 +54,7 @@ public interface ProtectedReservationInfoMapper extends BaseMapper<ProtectedRese
      * @param contentType 内容类型（精确匹配）
      * @return 保护区介绍增强DTO列表
      */
-    List<ProtectedReservationInfoEnhancedDTO> selectPageEnhanced(
+    List<java.util.Map<String, Object>> selectPageEnhanced(
             @Param("offset") int offset,
             @Param("limit") int limit,
             @Param("title") String title,
@@ -78,4 +78,12 @@ public interface ProtectedReservationInfoMapper extends BaseMapper<ProtectedRese
             @Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime,
             @Param("contentType") Byte contentType);
+    
+    /**
+     * 根据ID查询保护区介绍原始数据（不经过TypeHandler处理）
+     * 用于获取原始的JSON字符串形式的文件ID
+     * @param id 保护区介绍ID
+     * @return 原始数据Map
+     */
+    java.util.Map<String, Object> selectRawById(@Param("id") Long id);
 }

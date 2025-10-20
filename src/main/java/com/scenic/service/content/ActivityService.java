@@ -1,6 +1,7 @@
 package com.scenic.service.content;
 
 import java.util.List;
+import java.util.Map;
 
 import com.scenic.common.dto.Result;
 import com.scenic.dto.content.ActivityDTO;

@@ -1,8 +1,7 @@
 package com.scenic.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
@@ -18,8 +17,7 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * Jackson配置类
- * 解决雪花算法生成的Long类型ID在前端JavaScript中精度丢失的问题
- * 并配置日期格式化
+ * 用于处理Java 8日期时间API的序列化
  */
 @Configuration
 public class JacksonConfig {
@@ -35,6 +33,7 @@ public class JacksonConfig {
     public ObjectMapper jacksonObjectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper objectMapper = builder.createXmlMapper(false).build();
         
+
         // 创建自定义模块
         SimpleModule module = new SimpleModule();
         
@@ -47,9 +46,11 @@ public class JacksonConfig {
         
         // 注册JavaTimeModule用于处理新的时间API
         JavaTimeModule javaTimeModule = new JavaTimeModule();
+
         javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         objectMapper.registerModule(javaTimeModule);
+
         
         return objectMapper;
     }

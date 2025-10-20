@@ -198,7 +198,7 @@ public class ExcelParserUtil {
             activityAppointment.setRemark(getCellValueAsString(row.getCell(6)));
             
             // 设置默认状态和时间
-            activityAppointment.setStatus("待审核");
+            activityAppointment.setStatus(1); // 1表示待审核
             activityAppointment.setCreateTime(LocalDateTime.now());
             activityAppointment.setUpdateTime(LocalDateTime.now());
             

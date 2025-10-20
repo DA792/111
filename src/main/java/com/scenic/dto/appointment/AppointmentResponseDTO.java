@@ -19,7 +19,7 @@ public class AppointmentResponseDTO {
     private String scenicSpotName;
     private LocalDateTime appointmentTime;
     private Integer numberOfPeople;
-    private String status;
+    private Integer status;
     private String remark;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
@@ -117,11 +117,11 @@ public class AppointmentResponseDTO {
         this.numberOfPeople = numberOfPeople;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
