@@ -33,6 +33,13 @@ public interface AppointmentService {
     Result<String> createTeamAppointment(TeamAppointmentDTO appointmentDTO);
     
     /**
+     * 管理后台创建团队预约
+     * @param appointmentDTO 预约信息
+     * @return 预约结果
+     */
+    Result<String> createTeamAppointmentForAdmin(TeamAppointmentDTO appointmentDTO);
+    
+    /**
      * 批量保存团队预约
      * @param teamAppointments 团队预约列表
      * @return 保存结果

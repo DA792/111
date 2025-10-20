@@ -7,6 +7,7 @@
         <id column="id" property="id" jdbcType="BIGINT"/>
         <result column="registration_no" property="registrationNo" jdbcType="VARCHAR"/>
         <result column="activity_title" property="activityName" jdbcType="VARCHAR"/>
+        <result column="team_name" property="teamName" jdbcType="VARCHAR"/>
         <result column="team_leader" property="contactPerson" jdbcType="VARCHAR"/>
         <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
         <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
@@ -25,7 +26,7 @@
 
     <!-- 查询字段 -->
     <sql id="ActivityAppointment_Column_List">
-        id, registration_no, activity_title, team_leader, contact_phone, contact_email, activity_id, user_id, form_file_id,
+        id, registration_no, activity_title, team_name, team_leader, contact_phone, contact_email, activity_id, user_id, form_file_id,
         registration_time, activity_time, team_size, remarks, status, create_time, update_time, create_by
     </sql>
 
@@ -95,10 +96,10 @@
     <!-- 插入活动预约 -->
     <insert id="insert" parameterType="com.scenic.entity.appointment.ActivityAppointment" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO activity_registration(
-            registration_no, activity_title, team_leader, contact_phone, contact_email, activity_id, user_id, form_file_id,
+            registration_no, activity_title, team_name, team_leader, contact_phone, contact_email, activity_id, user_id, form_file_id,
             registration_time, activity_time, team_size, remarks, status, create_time, update_time, create_by
         ) VALUES(
-            #{registrationNo, jdbcType=VARCHAR}, #{activityName, jdbcType=VARCHAR}, #{contactPerson, jdbcType=VARCHAR}, #{contactPhone, jdbcType=VARCHAR}, #{contactEmail, jdbcType=VARCHAR}, #{activityId, jdbcType=BIGINT}, #{userId, jdbcType=BIGINT}, #{formFileId, jdbcType=BIGINT},
+            #{registrationNo, jdbcType=VARCHAR}, #{activityName, jdbcType=VARCHAR}, #{teamName, jdbcType=VARCHAR}, #{contactPerson, jdbcType=VARCHAR}, #{contactPhone, jdbcType=VARCHAR}, #{contactEmail, jdbcType=VARCHAR}, #{activityId, jdbcType=BIGINT}, #{userId, jdbcType=BIGINT}, #{formFileId, jdbcType=BIGINT},
             #{activityDate, jdbcType=TIMESTAMP}, #{activityTime, jdbcType=VARCHAR}, #{numberOfPeople, jdbcType=INTEGER}, #{remark, jdbcType=VARCHAR}, #{status, jdbcType=INTEGER}, #{createTime, jdbcType=TIMESTAMP}, #{updateTime, jdbcType=TIMESTAMP}, #{createBy, jdbcType=BIGINT}
         )
     </insert>
@@ -109,6 +110,9 @@
         <set>
             <if test="activityName != null and activityName != ''">
                 activity_title = #{activityName},
+            </if>
+            <if test="teamName != null and teamName != ''">
+                team_name = #{teamName},
             </if>
             <if test="contactPerson != null and contactPerson != ''">
                 team_leader = #{contactPerson},
