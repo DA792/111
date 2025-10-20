@@ -12,7 +12,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -85,8 +87,8 @@ public class ActivityServiceImpl implements ActivityService {
                 return Result.success("查询成功", cachedActivities);
             }
             
-            // 缓存中没有则从数据库查询
-            List<Activity> activities = activityMapper.selectAllEnabled();
+            // 缓存中没有则从数据库查询所有活动（包括禁用的）
+            List<Activity> activities = activityMapper.selectList(0, 1000); // 获取前1000个活动
             List<ActivityDTO> activityDTOs = activities.stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());

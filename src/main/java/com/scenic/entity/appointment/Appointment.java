@@ -16,7 +16,7 @@ public class Appointment {
     private String scenicSpotName;
     private LocalDateTime appointmentTime;
     private Integer numberOfPeople;
-    private String status = AppointmentConstants.STATUS_CONFIRMED;
+    private Integer status = AppointmentConstants.STATUS_CONFIRMED;
     private String remark;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
@@ -89,11 +89,11 @@ public class Appointment {
         this.numberOfPeople = numberOfPeople;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 

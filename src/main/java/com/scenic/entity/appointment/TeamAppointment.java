@@ -21,9 +21,12 @@ public class TeamAppointment {
     private String remark;
     private Integer status; // 预约状态：0-已取消，1-待审核，2-已完成
     private Long formFileId; // 表单文件ID
+    private String adminRemarks; // 管理员备注
+    private LocalDateTime checkInTime; // 签到时间
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Long createBy;
+    private Long updateBy;
 
     // 构造函数
     public TeamAppointment() {}
@@ -171,6 +174,30 @@ public class TeamAppointment {
 
     public void setFormFileId(Long formFileId) {
         this.formFileId = formFileId;
+    }
+
+    public String getAdminRemarks() {
+        return adminRemarks;
+    }
+
+    public void setAdminRemarks(String adminRemarks) {
+        this.adminRemarks = adminRemarks;
+    }
+
+    public LocalDateTime getCheckInTime() {
+        return checkInTime;
+    }
+
+    public void setCheckInTime(LocalDateTime checkInTime) {
+        this.checkInTime = checkInTime;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
     }
 
     @Override

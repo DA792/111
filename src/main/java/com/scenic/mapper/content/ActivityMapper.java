@@ -93,6 +93,7 @@ public interface ActivityMapper {
      * 查询所有未结束的活动
      * @return 活动列表
      */
+    @Select("SELECT * FROM activity WHERE status = 1 ORDER BY create_time DESC")
     @Select("SELECT * FROM activity WHERE status = 0 AND (deleted IS NULL OR deleted = 0) ORDER BY create_time DESC")
     List<Activity> selectAllEnabled();
 }

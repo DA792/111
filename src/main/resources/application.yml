@@ -1,9 +1,6 @@
-server:
-<<<<<<< HEAD
-  port: 10034
-=======
-  port: 10039
->>>>>>> 6cd0ce297cf5a68c5f0429c7abc1190a025c7b8b
+
+  port: 10033
+
 
 spring:
   datasource:
