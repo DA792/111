@@ -1111,6 +1111,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             
             // 保存文件信息到resource_file表
             ResourceFile resourceFile = new ResourceFile();
+            resourceFile.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
             resourceFile.setFileName(originalFilename);
             resourceFile.setFileKey(uniqueFilename);
             resourceFile.setBucketName("photo-checkin"); // MinIO存储桶名称
@@ -1129,6 +1130,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             
             // 创建照片打卡记录
             PhotoCheckIn photoCheckIn = new PhotoCheckIn();
+            photoCheckIn.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
             photoCheckIn.setTitle(title.trim());
             photoCheckIn.setCategoryId(categoryId);
             photoCheckIn.setPhotoId(resourceFile.getId());
@@ -1264,6 +1266,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 
                 // 保存文件信息到resource_file表
                 ResourceFile resourceFile = new ResourceFile();
+                resourceFile.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
                 resourceFile.setFileName(originalFilename);
                 resourceFile.setFileKey(uniqueFilename);
                 resourceFile.setBucketName("photo-checkin"); // MinIO存储桶名称

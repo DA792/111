@@ -9,6 +9,7 @@ public class PhotoCheckInDTO {
     private Long id;
     private Long userId; // 用户ID
     private String userName; // 用户名
+    private String userAvatar; // 用户头像
     private String photoUrl; // 照片URL
     private String title; // 标题
     private String category; // 分类
@@ -44,6 +45,14 @@ public class PhotoCheckInDTO {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getUserAvatar() {
+        return userAvatar;
+    }
+
+    public void setUserAvatar(String userAvatar) {
+        this.userAvatar = userAvatar;
     }
 
     public String getPhotoUrl() {

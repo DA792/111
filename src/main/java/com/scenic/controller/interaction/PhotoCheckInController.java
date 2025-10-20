@@ -244,7 +244,7 @@ public class PhotoCheckInController {
             @RequestParam("photo") MultipartFile photo) {
         return photoCheckInService.addPhotoCheckInForAdmin(title, categoryId, photo);
     }
-        
+
     /**
      * 管理后台端 - 编辑照片打卡记录
      * @param id 照片打卡记录ID
@@ -331,7 +331,7 @@ public class PhotoCheckInController {
      * @return 操作结果
      */
     @PostMapping(ADMIN_PREFIX + "/photo-check-in/category/add")
-    public Result<String> addCategory(String categoryName) {
+    public Result<String> addCategory(@RequestParam("categoryName") String categoryName) {
         return photoCheckInService.addCategory(categoryName);
     }
 
