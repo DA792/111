@@ -95,6 +95,28 @@ public interface IndividualReservationMapper {
     int deletePersonsByReservationId(@Param("reservationId") Long reservationId, @Param("updateBy") Long updateBy);
     
     /**
+     * 根据ID查询个人预约人员
+     * @param id 预约人员ID
+     * @return 个人预约人员信息
+     */
+    @Select("SELECT * FROM individual_reservation_person WHERE id = #{id} AND deleted = 0")
+    IndividualReservationPerson selectPersonById(Long id);
+    
+    /**
+     * 更新个人预约人员信息
+     * @param person 个人预约人员信息
+     * @return 更新结果
+     */
+    int updatePersonById(IndividualReservationPerson person);
+    
+    /**
+     * 批量更新个人预约人员信息
+     * @param persons 个人预约人员列表
+     * @return 更新结果
+     */
+    int updatePersonsBatch(@Param("persons") List<IndividualReservationPerson> persons);
+    
+    /**
      * 查询个人预约总数（带条件查询）
      * @param applicant 预约人（模糊查询）
      * @param appointmentTime 预约时间
