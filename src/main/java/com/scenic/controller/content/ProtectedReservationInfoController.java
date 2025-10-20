@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.io.InputStream;
 
 /**
@@ -34,6 +36,9 @@ public class ProtectedReservationInfoController {
     private ResourceFileMapper resourceFileMapper;
     
     @Autowired
+    private com.scenic.mapper.content.ProtectedReservationInfoMapper protectedReservationInfoMapper;
+    
+    @Autowired
     private com.scenic.utils.JwtUtil jwtUtil;
     
     /**
@@ -50,24 +55,39 @@ public class ProtectedReservationInfoController {
             @RequestParam(value = "galleryFiles", required = false) MultipartFile[] galleryFiles,
             @RequestParam(value = "audioFiles", required = false) MultipartFile[] audioFiles,
             @RequestParam(value = "data", required = false) String data,
-            @RequestBody(required = false) ProtectedReservationInfoDTO bodyDto,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             // 从Authorization头中获取当前登录用户ID
             Long currentUserId = null;
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
+                System.out.println("JWT令牌: " + token);
                 try {
                     // 验证令牌是否有效
-                    if (jwtUtil.validateAdminToken(token)) {
+                    boolean isValid = jwtUtil.validateAdminToken(token);
+                    System.out.println("令牌是否有效: " + isValid);
+                    
+                    if (isValid) {
                         // 使用公共方法从令牌中获取userId
-                        currentUserId = jwtUtil.getClaimFromToken(token, claims -> claims.get("userId", Long.class), jwtUtil.getAdminSecret());
-                        System.out.println("当前登录用户ID: " + currentUserId);
+                        currentUserId = jwtUtil.getClaimFromToken(token, claims -> {
+                            Object userId = claims.get("userId");
+                            System.out.println("从令牌中获取的userId类型: " + (userId != null ? userId.getClass().getName() : "null"));
+                            System.out.println("从令牌中获取的userId值: " + userId);
+                            
+                            // 如果userId是Number类型但不是Long类型，手动转换
+                            if (userId instanceof Number && !(userId instanceof Long)) {
+                                return ((Number) userId).longValue();
+                            }
+                            
+                            return claims.get("userId", Long.class);
+                        }, jwtUtil.getAdminSecret());
+                        System.out.println("解析后的当前登录用户ID: " + currentUserId);
                     } else {
                         System.err.println("令牌无效");
                     }
                 } catch (Exception e) {
                     System.err.println("获取用户ID失败: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
             
@@ -79,8 +99,8 @@ public class ProtectedReservationInfoController {
                 dto = new com.fasterxml.jackson.databind.ObjectMapper()
                         .readValue(data, ProtectedReservationInfoDTO.class);
             } else {
-                // JSON请求体方式
-                dto = bodyDto;
+                // 如果没有data参数，返回错误
+                return Result.error("无效的请求数据");
             }
             
             if (dto == null) {
@@ -113,58 +133,40 @@ public class ProtectedReservationInfoController {
                 System.out.println("富文本内容包含嵌入视频");
             }
             
-            // 根据内容类型处理不同的文件
+            // 记录文件数量信息，但不在Controller层处理文件
+            // 文件处理将在Service层进行，避免重复处理
             if (dto.getContentType() != null) {
                 if (dto.getContentType() == 1) { // 文章类型
-                    // 处理文章内容图片
+                    // 记录文件数量
                     if (photoFiles != null && photoFiles.length > 0) {
-                        System.out.println("开始处理文章内容图片，数量: " + photoFiles.length);
-                        List<Long> photoFileIds = protectedReservationInfoService.processPhotoFiles(photoFiles, currentUserId);
-                        System.out.println("处理完成，获取到文章内容图片ID: " + photoFileIds);
-                        dto.setContentImageIds(photoFileIds);
+                        System.out.println("收到文章内容图片，数量: " + photoFiles.length);
                     }
                     
-                    // 处理轮播图
                     if (carouselFiles != null && carouselFiles.length > 0) {
-                        System.out.println("开始处理轮播图，数量: " + carouselFiles.length);
-                        List<Long> carouselFileIds = protectedReservationInfoService.processPhotoFiles(carouselFiles, currentUserId);
-                        System.out.println("处理完成，获取到轮播图ID: " + carouselFileIds);
-                        dto.setCarouselFileIds(carouselFileIds);
+                        System.out.println("收到轮播图，数量: " + carouselFiles.length);
                     }
                     
-                    // 处理画廊图片
                     if (galleryFiles != null && galleryFiles.length > 0) {
-                        System.out.println("开始处理画廊图片，数量: " + galleryFiles.length);
-                        List<Long> galleryFileIds = protectedReservationInfoService.processPhotoFiles(galleryFiles, currentUserId);
-                        System.out.println("处理完成，获取到画廊图片ID: " + galleryFileIds);
-                        dto.setGalleryFileIds(galleryFileIds);
+                        System.out.println("收到画廊图片，数量: " + galleryFiles.length);
                     }
                     
-                    // 处理音频文件
                     if (audioFiles != null && audioFiles.length > 0) {
-                        System.out.println("开始处理音频文件，数量: " + audioFiles.length);
-                        List<Long> audioFileIds = protectedReservationInfoService.processAudioFiles(audioFiles, currentUserId);
-                        System.out.println("处理完成，获取到音频文件ID: " + audioFileIds);
-                        dto.setAudioFileIds(audioFileIds);
+                        System.out.println("收到音频文件，数量: " + audioFiles.length);
                     }
                 } else if (dto.getContentType() == 2) { // 视频类型
-                    // 处理视频文件
+                    // 记录文件数量
                     if (videoFiles != null && videoFiles.length > 0) {
-                        System.out.println("开始处理视频文件，数量: " + videoFiles.length);
+                        System.out.println("收到视频文件，数量: " + videoFiles.length);
                     }
                     
-                    // 视频类型也可能有轮播图
                     if (carouselFiles != null && carouselFiles.length > 0) {
-                        System.out.println("开始处理视频轮播图，数量: " + carouselFiles.length);
-                        List<Long> carouselFileIds = protectedReservationInfoService.processPhotoFiles(carouselFiles, currentUserId);
-                        System.out.println("处理完成，获取到轮播图ID: " + carouselFileIds);
-                        dto.setCarouselFileIds(carouselFileIds);
+                        System.out.println("收到视频轮播图，数量: " + carouselFiles.length);
                     }
                 }
             }
             
             // 委托给Service层处理业务逻辑
-            boolean result = protectedReservationInfoService.saveProtectedReservationInfoWithFiles(dto, videoFiles);
+            boolean result = protectedReservationInfoService.saveProtectedReservationInfoWithFiles(dto, videoFiles, photoFiles, carouselFiles, galleryFiles, audioFiles);
             System.out.println("保存结果: " + result);
             
             if (dto.getVideoFileIds() != null) {
@@ -216,24 +218,39 @@ public class ProtectedReservationInfoController {
             @RequestParam(value = "galleryFiles", required = false) MultipartFile[] galleryFiles,
             @RequestParam(value = "audioFiles", required = false) MultipartFile[] audioFiles,
             @RequestParam(value = "data", required = false) String data,
-            @RequestBody(required = false) ProtectedReservationInfoDTO bodyDto,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             // 从Authorization头中获取当前登录用户ID
             Long currentUserId = null;
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
+                System.out.println("JWT令牌: " + token);
                 try {
                     // 验证令牌是否有效
-                    if (jwtUtil.validateAdminToken(token)) {
+                    boolean isValid = jwtUtil.validateAdminToken(token);
+                    System.out.println("令牌是否有效: " + isValid);
+                    
+                    if (isValid) {
                         // 使用公共方法从令牌中获取userId
-                        currentUserId = jwtUtil.getClaimFromToken(token, claims -> claims.get("userId", Long.class), jwtUtil.getAdminSecret());
-                        System.out.println("当前登录用户ID: " + currentUserId);
+                        currentUserId = jwtUtil.getClaimFromToken(token, claims -> {
+                            Object userId = claims.get("userId");
+                            System.out.println("从令牌中获取的userId类型: " + (userId != null ? userId.getClass().getName() : "null"));
+                            System.out.println("从令牌中获取的userId值: " + userId);
+                            
+                            // 如果userId是Number类型但不是Long类型，手动转换
+                            if (userId instanceof Number && !(userId instanceof Long)) {
+                                return ((Number) userId).longValue();
+                            }
+                            
+                            return claims.get("userId", Long.class);
+                        }, jwtUtil.getAdminSecret());
+                        System.out.println("解析后的当前登录用户ID: " + currentUserId);
                     } else {
                         System.err.println("令牌无效");
                     }
                 } catch (Exception e) {
                     System.err.println("获取用户ID失败: " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
             
@@ -245,17 +262,24 @@ public class ProtectedReservationInfoController {
                 dto = new com.fasterxml.jackson.databind.ObjectMapper()
                         .readValue(data, ProtectedReservationInfoDTO.class);
             } else {
-                // JSON请求体方式
-                dto = bodyDto;
+                // 如果没有data参数，返回错误
+                return Result.error("无效的请求数据");
             }
             
             if (dto == null) {
                 return Result.error("无效的请求数据");
             }
             
-            // 设置更新者ID
+            // 调试信息
+            System.out.println("接收到的DTO ID: " + dto.getId());
+            System.out.println("DTO类型: " + dto.getClass().getName());
+            
+            // 设置更新者ID和创建者ID
             if (currentUserId != null) {
                 dto.setUpdateBy(currentUserId);
+                // 同时设置创建者ID，确保文件上传时能使用正确的用户ID
+                dto.setCreateBy(currentUserId);
+                System.out.println("设置DTO的用户ID: updateBy=" + dto.getUpdateBy() + ", createBy=" + dto.getCreateBy());
             }
             
             // 检查是否有视频文件
@@ -278,54 +302,39 @@ public class ProtectedReservationInfoController {
                 System.out.println("富文本内容包含嵌入视频");
             }
             
-            // 根据内容类型处理不同的文件
+            // 记录文件数量信息，但不在Controller层处理文件
+            // 文件处理将在Service层进行，避免重复处理
             if (dto.getContentType() != null) {
                 if (dto.getContentType() == 1) { // 文章类型
-                    // 处理文章内容图片
+                    // 记录文件数量
                     if (photoFiles != null && photoFiles.length > 0) {
-                        System.out.println("开始处理文章内容图片，数量: " + photoFiles.length);
-                        List<Long> photoFileIds = protectedReservationInfoService.processPhotoFiles(photoFiles, currentUserId);
-                        System.out.println("处理完成，获取到文章内容图片ID: " + photoFileIds);
-                        dto.setContentImageIds(photoFileIds);
+                        System.out.println("收到文章内容图片，数量: " + photoFiles.length);
                     }
                     
-                    // 处理轮播图
                     if (carouselFiles != null && carouselFiles.length > 0) {
-                        System.out.println("开始处理轮播图，数量: " + carouselFiles.length);
-                        List<Long> carouselFileIds = protectedReservationInfoService.processPhotoFiles(carouselFiles, currentUserId);
-                        System.out.println("处理完成，获取到轮播图ID: " + carouselFileIds);
-                        dto.setCarouselFileIds(carouselFileIds);
+                        System.out.println("收到轮播图，数量: " + carouselFiles.length);
                     }
                     
-                    // 处理画廊图片
                     if (galleryFiles != null && galleryFiles.length > 0) {
-                        System.out.println("开始处理画廊图片，数量: " + galleryFiles.length);
-                        List<Long> galleryFileIds = protectedReservationInfoService.processPhotoFiles(galleryFiles, currentUserId);
-                        System.out.println("处理完成，获取到画廊图片ID: " + galleryFileIds);
-                        dto.setGalleryFileIds(galleryFileIds);
+                        System.out.println("收到画廊图片，数量: " + galleryFiles.length);
                     }
                     
-                    // 处理音频文件
                     if (audioFiles != null && audioFiles.length > 0) {
-                        System.out.println("开始处理音频文件，数量: " + audioFiles.length);
-                        List<Long> audioFileIds = protectedReservationInfoService.processAudioFiles(audioFiles, currentUserId);
-                        System.out.println("处理完成，获取到音频文件ID: " + audioFileIds);
-                        dto.setAudioFileIds(audioFileIds);
+                        System.out.println("收到音频文件，数量: " + audioFiles.length);
                     }
                 } else if (dto.getContentType() == 2) { // 视频类型
-                    // 处理视频文件已在updateProtectedReservationInfo方法中实现
+                    // 记录文件数量
+                    if (videoFiles != null && videoFiles.length > 0) {
+                        System.out.println("收到视频文件，数量: " + videoFiles.length);
+                    }
                     
-                    // 视频类型也可能有轮播图
                     if (carouselFiles != null && carouselFiles.length > 0) {
-                        System.out.println("开始处理视频轮播图，数量: " + carouselFiles.length);
-                        List<Long> carouselFileIds = protectedReservationInfoService.processPhotoFiles(carouselFiles, currentUserId);
-                        System.out.println("处理完成，获取到轮播图ID: " + carouselFileIds);
-                        dto.setCarouselFileIds(carouselFileIds);
+                        System.out.println("收到视频轮播图，数量: " + carouselFiles.length);
                     }
                 }
             }
             
-            boolean result = protectedReservationInfoService.updateProtectedReservationInfo(dto, videoFiles);
+            boolean result = protectedReservationInfoService.saveProtectedReservationInfoWithFiles(dto, videoFiles, photoFiles, carouselFiles, galleryFiles, audioFiles);
             return Result.success(result);
         } catch (Exception e) {
             e.printStackTrace();
@@ -338,6 +347,92 @@ public class ProtectedReservationInfoController {
      */
     @DeleteMapping("/{id}")
     public Result<Boolean> deleteProtectedReservationInfo(@PathVariable Long id) {
+        System.out.println("=== 开始删除保护区介绍，ID: " + id + " ===");
+        
+        // 获取保护区介绍信息，用于删除关联的文件
+        try {
+            // 查询原始数据，获取JSON字符串形式的文件ID
+            Map<String, Object> rawData = protectedReservationInfoMapper.selectRawById(id);
+            if (rawData != null) {
+                System.out.println("获取到原始数据: " + rawData);
+                
+                // 通用方法：提取ID并删除文件
+                BiFunction<Object, String, List<String>> extractAndDeleteFiles = (fileIdsObj, fileType) -> {
+                    if (fileIdsObj == null || fileIdsObj.toString().isEmpty()) {
+                        System.out.println("没有" + fileType + "文件需要删除");
+                        return new java.util.ArrayList<>();
+                    }
+                    
+                    System.out.println("原始" + fileType + "ID JSON: " + fileIdsObj);
+                    
+                    // 直接从JSON字符串中提取ID
+                    String fileIdsStr = fileIdsObj.toString();
+                    List<String> fileIds = new java.util.ArrayList<>();
+                    
+                    // 使用正则表达式提取数字
+                    java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+");
+                    java.util.regex.Matcher matcher = pattern.matcher(fileIdsStr);
+                    
+                    while (matcher.find()) {
+                        String idStr = matcher.group();
+                        fileIds.add(idStr);
+                        System.out.println("提取到" + fileType + "ID: " + idStr);
+                    }
+                    
+                    // 直接删除文件
+                    if (!fileIds.isEmpty()) {
+                        for (String fileIdStr : fileIds) {
+                            try {
+                                Long fileId = Long.parseLong(fileIdStr);
+                                ResourceFile resourceFile = resourceFileMapper.selectById(fileId);
+                                
+                                if (resourceFile != null) {
+                                    System.out.println("找到" + fileType + "文件记录: ID=" + resourceFile.getId() + ", 文件名=" + resourceFile.getFileName());
+                                    
+                                    // 删除MinIO中的文件
+                                    try {
+                                        fileUploadUtil.removeObject(resourceFile.getBucketName(), resourceFile.getFileKey());
+                                        System.out.println("已删除MinIO中的" + fileType + "文件: " + resourceFile.getBucketName() + "/" + resourceFile.getFileKey());
+                                    } catch (Exception e) {
+                                        System.err.println("删除MinIO中的" + fileType + "文件失败: " + e.getMessage());
+                                    }
+                                    
+                                    // 删除数据库中的文件记录
+                                    int result = resourceFileMapper.deleteById(fileId);
+                                    System.out.println("删除" + fileType + "文件记录结果: " + result);
+                                } else {
+                                    System.out.println("未找到ID为" + fileId + "的" + fileType + "文件记录");
+                                }
+                            } catch (Exception e) {
+                                System.err.println("处理" + fileType + "文件ID时发生异常: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                    
+                    return fileIds;
+                };
+                
+                // 处理视频文件
+                extractAndDeleteFiles.apply(rawData.get("video_file_ids"), "视频");
+                
+                // 处理画廊图片
+                extractAndDeleteFiles.apply(rawData.get("gallery_file_ids"), "画廊图片");
+                
+                // 处理音频文件
+                extractAndDeleteFiles.apply(rawData.get("audio_file_ids"), "音频");
+                
+                // 处理轮播图
+                extractAndDeleteFiles.apply(rawData.get("carousel_file_ids"), "轮播图");
+                
+                // 处理内容图片
+                extractAndDeleteFiles.apply(rawData.get("content_image_ids"), "内容图片");
+            }
+        } catch (Exception e) {
+            System.err.println("删除关联文件时发生异常: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
         boolean result = protectedReservationInfoService.deleteProtectedReservationInfo(id);
         return Result.success(result);
     }
@@ -400,7 +495,7 @@ public class ProtectedReservationInfoController {
      * 分页查询保护区介绍列表（增强版，支持发布人、发布时间、内容类型搜索）
      */
     @GetMapping("/page-enhanced")
-    public Result<PageResult<ProtectedReservationInfoEnhancedDTO>> getProtectedReservationInfoPageEnhanced(
+    public Result<PageResult<java.util.Map<String, Object>>> getProtectedReservationInfoPageEnhanced(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String title,
@@ -419,7 +514,7 @@ public class ProtectedReservationInfoController {
             endDateTime = LocalDateTime.parse(endTime);
         }
         
-        PageResult<ProtectedReservationInfoEnhancedDTO> pageResult = protectedReservationInfoService.getProtectedReservationInfoPageEnhanced(
+        PageResult<java.util.Map<String, Object>> pageResult = protectedReservationInfoService.getProtectedReservationInfoPageEnhanced(
                 page, size, title, creatorName, startDateTime, endDateTime, contentType);
         return Result.success(pageResult);
     }

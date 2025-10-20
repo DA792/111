@@ -21,6 +21,27 @@
         <result column="create_by" property="createBy"/>
         <result column="update_by" property="updateBy"/>
     </resultMap>
+    
+    <!-- 保护区介绍增强DTO结果映射 -->
+    <resultMap id="protectedReservationInfoEnhancedDTOResultMap" type="com.scenic.dto.content.ProtectedReservationInfoEnhancedDTO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content_type" property="contentType"/>
+        <result column="content_category" property="contentCategory"/>
+        <result column="rich_content" property="richContent"/>
+        <result column="plain_text" property="plainText"/>
+        <result column="content_image_ids" property="contentImageIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="carousel_file_ids" property="carouselFileIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="gallery_file_ids" property="galleryFileIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="audio_file_ids" property="audioFileIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="video_file_ids" property="videoFileIds" typeHandler="com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler"/>
+        <result column="deleted" property="deleted"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="create_by" property="createBy"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="creatorName" property="creatorName"/>
+    </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
@@ -29,20 +50,11 @@
         deleted, create_time, update_time, create_by, update_by
     </sql>
 
-    <!-- 根据删除标记查询保护区介绍列表 -->
-    <select id="selectByDeleted" parameterType="java.lang.Byte" resultMap="protectedReservationInfoResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM protected_reservation_info
-        WHERE deleted = #{deleted}
-        ORDER BY create_time DESC
-    </select>
-
     <!-- 根据标题模糊查询保护区介绍列表 -->
     <select id="selectByTitle" parameterType="java.lang.String" resultMap="protectedReservationInfoResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM protected_reservation_info
         WHERE title LIKE CONCAT('%', #{title}, '%')
-        AND (deleted = 0 OR deleted IS NULL)
         ORDER BY create_time DESC
     </select>
 
@@ -51,7 +63,6 @@
         SELECT <include refid="Base_Column_List"/>
         FROM protected_reservation_info
         WHERE content_type = #{contentType}
-        AND (deleted = 0 OR deleted IS NULL)
         ORDER BY create_time DESC
     </select>
 
@@ -60,12 +71,11 @@
         SELECT <include refid="Base_Column_List"/>
         FROM protected_reservation_info
         WHERE content_category = #{contentCategory}
-        AND (deleted = 0 OR deleted IS NULL)
         ORDER BY create_time DESC
     </select>
     
     <!-- 分页查询保护区介绍列表（增强版，支持发布人、发布时间、内容类型搜索） -->
-    <select id="selectPageEnhanced" resultType="com.scenic.dto.content.ProtectedReservationInfoEnhancedDTO">
+    <select id="selectPageEnhanced" resultType="java.util.Map">
         SELECT 
             pri.id,
             pri.title,
@@ -73,21 +83,22 @@
             pri.content_category as contentCategory,
             pri.rich_content as richContent,
             pri.plain_text as plainText,
-            pri.content_image_ids as contentImageIds,
-            pri.carousel_file_ids as carouselFileIds,
-            pri.gallery_file_ids as galleryFileIds,
-            pri.audio_file_ids as audioFileIds,
-            pri.video_file_ids as videoFileIds,
+            pri.content_image_ids,
+            pri.carousel_file_ids,
+            pri.gallery_file_ids as gallery_file_ids,
+            pri.audio_file_ids as audio_file_ids,
+            pri.video_file_ids,
             pri.deleted,
-            pri.create_time as createTime,
-            pri.update_time as updateTime,
+            DATE_FORMAT(pri.create_time, '%Y-%m-%d %H:%i:%s') as createTime,
+            DATE_FORMAT(pri.update_time, '%Y-%m-%d %H:%i:%s') as updateTime,
             pri.create_by as createBy,
             pri.update_by as updateBy,
-            u.real_name as creatorName
+            u.real_name as creatorName,
+            pri.gallery_file_ids as galleryFileIds,
+            pri.audio_file_ids as audioFileIds
         FROM protected_reservation_info pri
         LEFT JOIN user u ON pri.create_by = u.id
         <where>
-            pri.deleted = 0
             <if test="title != null and title != ''">
                 AND pri.title LIKE CONCAT('%', #{title}, '%')
             </if>
@@ -114,7 +125,6 @@
         FROM protected_reservation_info pri
         LEFT JOIN user u ON pri.create_by = u.id
         <where>
-            pri.deleted = 0
             <if test="title != null and title != ''">
                 AND pri.title LIKE CONCAT('%', #{title}, '%')
             </if>
@@ -131,6 +141,29 @@
                 AND pri.content_type = #{contentType}
             </if>
         </where>
+    </select>
+    
+    <!-- 根据ID查询保护区介绍原始数据（不经过TypeHandler处理） -->
+    <select id="selectRawById" resultType="java.util.Map">
+        SELECT 
+            id,
+            title,
+            content_type,
+            content_category,
+            rich_content,
+            plain_text,
+            content_image_ids,
+            carousel_file_ids,
+            gallery_file_ids,
+            audio_file_ids,
+            video_file_ids,
+            deleted,
+            create_time,
+            update_time,
+            create_by,
+            update_by
+        FROM protected_reservation_info
+        WHERE id = #{id}
     </select>
 
 </mapper>

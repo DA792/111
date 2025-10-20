@@ -67,7 +67,7 @@ public interface ProtectedReservationInfoService extends IService<ProtectedReser
      * @param contentType 内容类型（精确匹配）
      * @return 分页结果
      */
-    PageResult<ProtectedReservationInfoEnhancedDTO> getProtectedReservationInfoPageEnhanced(
+    PageResult<java.util.Map<String, Object>> getProtectedReservationInfoPageEnhanced(
             Integer page, Integer size, String title, String creatorName, 
             LocalDateTime startTime, LocalDateTime endTime, Byte contentType);
     
@@ -95,10 +95,14 @@ public interface ProtectedReservationInfoService extends IService<ProtectedReser
      * 保存保护区介绍（包含文件上传处理）
      * @param dto 保护区介绍DTO
      * @param videoFiles 视频文件数组
+     * @param photoFiles 文章内容图片文件数组
+     * @param carouselFiles 轮播图文件数组
+     * @param galleryFiles 画廊图片文件数组
+     * @param audioFiles 音频文件数组
      * @return 是否保存成功
      * @throws Exception 异常
      */
-    boolean saveProtectedReservationInfoWithFiles(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles) throws Exception;
+    boolean saveProtectedReservationInfoWithFiles(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles, MultipartFile[] photoFiles, MultipartFile[] carouselFiles, MultipartFile[] galleryFiles, MultipartFile[] audioFiles) throws Exception;
     
     /**
      * 处理视频文件上传

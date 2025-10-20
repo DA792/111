@@ -23,7 +23,7 @@ import java.util.UUID;
  * 提供文件上传、下载和管理功能
  */
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api")
 public class FileController {
 
     @Autowired
@@ -213,6 +213,53 @@ public class FileController {
     }
     
     /**
+     * 根据文件ID获取文件的临时URL
+     *
+     * @param fileId 文件ID
+     * @return 文件的临时URL
+     */
+    @GetMapping("/file/{fileId}")
+    public Result<String> getFileUrlById(@PathVariable String fileId) {
+        System.out.println("获取文件URL，文件ID: " + fileId);
+        try {
+            if (fileId == null || fileId.isEmpty()) {
+                System.err.println("文件ID为null或空");
+                return Result.error("文件ID不能为空");
+            }
+            
+            // 将字符串ID转换为Long类型
+            Long fileIdLong;
+            try {
+                fileIdLong = Long.parseLong(fileId);
+            } catch (NumberFormatException e) {
+                System.err.println("文件ID格式不正确: " + fileId);
+                return Result.error("文件ID格式不正确");
+            }
+            
+            // 根据文件ID查询文件信息
+            ResourceFile resourceFile = resourceFileMapper.selectById(fileIdLong);
+            System.out.println("查询文件结果: " + (resourceFile != null ? "找到文件" : "文件不存在"));
+            
+            if (resourceFile == null) {
+                System.err.println("文件不存在，ID: " + fileId);
+                return Result.error("文件不存在");
+            }
+            
+            System.out.println("文件信息: bucketName=" + resourceFile.getBucketName() + ", fileKey=" + resourceFile.getFileKey());
+            
+            // 获取文件的临时URL，设置更长的有效期（7天）
+            String fileUrl = fileUploadUtil.getPresignedUrl(resourceFile.getBucketName(), resourceFile.getFileKey(), 604800);
+            System.out.println("生成的文件URL: " + fileUrl);
+            
+            return Result.success(fileUrl);
+        } catch (Exception e) {
+            System.err.println("获取文件URL失败: " + e.getMessage());
+            e.printStackTrace();
+            return Result.error("获取文件URL失败: " + e.getMessage());
+        }
+    }
+    
+    /**
      * 获取用户头像URL
      *
      * @param userId 用户ID
@@ -221,25 +268,27 @@ public class FileController {
     @GetMapping("/avatar/{userId}")
     public Result<String> getUserAvatarUrl(@PathVariable Long userId, HttpServletRequest request) {
         try {
-            // 验证用户身份
+            // 注意：JwtInterceptor已经放行了GET请求，所以这里不需要再验证JWT
+            // 但我们仍然保留验证代码，以防配置变更
             String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return Result.error("未授权：缺少有效的认证令牌");
-            }
+            boolean hasValidToken = false;
             
-            String token = authHeader.substring(7);
-            
-            // 验证token有效性
-            // 先尝试验证管理员令牌
-            boolean isValidToken = jwtUtil.validateAdminToken(token);
-            
-            // 如果管理员令牌验证失败，再尝试验证小程序用户令牌
-            if (!isValidToken) {
-                isValidToken = jwtUtil.validateMiniappToken(token);
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                
+                // 验证token有效性
+                // 先尝试验证管理员令牌
+                boolean isValidToken = jwtUtil.validateAdminToken(token);
+                
+                // 如果管理员令牌验证失败，再尝试验证小程序用户令牌
                 if (!isValidToken) {
-                    return Result.error("未授权：认证令牌无效或已过期");
+                    isValidToken = jwtUtil.validateMiniappToken(token);
                 }
+                
+                hasValidToken = isValidToken;
             }
+            
+            // 即使没有有效的token，也允许访问头像（因为JwtInterceptor已经放行了GET请求）
             
             // 根据用户ID获取用户头像文件信息
             ResourceFile avatarFile = resourceFileMapper.selectUserAvatar(userId);

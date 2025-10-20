@@ -17,9 +17,17 @@ public class ProtectedReservationInfo {
     private Byte contentCategory; // 内容分类
     private String richContent; // 富文本内容
     private String plainText; // 纯文本内容
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> contentImageIds; // 内容图片ID列表
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> carouselFileIds; // 轮播图文件ID列表
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> galleryFileIds; // 画廊文件ID列表
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> audioFileIds; // 音频文件ID列表
     
     @TableField(typeHandler = JacksonTypeHandler.class)

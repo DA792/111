@@ -56,9 +56,9 @@ public interface ResourceFileMapper {
      * @return 插入结果
      */
     @Insert("INSERT INTO resource_file(file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
-            "duration, sha256, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
+            "duration, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
             "VALUES(#{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
-            "#{duration}, #{sha256}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
+            "#{duration}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(ResourceFile resourceFile);
     
@@ -77,6 +77,14 @@ public interface ResourceFileMapper {
      */
     @Delete("<script>DELETE FROM resource_file WHERE id IN <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
     int deleteByIds(@Param("ids") List<Long> ids);
+    
+    /**
+     * 根据字符串ID列表删除文件资源记录
+     * @param ids 文件资源ID字符串列表
+     * @return 删除结果
+     */
+    @Delete("<script>DELETE FROM resource_file WHERE id IN <foreach collection='ids' item='id' open='(' separator=',' close=')'>#{id}</foreach></script>")
+    int deleteByStringIds(@Param("ids") List<String> ids);
     
     /**
      * 根据文件类型查询最新上传的文件

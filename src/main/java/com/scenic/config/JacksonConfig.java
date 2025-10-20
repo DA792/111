@@ -33,7 +33,7 @@ public class JacksonConfig {
         ObjectMapper objectMapper = builder.createXmlMapper(false).build();
         
         // 设置日期格式和时区
-        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
         objectMapper.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         
         // 创建自定义模块
@@ -47,7 +47,11 @@ public class JacksonConfig {
         objectMapper.registerModule(module);
         
         // 注册JavaTimeModule用于处理新的时间API
-        objectMapper.registerModule(new JavaTimeModule());
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        objectMapper.registerModule(javaTimeModule);
+        
+        // 配置LocalDateTime序列化
+        objectMapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         
         return objectMapper;
     }

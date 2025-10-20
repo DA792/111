@@ -52,5 +52,7 @@ public class WebConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/api/uniapp/**")  // 排除所有小程序接口
                 .excludePathPatterns("/api/**/register/**")  // 排除注册接口
                 .excludePathPatterns("/uploads/**");  // 排除静态资源
+                // 注意：不再排除所有的/api/avatar/**和/api/file/**路径
+                // 而是在JwtInterceptor中根据请求方法进行判断
     }
 }
