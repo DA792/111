@@ -20,13 +20,25 @@ public class FileUploadUtil {
     private MinioService minioService;
 
     /**
-     * 上传文件并返回永久访问URL
+     * 上传文件到默认桶并返回永久访问URL
      *
      * @param file 文件
      * @return 文件访问URL
      * @throws Exception 异常
      */
     public String uploadFile(MultipartFile file) throws Exception {
+        return uploadFileToBucket(null, file);
+    }
+    
+    /**
+     * 上传文件到指定桶并返回永久访问URL
+     *
+     * @param bucketName 存储桶名称，如果为null则使用默认桶
+     * @param file 文件
+     * @return 文件访问URL
+     * @throws Exception 异常
+     */
+    public String uploadFileToBucket(String bucketName, MultipartFile file) throws Exception {
         if (file.isEmpty()) {
             throw new IOException("文件不能为空");
         }
@@ -42,7 +54,11 @@ public class FileUploadUtil {
         String uniqueFilename = UUID.randomUUID().toString() + "." + extension;
 
         // 使用MinIO存储并返回永久访问URL
-        return minioService.uploadFile(file, uniqueFilename);
+        if (bucketName != null && !bucketName.isEmpty()) {
+            return minioService.uploadFileToBucket(bucketName, file, uniqueFilename);
+        } else {
+            return minioService.uploadFile(file, uniqueFilename);
+        }
     }
 
     /**

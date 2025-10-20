@@ -40,10 +40,22 @@ public class JwtInterceptor implements HandlerInterceptor {
         
         System.out.println("JWT拦截器处理请求: " + method + " " + requestURI);
         
-        // 放行管理后台登录接口、注册接口和头像API
+        // 放行管理后台登录接口、注册接口
         if (requestURI.equals("/api/manage/login") || 
-            requestURI.contains("/register") ||
-            requestURI.startsWith("/api/files/avatar/")) {
+            requestURI.contains("/register")) {
+            System.out.println("放行登录/注册接口: " + requestURI);
+            return true;
+        }
+        
+        // 放行头像API的GET请求 - 无需验证JWT
+        if ((requestURI.startsWith("/api/avatar/") || requestURI.startsWith("/api/files/avatar/")) && method.equals("GET")) {
+            System.out.println("放行头像API的GET请求: " + requestURI);
+            return true;
+        }
+        
+        // 放行文件获取API的GET请求
+        if (requestURI.startsWith("/api/file/") && method.equals("GET")) {
+            System.out.println("放行文件API的GET请求: " + requestURI);
             return true;
         }
         
@@ -73,7 +85,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String token = authHeader.substring(7);
         
         // 验证管理后台JWT令牌
-        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/")) {
+        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/") || requestURI.equals("/api/upload")) {
             if (!jwtUtil.validateAdminToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"timestamp\":\"" + java.time.Instant.now() + "\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"未授权：管理后台认证令牌无效或已过期\",\"path\":\"" + requestURI + "\"}");
@@ -93,6 +105,17 @@ public class JwtInterceptor implements HandlerInterceptor {
         } else {
             // 其他路径，默认需要认证
             System.out.println("无法识别的请求路径: " + requestURI);
+            // 如果是头像API的GET请求，放行
+            if ((requestURI.startsWith("/api/avatar/") || requestURI.startsWith("/api/files/avatar/")) && method.equals("GET")) {
+                System.out.println("放行头像API的GET请求: " + requestURI);
+                return true;
+            }
+            
+            // 如果是文件API的GET请求，放行
+            if (requestURI.startsWith("/api/file/") && method.equals("GET")) {
+                System.out.println("放行文件API的GET请求: " + requestURI);
+                return true;
+            }
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("{\"timestamp\":\"" + java.time.Instant.now() + "\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"未授权：无法识别的请求路径\",\"path\":\"" + requestURI + "\"}");
             return false;
@@ -101,10 +124,12 @@ public class JwtInterceptor implements HandlerInterceptor {
         System.out.println("JWT验证通过: " + requestURI);
         return true;
     }
+
     
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         // 请求完成后清除用户上下文，防止内存泄漏
         userContextUtil.clear();
     }
+
 }

@@ -35,6 +35,7 @@ public class JacksonConfig {
     public ObjectMapper jacksonObjectMapper(Jackson2ObjectMapperBuilder builder) {
         ObjectMapper objectMapper = builder.createXmlMapper(false).build();
         
+
         // 创建自定义模块
         SimpleModule module = new SimpleModule();
         
@@ -47,9 +48,11 @@ public class JacksonConfig {
         
         // 注册JavaTimeModule用于处理新的时间API
         JavaTimeModule javaTimeModule = new JavaTimeModule();
+
         javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         objectMapper.registerModule(javaTimeModule);
+
         
         return objectMapper;
     }

@@ -3,6 +3,8 @@ package com.scenic.entity.content;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 /**
@@ -15,10 +17,21 @@ public class ProtectedReservationInfo {
     private Byte contentCategory; // 内容分类
     private String richContent; // 富文本内容
     private String plainText; // 纯文本内容
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> contentImageIds; // 内容图片ID列表
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> carouselFileIds; // 轮播图文件ID列表
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> galleryFileIds; // 画廊文件ID列表
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
     private List<Long> audioFileIds; // 音频文件ID列表
+    
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<Long> videoFileIds; // 视频文件ID列表
     private Byte deleted; // 删除标记
     private LocalDateTime createTime; // 创建时间
     private LocalDateTime updateTime; // 更新时间
@@ -107,6 +120,14 @@ public class ProtectedReservationInfo {
 
     public void setAudioFileIds(List<Long> audioFileIds) {
         this.audioFileIds = audioFileIds;
+    }
+
+    public List<Long> getVideoFileIds() {
+        return videoFileIds;
+    }
+
+    public void setVideoFileIds(List<Long> videoFileIds) {
+        this.videoFileIds = videoFileIds;
     }
 
     public Byte getDeleted() {
