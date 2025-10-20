@@ -140,7 +140,7 @@ public class ActivityAppointmentController {
      */
     @PutMapping(ADMIN_PREFIX + "/activity-appointments/{id}")
     public Result<String> updateActivityAppointmentForAdmin(@PathVariable Long id, @RequestBody ActivityAppointmentDTO appointmentDTO) {
-        // 复用审核接口实现更新功能
+        // 调用服务层更新活动预约
         return appointmentService.updateActivityAppointment(id, appointmentDTO);
     }
     

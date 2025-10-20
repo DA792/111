@@ -1040,6 +1040,11 @@ public class AppointmentServiceImpl implements AppointmentService {
             existingActivityAppointment.setRemark(appointmentDTO.getRemark());
             existingActivityAppointment.setUpdateTime(LocalDateTime.now());
             
+            // 如果DTO中提供了createBy，则更新
+            if (appointmentDTO.getCreateBy() != null) {
+                existingActivityAppointment.setCreateBy(appointmentDTO.getCreateBy());
+            }
+            
             // 保存活动预约主表记录
             activityAppointmentMapper.updateById(existingActivityAppointment);
             
