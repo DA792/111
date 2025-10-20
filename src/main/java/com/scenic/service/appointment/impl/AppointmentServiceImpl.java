@@ -191,12 +191,17 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             // 设置状态，如果DTO中提供了状态则使用，否则使用默认的1(待审核)
             String statusStr = appointmentDTO.getStatus();
+            Integer statusValue = null;
             if (statusStr != null && !statusStr.isEmpty()) {
                 try {
-                    teamAppointment.setStatus(Integer.valueOf(statusStr));
+                    statusValue = Integer.valueOf(statusStr);
                 } catch (NumberFormatException e) {
-                    teamAppointment.setStatus(1); // 1表示待审核
+                    // 如果转换失败，使用默认值
+                    statusValue = 1; // 1表示待审核
                 }
+            }
+            if (statusValue != null) {
+                teamAppointment.setStatus(statusValue);
             } else {
                 teamAppointment.setStatus(1); // 1表示待审核
             }
@@ -307,8 +312,14 @@ public class AppointmentServiceImpl implements AppointmentService {
                 try {
             // 设置默认值
             if (activityAppointment.getStatus() == null) {
-                activityAppointment.setStatus(Integer.valueOf(AppointmentConstants.STATUS_PENDING));
+                activityAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
             }
+                    // 生成预约编号
+                    if (activityAppointment.getRegistrationNo() == null || activityAppointment.getRegistrationNo().isEmpty()) {
+                        String registrationNo = "ACT" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")) 
+                              + String.format("%03d", (int)(Math.random() * 1000));
+                        activityAppointment.setRegistrationNo(registrationNo);
+                    }
                     if (activityAppointment.getCreateTime() == null) {
                         activityAppointment.setCreateTime(LocalDateTime.now());
                     }
@@ -374,12 +385,17 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             // 处理状态字段
             String statusStr = appointmentDTO.getStatus();
+            Integer statusValue = null;
             if (statusStr != null && !statusStr.isEmpty()) {
                 try {
-                    existingTeamAppointment.setStatus(Integer.valueOf(statusStr));
+                    statusValue = Integer.valueOf(statusStr);
                 } catch (NumberFormatException e) {
                     // 如果转换失败，保持原有状态
+                    statusValue = existingTeamAppointment.getStatus();
                 }
+            }
+            if (statusValue != null) {
+                existingTeamAppointment.setStatus(statusValue);
             }
             
             // 保存团队预约主表记录
@@ -425,17 +441,26 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             // 创建活动预约主表记录
             ActivityAppointment activityAppointment = new ActivityAppointment();
+            // 生成预约编号
+            String registrationNo = "ACT" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")) 
+                          + String.format("%03d", (int)(Math.random() * 1000));
+            activityAppointment.setRegistrationNo(registrationNo);
             activityAppointment.setActivityName(appointmentDTO.getActivityName());
+            activityAppointment.setTeamName(appointmentDTO.getTeamName());
             activityAppointment.setContactPerson(appointmentDTO.getContactPerson());
             activityAppointment.setContactPhone(appointmentDTO.getContactPhone());
             activityAppointment.setContactEmail(appointmentDTO.getContactEmail());
             activityAppointment.setActivityId(appointmentDTO.getActivityId());
+            // 设置用户ID
+            activityAppointment.setUserId(appointmentDTO.getUserId() != null ? appointmentDTO.getUserId() : 1L);
+            // 设置表单文件ID，默认为0
+            activityAppointment.setFormFileId(0L);
             activityAppointment.setActivityDate(appointmentDTO.getActivityDate());
             activityAppointment.setActivityTime(appointmentDTO.getActivityTime());
             activityAppointment.setNumberOfPeople(appointmentDTO.getNumberOfPeople());
             activityAppointment.setRemark(appointmentDTO.getRemark());
             // 管理后台新增默认状态为待审核
-            activityAppointment.setStatus(Integer.valueOf(AppointmentConstants.STATUS_PENDING));
+            activityAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
             activityAppointment.setCreateTime(LocalDateTime.now());
             activityAppointment.setUpdateTime(LocalDateTime.now());
             activityAppointment.setCreateBy(createBy);
@@ -475,16 +500,32 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             // 创建活动预约主表记录
             ActivityAppointment activityAppointment = new ActivityAppointment();
+            // 生成预约编号
+            String registrationNo = "ACT" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")) 
+                          + String.format("%03d", (int)(Math.random() * 1000));
+            activityAppointment.setRegistrationNo(registrationNo);
             activityAppointment.setActivityName(appointmentDTO.getActivityName());
+            activityAppointment.setTeamName(appointmentDTO.getTeamName());
             activityAppointment.setContactPerson(appointmentDTO.getContactPerson());
             activityAppointment.setContactPhone(appointmentDTO.getContactPhone());
             activityAppointment.setContactEmail(appointmentDTO.getContactEmail());
             activityAppointment.setActivityId(appointmentDTO.getActivityId());
+            // 设置用户ID
+            activityAppointment.setUserId(appointmentDTO.getUserId() != null ? appointmentDTO.getUserId() : 1L);
+            // 设置表单文件ID，默认为0
+            activityAppointment.setFormFileId(0L);
             activityAppointment.setActivityDate(appointmentDTO.getActivityDate());
             activityAppointment.setActivityTime(appointmentDTO.getActivityTime());
             activityAppointment.setNumberOfPeople(appointmentDTO.getNumberOfPeople());
             activityAppointment.setRemark(appointmentDTO.getRemark());
-            activityAppointment.setStatus(Integer.valueOf(AppointmentConstants.STATUS_PENDING));
+            
+            // 处理状态字段
+            if (appointmentDTO.getStatus() != null) {
+                activityAppointment.setStatus(appointmentDTO.getStatus());
+            } else {
+                activityAppointment.setStatus(AppointmentConstants.STATUS_PENDING);
+            }
+            
             activityAppointment.setCreateTime(LocalDateTime.now());
             activityAppointment.setUpdateTime(LocalDateTime.now());
             
@@ -493,6 +534,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             return Result.success("预约成功", "ACT" + activityAppointment.getId());
         } catch (Exception e) {
+            e.printStackTrace();
             return Result.error("预约失败：" + e.getMessage());
         }
     }
@@ -543,7 +585,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             // 检查是否可以取消（简化处理，实际应根据配置的时间限制）
-            if (AppointmentConstants.STATUS_COMPLETED.equals(appointment.getStatus())) {
+            if (appointment.getStatus() != null && appointment.getStatus().equals(AppointmentConstants.STATUS_COMPLETED)) {
                 return Result.error("已完成的预约无法取消");
             }
             
@@ -572,7 +614,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             // 检查是否可以取消（简化处理，实际应根据配置的时间限制）
-            if (AppointmentConstants.STATUS_COMPLETED.equals(teamAppointment.getStatus())) {
+            if (teamAppointment.getStatus() != null && teamAppointment.getStatus().equals(AppointmentConstants.STATUS_COMPLETED)) {
                 return Result.error("已完成的团队预约无法取消");
             }
             
@@ -601,7 +643,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             // 检查是否可以取消（简化处理，实际应根据配置的时间限制）
-            if (AppointmentConstants.STATUS_COMPLETED.equals(activityAppointment.getStatus())) {
+            if (activityAppointment.getStatus() != null && activityAppointment.getStatus().equals(AppointmentConstants.STATUS_COMPLETED)) {
                 return Result.error("已完成的活动预约无法取消");
             }
             
@@ -758,7 +800,18 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             // 更新预约状态
-            appointment.setStatus(status);
+            Integer statusValue = null;
+            if (status != null && !status.isEmpty()) {
+                try {
+                    statusValue = Integer.valueOf(status);
+                } catch (NumberFormatException e) {
+                    return Result.error("状态值格式不正确");
+                }
+            } else {
+                // 如果状态为空，保持原有状态
+                statusValue = appointment.getStatus();
+            }
+            appointment.setStatus(statusValue);
             appointment.setUpdateTime(LocalDateTime.now());
             appointmentMapper.updateById(appointment);
             
@@ -864,6 +917,7 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             // 更新活动预约主表记录
             existingActivityAppointment.setActivityName(appointmentDTO.getActivityName());
+            existingActivityAppointment.setTeamName(appointmentDTO.getTeamName());
             existingActivityAppointment.setContactPerson(appointmentDTO.getContactPerson());
             existingActivityAppointment.setContactPhone(appointmentDTO.getContactPhone());
             existingActivityAppointment.setContactEmail(appointmentDTO.getContactEmail());

@@ -8,11 +8,11 @@ public class AppointmentConstants {
     /**
      * 预约状态常量
      */
-    public static final String STATUS_PENDING = "待审核";
-    public static final String STATUS_CONFIRMED = "已确认";
-    public static final String STATUS_CANCELLED = "已取消";
-    public static final String STATUS_COMPLETED = "已完成";
-    public static final String STATUS_REJECTED = "已拒绝";
+    public static final int STATUS_PENDING = 1;  // 待审核
+    public static final int STATUS_CONFIRMED = 2;  // 已确认
+    public static final int STATUS_CANCELLED = 3;  // 已取消
+    public static final int STATUS_COMPLETED = 4;  // 已完成
+    public static final int STATUS_REJECTED = 0;  // 已拒绝
     
     /**
      * 预约类型常量
