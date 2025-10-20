@@ -92,18 +92,36 @@ public class PhotoCheckInController {
      * @return 照片打卡记录列表
      */
     @GetMapping(MINIAPP_PREFIX + "/photo-check-in/list")
-    public PageResult<PhotoCheckInVO> getAllPhotoCheckInsForMiniapp(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
-        return photoCheckInService.getAllPhotoCheckIns(photoCheckInQueryDTO);
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckInsForMiniapp(
+            @RequestParam(value = "params[pageNum]", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "params[pageSize]", defaultValue = "10") Integer pageSize,
+            @RequestParam(value = "params[title]", required = false) String title,
+            @RequestParam(value = "params[categoryId]", required = false) Long categoryId) {
+        
+        // 处理title参数，如果是"undefined"字符串则转为null
+        if (title != null && "undefined".equals(title)) {
+            title = null;
+        }
+        
+        PhotoCheckInQueryDTO queryDTO = new PhotoCheckInQueryDTO();
+        queryDTO.setPageNum(pageNum);
+        queryDTO.setPageSize(pageSize);
+        queryDTO.setTitle(title);
+        queryDTO.setCategoryId(categoryId);
+        
+        return photoCheckInService.getAllPhotoCheckIns(queryDTO);
     }
     
     /**
      * 小程序端 - 点赞照片打卡
      * @param photoCheckInId 照片打卡ID
+     * @param userId 用户ID
      * @return 操作结果
      */
     @PostMapping(MINIAPP_PREFIX + "/photo-check-in/like/{photoCheckInId}")
-    public Result<String> likePhotoCheckIn(@PathVariable Long photoCheckInId) {
-        return photoCheckInService.likePhotoCheckIn(photoCheckInId);
+    public Result<String> likePhotoCheckIn(@PathVariable Long photoCheckInId,
+                                         @RequestParam("userId") Long userId) {
+        return photoCheckInService.likePhotoCheckIn(photoCheckInId, userId);
     }
     
     /**
@@ -111,9 +129,89 @@ public class PhotoCheckInController {
      * @param photoCheckInId 照片打卡ID
      * @return 操作结果
      */
-    @PostMapping(MINIAPP_PREFIX + "/photo-check-in/unlike/{photoCheckInId}")
+    @DeleteMapping(MINIAPP_PREFIX + "/photo-check-in/unlike/{photoCheckInId}")
     public Result<String> unlikePhotoCheckIn(@PathVariable Long photoCheckInId) {
         return photoCheckInService.unlikePhotoCheckIn(photoCheckInId);
+    }
+    
+    /**
+     * 小程序端 - 收藏照片打卡
+     * @param photoCheckInId 照片打卡ID
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @PostMapping(MINIAPP_PREFIX + "/photo-check-in/favorite/{photoCheckInId}")
+    public Result<String> favoritePhotoCheckIn(@PathVariable Long photoCheckInId,
+                                             @RequestParam("userId") Long userId) {
+        return photoCheckInService.favoritePhotoCheckIn(photoCheckInId, userId);
+    }
+    
+    /**
+     * 小程序端 - 取消收藏照片打卡
+     * @param photoCheckInId 照片打卡ID
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @DeleteMapping(MINIAPP_PREFIX + "/photo-check-in/unfavorite/{photoCheckInId}")
+    public Result<String> unfavoritePhotoCheckIn(@PathVariable Long photoCheckInId,
+                                               @RequestParam("userId") Long userId) {
+        return photoCheckInService.unfavoritePhotoCheckIn(photoCheckInId, userId);
+    }
+    
+    /**
+     * 小程序端 - 获取用户收藏的照片打卡记录
+     * @param userId 用户ID
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @return 照片打卡记录列表
+     */
+    @GetMapping(MINIAPP_PREFIX + "/photo-check-in/favorites")
+    public PageResult<PhotoCheckInVO> getFavoritePhotoCheckIns(
+            @RequestParam(value = "userId", required = false) Long userIdDirect,
+            @RequestParam(value = "params[userId]", required = false) Long userIdInParams,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNumDirect,
+            @RequestParam(value = "params[pageNum]", defaultValue = "1") Integer pageNumInParams,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSizeDirect,
+            @RequestParam(value = "params[pageSize]", defaultValue = "10") Integer pageSizeInParams) {
+        
+        // 优先使用直接传递的参数，如果没有则使用params中的参数
+        Long userId = userIdDirect != null ? userIdDirect : userIdInParams;
+        Integer pageNum = pageNumDirect != 1 ? pageNumDirect : pageNumInParams;
+        Integer pageSize = pageSizeDirect != 10 ? pageSizeDirect : pageSizeInParams;
+        
+        if (userId == null) {
+            throw new IllegalArgumentException("Required parameter 'userId' is missing");
+        }
+        
+        return photoCheckInService.getFavoritePhotoCheckIns(userId, pageNum, pageSize);
+    }
+    
+    /**
+     * 小程序端 - 获取用户点赞的照片打卡记录
+     * @param userId 用户ID
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @return 照片打卡记录列表
+     */
+    @GetMapping(MINIAPP_PREFIX + "/photo-check-in/likes")
+    public PageResult<PhotoCheckInVO> getLikedPhotoCheckIns(
+            @RequestParam(value = "userId", required = false) Long userIdDirect,
+            @RequestParam(value = "params[userId]", required = false) Long userIdInParams,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNumDirect,
+            @RequestParam(value = "params[pageNum]", defaultValue = "1") Integer pageNumInParams,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSizeDirect,
+            @RequestParam(value = "params[pageSize]", defaultValue = "10") Integer pageSizeInParams) {
+        
+        // 优先使用直接传递的参数，如果没有则使用params中的参数
+        Long userId = userIdDirect != null ? userIdDirect : userIdInParams;
+        Integer pageNum = pageNumDirect != 1 ? pageNumDirect : pageNumInParams;
+        Integer pageSize = pageSizeDirect != 10 ? pageSizeDirect : pageSizeInParams;
+        
+        if (userId == null) {
+            throw new IllegalArgumentException("Required parameter 'userId' is missing");
+        }
+        
+        return photoCheckInService.getLikedPhotoCheckIns(userId, pageNum, pageSize);
     }
     
     /**
@@ -184,6 +282,47 @@ public class PhotoCheckInController {
      */
     @GetMapping(ADMIN_PREFIX + "/photo-check-in/categoryList")
     public Result<List<CheckinCategoryVO>> getCategoryList() {
+        return photoCheckInService.getCategoryList();
+    }
+
+    /**
+     * 小程序端 - 根据用户ID和分类ID获取用户的发布打卡记录
+     * @param userId 用户ID
+     * @param categoryId 分类ID
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @return 照片打卡记录列表
+     */
+    @GetMapping(MINIAPP_PREFIX + "/photo-check-in/user-category")
+    public PageResult<PhotoCheckInVO> getPhotoCheckInsByUserAndCategory(
+            @RequestParam(value = "userId", required = false) Long userIdDirect,
+            @RequestParam(value = "params[userId]", required = false) Long userIdInParams,
+            @RequestParam(value = "categoryId", required = false) Long categoryIdDirect,
+            @RequestParam(value = "params[categoryId]", required = false) Long categoryIdInParams,
+            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNumDirect,
+            @RequestParam(value = "params[pageNum]", defaultValue = "1") Integer pageNumInParams,
+            @RequestParam(value = "pageSize", defaultValue = "10") Integer pageSizeDirect,
+            @RequestParam(value = "params[pageSize]", defaultValue = "10") Integer pageSizeInParams) {
+        
+        // 优先使用直接传递的参数，如果没有则使用params中的参数
+        Long userId = userIdDirect != null ? userIdDirect : userIdInParams;
+        Long categoryId = categoryIdDirect != null ? categoryIdDirect : categoryIdInParams;
+        Integer pageNum = pageNumDirect != 1 ? pageNumDirect : pageNumInParams;
+        Integer pageSize = pageSizeDirect != 10 ? pageSizeDirect : pageSizeInParams;
+        
+        if (userId == null) {
+            throw new IllegalArgumentException("Required parameter 'userId' is missing");
+        }
+        
+        return photoCheckInService.getPhotoCheckInsByUserAndCategory(userId, categoryId, pageNum, pageSize);
+    }
+    
+    /**
+     * 小程序端 - 获取拍照打卡分类列表
+     * @return 分类列表
+     */
+    @GetMapping(MINIAPP_PREFIX + "/photo-check-in/categoryList")
+    public Result<List<CheckinCategoryVO>> getCategoryListForMiniapp() {
         return photoCheckInService.getCategoryList();
     }
 

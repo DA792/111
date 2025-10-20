@@ -21,6 +21,14 @@ public interface ResourceFileMapper {
     ResourceFile selectById(Long id);
     
     /**
+     * 根据文件键查询文件资源
+     * @param fileKey 文件键
+     * @return 文件资源信息
+     */
+    @Select("SELECT * FROM resource_file WHERE file_key = #{fileKey}")
+    ResourceFile selectByFileKey(String fileKey);
+    
+    /**
      * 根据文件路径和存储桶名称查询文件资源
      * @param bucketName 存储桶名称
      * @param fileKey 文件路径
