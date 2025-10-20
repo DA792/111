@@ -40,7 +40,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
         
         // 放行头像API的GET请求 - 无需验证JWT
-        if (requestURI.startsWith("/api/avatar/") && method.equals("GET")) {
+        if ((requestURI.startsWith("/api/avatar/") || requestURI.startsWith("/api/files/avatar/")) && method.equals("GET")) {
             System.out.println("放行头像API的GET请求: " + requestURI);
             return true;
         }
@@ -87,7 +87,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             // 其他路径，默认需要认证
             System.out.println("无法识别的请求路径: " + requestURI);
             // 如果是头像API的GET请求，放行
-            if (requestURI.startsWith("/api/avatar/") && method.equals("GET")) {
+            if ((requestURI.startsWith("/api/avatar/") || requestURI.startsWith("/api/files/avatar/")) && method.equals("GET")) {
                 System.out.println("放行头像API的GET请求: " + requestURI);
                 return true;
             }
