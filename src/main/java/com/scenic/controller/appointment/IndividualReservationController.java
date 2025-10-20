@@ -75,6 +75,7 @@ public class IndividualReservationController {
                                           @RequestBody IndividualReservation reservation,
                                           @RequestParam(required = false) Long updateBy) {
         reservation.setId(id);
+        reservation.setUpdateBy(id);
         if (updateBy != null) {
             reservation.setUpdateBy(updateBy);
         }

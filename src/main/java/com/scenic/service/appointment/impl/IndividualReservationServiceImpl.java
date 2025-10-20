@@ -90,7 +90,7 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             log.error("数据库访问异常", e);
             // 释放Redis锁
             reservationUtil.releaseReservationLock(reservation);
-            throw new ServiceUnavailableException("数据访问异常");
+            throw new ServiceUnavailableException("该预约订单中已经有人预约过了");
         } catch (Exception e) {
             log.error("预约创建异常", e);
             // 释放Redis锁
@@ -162,6 +162,62 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             
             // 批量插入预约人员
             individualReservationMapper.insertPersonsBatch(reservation.getReservationPersons());
+        }
+    }
+    
+    /**
+     * 更新预约人员信息
+     * @param reservation 预约信息
+     */
+    private void updateReservationPersons(IndividualReservation reservation) {
+        if (reservation.getReservationPersons() != null && !reservation.getReservationPersons().isEmpty()) {
+            // 分别处理新增和更新的预约人员
+            for (IndividualReservationPerson person : reservation.getReservationPersons()) {
+                person.setReservationId(reservation.getId());
+                person.setVisitDate(reservation.getVisitDate());
+                person.setTimeSlot(reservation.getTimeSlot());
+                if (person.getVersion() == null) {
+                    person.setVersion(0);
+                }
+                if (person.getDeleted() == null) {
+                    person.setDeleted(0);
+                }
+                if (person.getUpdateTime() == null) {
+                    person.setUpdateTime(LocalDateTime.now());
+                }
+                if (person.getUpdateBy() == null) {
+                    person.setUpdateBy(reservation.getUpdateBy());
+                }
+                
+                // 区分新增和更新：如果ID为null或数据库中不存在该ID，则为新增；否则为更新
+                if (person.getId() == null) {
+                    // 新增人员：设置创建时间和其他必要字段
+                    if (person.getCreateTime() == null) {
+                        person.setCreateTime(LocalDateTime.now());
+                    }
+                    if (person.getCreateBy() == null) {
+                        person.setCreateBy(reservation.getUpdateBy());
+                    }
+                    individualReservationMapper.insertPerson(person);
+                } else {
+                    // 检查数据库中是否存在该人员（避免更新不存在的记录）
+                    IndividualReservationPerson existingPerson = individualReservationMapper.selectPersonById(person.getId());
+                    if (existingPerson != null) {
+                        // 更新人员
+                        individualReservationMapper.updatePersonById(person);
+                    } else {
+                        // 如果数据库中不存在该ID的人员，则作为新增处理
+                        if (person.getCreateTime() == null) {
+                            person.setCreateTime(LocalDateTime.now());
+                        }
+                        if (person.getCreateBy() == null) {
+                            person.setCreateBy(reservation.getUpdateBy());
+                        }
+                        person.setId(null); // 清除ID，让数据库自动生成
+                        individualReservationMapper.insertPerson(person);
+                    }
+                }
+            }
         }
     }
     
@@ -296,8 +352,12 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             
             // 更新预约记录
             int result = individualReservationMapper.updateById(reservation);
-            
+            System.out.println(result);
             if (result > 0) {
+                // 如果有预约人员信息，同时更新预约人员表
+                if (reservation.getReservationPersons() != null && !reservation.getReservationPersons().isEmpty()) {
+                    updateReservationPersons(reservation);
+                }
                 return Result.success("预约更新成功");
             } else {
                 return Result.error("预约更新失败");
@@ -323,7 +383,10 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
                 return Result.error("预约记录不存在");
             }
             
-            // 逻辑删除
+            // 逻辑删除预约人员信息
+            individualReservationMapper.deletePersonsByReservationId(id, updateBy);
+            
+            // 逻辑删除预约主记录
             int result = individualReservationMapper.deleteById(id, updateBy);
             
             if (result > 0) {
