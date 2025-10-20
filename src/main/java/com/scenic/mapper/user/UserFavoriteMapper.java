@@ -54,12 +54,28 @@ public interface UserFavoriteMapper {
     int selectCountByUserId(@Param("userId") Long userId, @Param("contentType") Integer contentType);
     
     /**
+     * 批量查询用户对多个内容的互动状态
+     * @param userId 用户ID
+     * @param contentIds 内容ID列表
+     * @return 互动记录列表
+     */
+    @Select({
+        "<script>",
+        "SELECT * FROM user_favorite WHERE user_id = #{userId} AND content_id IN",
+        "<foreach item='id' collection='contentIds' open='(' separator=',' close=')'>",
+        "#{id}",
+        "</foreach>",
+        "</script>"
+    })
+    List<UserFavorite> selectByUserAndContentIds(@Param("userId") Long userId, @Param("contentIds") List<Long> contentIds);
+    
+    /**
      * 插入用户收藏
      * @param userFavorite 收藏信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO user_favorite(user_id, content_id, content_type, version, create_time, update_time, create_by, update_by) " +
-            "VALUES(#{userId}, #{contentId}, #{contentType}, #{version}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
+    @Insert("INSERT INTO user_favorite(user_id, content_id, content_type, version, create_time, update_time, create_by, update_by, category_id) " +
+            "VALUES(#{userId}, #{contentId}, #{contentType}, #{version}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}, #{categoryId})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(UserFavorite userFavorite);
     

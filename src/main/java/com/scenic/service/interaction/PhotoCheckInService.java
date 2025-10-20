@@ -25,9 +25,18 @@ public interface PhotoCheckInService {
     
     /**
      * 获取所有照片打卡记录
+     * @param photoCheckInQueryDTO 查询条件
      * @return 照片打卡记录列表
      */
     PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO);
+    
+    /**
+     * 获取所有照片打卡记录（带用户互动状态）
+     * @param photoCheckInQueryDTO 查询条件
+     * @param userId 用户ID，用于判断互动状态
+     * @return 照片打卡记录列表
+     */
+    PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO, Long userId);
     
     
     /**
@@ -141,4 +150,15 @@ public interface PhotoCheckInService {
      * @return 照片打卡记录列表
      */
     PageResult<PhotoCheckInVO> getPhotoCheckInsByUserAndCategory(Long userId, Long categoryId, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 小程序端 - 根据用户ID和分类ID获取用户的发布打卡记录（带用户互动状态）
+     * @param userId 用户ID
+     * @param categoryId 分类ID
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @param currentUserId 当前用户ID，用于判断互动状态
+     * @return 照片打卡记录列表
+     */
+    PageResult<PhotoCheckInVO> getPhotoCheckInsByUserAndCategory(Long userId, Long categoryId, Integer pageNum, Integer pageSize, Long currentUserId);
 }

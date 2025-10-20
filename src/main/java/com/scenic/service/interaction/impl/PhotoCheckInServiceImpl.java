@@ -1,7 +1,10 @@
 package com.scenic.service.interaction.impl;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -22,6 +25,7 @@ import com.scenic.entity.interaction.PhotoCheckIn;
 import com.scenic.entity.interaction.vo.CheckinCategoryVO;
 import com.scenic.entity.interaction.vo.PhotoCheckInVO;
 import com.scenic.entity.ResourceFile;
+import com.scenic.entity.user.UserFavorite;
 import com.scenic.mapper.interaction.CheckinCategoryMapper;
 import com.scenic.mapper.interaction.PhotoCheckInMapper;
 import com.scenic.mapper.ResourceFileMapper;
@@ -29,7 +33,10 @@ import com.scenic.mapper.user.UserMapper;
 import com.scenic.mapper.user.UserFavoriteMapper;
 import com.scenic.service.MinioService;
 import com.scenic.service.interaction.PhotoCheckInService;
+import com.scenic.utils.BloomFilterUtil;
+import com.scenic.utils.IdGenerator;
 import com.scenic.utils.UserContextUtil;
+import com.scenic.utils.UserInteractionCacheUtil;
 
 /**
  * 拍照打卡服务实现类
@@ -60,6 +67,15 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     
     @Autowired
     private UserFavoriteMapper userFavoriteMapper;
+    
+    @Autowired
+    private BloomFilterUtil bloomFilterUtil;
+    
+    @Autowired
+    private UserInteractionCacheUtil userInteractionCacheUtil;
+    
+    @Autowired
+    private IdGenerator idGenerator;
     
     // Redis缓存键前缀
     private static final String PHOTO_CHECK_IN_CACHE_PREFIX = "photo_check_in:";
@@ -92,13 +108,30 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             if (photoCheckInDTO.getPhotoUrl() == null || photoCheckInDTO.getPhotoUrl().trim().isEmpty()) {
                 return Result.error("照片URL不能为空");
             }
-            if (photoCheckInDTO.getCategory() == null || photoCheckInDTO.getCategory().trim().isEmpty()) {
-                return Result.error("分类不能为空");
+            // 验证分类ID
+            if (photoCheckInDTO.getCategoryId() == null) {
+                return Result.error("分类ID不能为空");
+            }
+            
+            // 验证分类是否存在且启用
+            CheckinCategory category = checkinCategoryMapper.selectById(photoCheckInDTO.getCategoryId());
+            if (category == null || category.getStatus() != 1) {
+                return Result.error("指定的分类不存在或已禁用");
             }
             
             // 从照片URL中提取文件名和文件键
             String photoUrl = photoCheckInDTO.getPhotoUrl();
-            String fileName = photoUrl.substring(photoUrl.lastIndexOf("/") + 1);
+            // 提取基本文件名（去除查询参数）
+            String fullFileName = photoUrl.substring(photoUrl.lastIndexOf("/") + 1);
+            String fileName = fullFileName;
+            // 如果文件名包含查询参数，只保留文件名部分
+            if (fileName.contains("?")) {
+                fileName = fileName.substring(0, fileName.indexOf("?"));
+            }
+            // 确保文件名不超过数据库字段长度限制（假设为255）
+            if (fileName.length() > 250) {
+                fileName = fileName.substring(0, 250);
+            }
             String fileKey = fileName;
             
             // 检查文件是否已存在
@@ -111,6 +144,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             } else {
                 // 创建新的文件记录
                 ResourceFile resourceFile = new ResourceFile();
+                // 使用雪花算法生成ID
+                resourceFile.setId(idGenerator.nextId());
                 resourceFile.setFileName(fileName);
                 resourceFile.setFileKey(fileKey);
                 resourceFile.setBucketName("photo-checkin");
@@ -127,23 +162,17 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 photoId = resourceFile.getId();
             }
             
-            // 根据分类名称查找分类ID
-            Long categoryId = 1L; // 默认分类ID
-            try {
-                CheckinCategory category = checkinCategoryMapper.selectByName(photoCheckInDTO.getCategory());
-                if (category != null) {
-                    categoryId = category.getId();
-                }
-            } catch (Exception e) {
-                System.err.println("查找分类失败：" + e.getMessage());
-            }
+            // 使用传入的分类ID
+            Long categoryId = photoCheckInDTO.getCategoryId();
             
             // 创建照片打卡记录
             PhotoCheckIn photoCheckIn = new PhotoCheckIn();
+            // 使用雪花算法生成ID
+            photoCheckIn.setId(idGenerator.nextId());
             photoCheckIn.setUserId(photoCheckInDTO.getUserId());
             photoCheckIn.setUserName(photoCheckInDTO.getUserName());
-            photoCheckIn.setTitle(photoCheckInDTO.getDescription() != null ? photoCheckInDTO.getDescription() : "照片打卡");
-            photoCheckIn.setContent(photoCheckInDTO.getDescription() != null ? photoCheckInDTO.getDescription() : "");
+            photoCheckIn.setTitle(photoCheckInDTO.getTitle() != null ? photoCheckInDTO.getTitle() : "照片打卡");
+            photoCheckIn.setContent(photoCheckInDTO.getTitle() != null ? photoCheckInDTO.getTitle() : "");
             photoCheckIn.setCategoryId(categoryId);
             photoCheckIn.setPhotoId(photoId);
             photoCheckIn.setLikeCount(0);
@@ -156,22 +185,15 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             photoCheckIn.setCreateBy(photoCheckInDTO.getUserId());
             photoCheckIn.setUpdateBy(photoCheckInDTO.getUserId());
             
-            // 设置用户头像（如果用户有头像）
+            // 设置用户头像为用户的头像文件ID
             try {
                 com.scenic.entity.user.User user = userMapper.selectById(photoCheckInDTO.getUserId());
                 if (user != null && user.getAvatarFileId() != null) {
-                    ResourceFile avatarFile = resourceFileMapper.selectById(user.getAvatarFileId());
-                    if (avatarFile != null) {
-                        String avatarUrl = minioService.getPresignedObjectUrl(
-                            avatarFile.getBucketName() != null ? avatarFile.getBucketName() : "user-avatars",
-                            avatarFile.getFileKey(),
-                            7 * 24 * 3600 // 7天有效期
-                        );
-                        photoCheckIn.setUserAvatar(avatarUrl);
-                    }
+                    // 直接存储头像文件ID，而不是URL
+                    photoCheckIn.setUserAvatar(user.getAvatarFileId().toString());
                 }
             } catch (Exception e) {
-                System.err.println("获取用户头像失败：" + e.getMessage());
+                System.err.println("获取用户头像ID失败：" + e.getMessage());
             }
             
             // 保存到数据库
@@ -288,10 +310,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             // 查询照片打卡记录
             List<PhotoCheckIn> photos = photoCheckInMapper.selectByIds(photoCheckInIds);
             
-            // 转换为VO对象
-            List<PhotoCheckInVO> photoCheckInVOs = photos.stream()
-                .map(this::convertToVO)
-                .collect(java.util.stream.Collectors.toList());
+            // 转换为VO对象，包含用户互动状态
+            List<PhotoCheckInVO> photoCheckInVOs = convertToVOsWithUserInteraction(photos, userId);
             
             // 查询总数
             int totalCount = userFavoriteMapper.selectCountByUserId(userId, 1);
@@ -334,10 +354,8 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             // 查询照片打卡记录
             List<PhotoCheckIn> photos = photoCheckInMapper.selectByIds(photoCheckInIds);
             
-            // 转换为VO对象
-            List<PhotoCheckInVO> photoCheckInVOs = photos.stream()
-                .map(this::convertToVO)
-                .collect(java.util.stream.Collectors.toList());
+            // 转换为VO对象，包含用户互动状态
+            List<PhotoCheckInVO> photoCheckInVOs = convertToVOsWithUserInteraction(photos, userId);
             
             // 查询总数
             int totalCount = userFavoriteMapper.selectCountByUserId(userId, 2);
@@ -356,6 +374,19 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      */
     @Override
     public PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO) {
+        // 使用当前登录用户ID
+        Long currentUserId = userContextUtil.getCurrentUserId();
+        return getAllPhotoCheckIns(photoCheckInQueryDTO, currentUserId);
+    }
+    
+    /**
+     * 获取所有照片打卡记录 - 分页查询（带用户互动状态）
+     * @param photoCheckInQueryDTO 查询条件
+     * @param userId 用户ID，用于判断互动状态
+     * @return 照片打卡记录分页结果
+     */
+    @Override
+    public PageResult<PhotoCheckInVO> getAllPhotoCheckIns(PhotoCheckInQueryDTO photoCheckInQueryDTO, Long userId) {
         // 生成缓存键
         String cacheKey = generatePageCacheKey(photoCheckInQueryDTO);
         
@@ -402,10 +433,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             totalCount = photoCheckInMapper.selectCountForMiniapp(title, categoryId);
         }
         
-        // 转换为VO对象
-        List<PhotoCheckInVO> photoCheckInVOs = photoCheckIns.stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
+        // 转换为VO对象，包含用户互动状态
+        // 使用传入的userId而不是从上下文获取
+        List<PhotoCheckInVO> photoCheckInVOs = convertToVOsWithUserInteraction(photoCheckIns, userId);
         
         // 构造分页结果
         PageResult<PhotoCheckInVO> pageResult = PageResult.of(totalCount, photoCheckInQueryDTO.getPageSize(), photoCheckInQueryDTO.getPageNum(), photoCheckInVOs);
@@ -610,6 +640,22 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      */
     @Override
     public PageResult<PhotoCheckInVO> getPhotoCheckInsByUserAndCategory(Long userId, Long categoryId, Integer pageNum, Integer pageSize) {
+        // 使用当前登录用户ID
+        Long currentUserId = userContextUtil.getCurrentUserId();
+        return getPhotoCheckInsByUserAndCategory(userId, categoryId, pageNum, pageSize, currentUserId);
+    }
+    
+    /**
+     * 小程序端 - 根据用户ID和分类ID获取用户的发布打卡记录（带用户互动状态）
+     * @param userId 用户ID
+     * @param categoryId 分类ID
+     * @param pageNum 页码
+     * @param pageSize 每页条数
+     * @param currentUserId 当前用户ID，用于判断互动状态
+     * @return 照片打卡记录列表
+     */
+    @Override
+    public PageResult<PhotoCheckInVO> getPhotoCheckInsByUserAndCategory(Long userId, Long categoryId, Integer pageNum, Integer pageSize, Long currentUserId) {
         try {
             // 参数验证
             if (userId == null) {
@@ -622,10 +668,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             // 查询照片打卡记录
             List<PhotoCheckIn> photos = photoCheckInMapper.selectByUserAndCategory(userId, categoryId, offset, pageSize);
             
-            // 转换为VO对象
-            List<PhotoCheckInVO> photoCheckInVOs = photos.stream()
-                .map(this::convertToVO)
-                .collect(java.util.stream.Collectors.toList());
+            // 转换为VO对象，包含用户互动状态
+            // 使用传入的currentUserId而不是从上下文获取
+            List<PhotoCheckInVO> photoCheckInVOs = convertToVOsWithUserInteraction(photos, currentUserId);
             
             // 查询总数
             int totalCount = photoCheckInMapper.selectCountByUserAndCategory(userId, categoryId);
@@ -667,9 +712,172 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 }
             }
         }
+        
+        // 处理用户头像URL
+        String userAvatarStr = photo.getUserAvatar();
+        if (userAvatarStr != null && !userAvatarStr.isEmpty()) {
+            try {
+                // 尝试将userAvatar转换为Long类型的文件ID
+                Long userAvatarFileId = Long.parseLong(userAvatarStr);
+                ResourceFile avatarFile = resourceFileMapper.selectById(userAvatarFileId);
+                if (avatarFile != null) {
+                    try {
+                        // 生成头像URL
+                        String avatarUrl;
+                        if (avatarFile.getBucketName() != null) {
+                            // 使用指定的存储桶名称
+                            avatarUrl = minioService.getPresignedObjectUrl(
+                                avatarFile.getBucketName(),
+                                avatarFile.getFileKey(),
+                                7 * 24 * 3600 // 7天有效期
+                            );
+                        } else {
+                            // 默认使用user-avatars存储桶
+                            avatarUrl = minioService.getPresignedObjectUrl(
+                                "user-avatars",
+                                avatarFile.getFileKey(),
+                                7 * 24 * 3600 // 7天有效期
+                            );
+                        }
+                        vo.setUserAvatarUrl(avatarUrl);
+                    } catch (Exception e) {
+                        // 如果获取URL失败，使用文件键作为备用
+                        vo.setUserAvatarUrl(avatarFile.getFileKey());
+                        System.err.println("获取用户头像URL失败：" + e.getMessage());
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // 如果userAvatar不是数字，可能是直接存储的URL
+                vo.setUserAvatarUrl(userAvatarStr);
+                System.err.println("用户头像不是有效的文件ID：" + e.getMessage());
+            }
+        }
+        
         // 设置分类名称
         vo.setCategoryName(photo.getCategoryName());
         return vo;
+    }
+    
+    /**
+     * 将PhotoCheckIn实体转换为PhotoCheckInVO，并包含用户互动状态
+     * @param photo PhotoCheckIn实体
+     * @param userId 用户ID
+     * @return PhotoCheckInVO
+     */
+    private PhotoCheckInVO convertToVOWithUserInteraction(PhotoCheckIn photo, Long userId) {
+        PhotoCheckInVO vo = convertToVO(photo);
+        
+        if (userId != null) {
+            // 使用Bloom Filter快速判断用户是否可能有互动记录
+            if (bloomFilterUtil.mightContainUserInteraction(userId, photo.getId())) {
+                // Bloom Filter可能存在，进一步检查缓存或数据库
+                Map<String, Boolean> interactionStatus = userInteractionCacheUtil.getUserInteractionStatus(userId, photo.getId());
+                
+                if (interactionStatus != null) {
+                    // 从缓存获取状态
+                    vo.setIsCollected(interactionStatus.getOrDefault("collected", false));
+                    vo.setIsLiked(interactionStatus.getOrDefault("liked", false));
+                } else {
+                    // 从数据库查询并缓存
+                    UserFavorite collectedFavorite = userFavoriteMapper.selectByUserAndContent(userId, photo.getId(), 1);
+                    UserFavorite likedFavorite = userFavoriteMapper.selectByUserAndContent(userId, photo.getId(), 2);
+                    
+                    boolean isCollected = collectedFavorite != null;
+                    boolean isLiked = likedFavorite != null;
+                    
+                    vo.setIsCollected(isCollected);
+                    vo.setIsLiked(isLiked);
+                    
+                    // 缓存结果
+                    userInteractionCacheUtil.cacheUserInteractionStatus(userId, photo.getId(), isCollected, isLiked);
+                    
+                    // 更新Bloom Filter
+                    if (isCollected || isLiked) {
+                        bloomFilterUtil.addUserInteractionToBloomFilter(userId, photo.getId());
+                    }
+                }
+            } else {
+                // Bloom Filter确定没有互动记录
+                vo.setIsCollected(false);
+                vo.setIsLiked(false);
+            }
+        }
+        
+        return vo;
+    }
+    
+    /**
+     * 批量将PhotoCheckIn实体列表转换为PhotoCheckInVO列表，并包含用户互动状态
+     * @param photos PhotoCheckIn实体列表
+     * @param userId 用户ID
+     * @return PhotoCheckInVO列表
+     */
+    private List<PhotoCheckInVO> convertToVOsWithUserInteraction(List<PhotoCheckIn> photos, Long userId) {
+        if (userId == null) {
+            return photos.stream().map(this::convertToVO).collect(Collectors.toList());
+        }
+        
+        // 提取照片ID列表
+        List<Long> photoIds = photos.stream().map(PhotoCheckIn::getId).collect(Collectors.toList());
+        
+        Map<Long, PhotoCheckInVO> result = new HashMap<>();
+        
+        // 先从缓存获取已有的状态
+        Map<Long, Map<String, Boolean>> cachedStatuses = userInteractionCacheUtil.batchGetUserInteractionStatus(userId, photoIds);
+        
+        // 所有未缓存的照片ID都需要查询数据库
+        List<Long> needQueryPhotoIds = photoIds.stream()
+            .filter(photoId -> !cachedStatuses.containsKey(photoId))
+            .collect(Collectors.toList());
+        
+        // 从数据库批量查询需要查询的照片互动状态
+        if (!needQueryPhotoIds.isEmpty()) {
+            List<UserFavorite> userFavorites = userFavoriteMapper.selectByUserAndContentIds(userId, needQueryPhotoIds);
+            
+            // 按照片ID分组
+            Map<Long, List<UserFavorite>> favoritesByPhotoId = userFavorites.stream()
+                .collect(Collectors.groupingBy(UserFavorite::getContentId));
+            
+            // 处理每个需要查询的照片
+            for (Long photoId : needQueryPhotoIds) {
+                PhotoCheckIn photo = photos.stream().filter(p -> p.getId().equals(photoId)).findFirst().orElse(null);
+                if (photo != null) {
+                    List<UserFavorite> favorites = favoritesByPhotoId.getOrDefault(photoId, java.util.Collections.emptyList());
+                    
+                    boolean isCollected = favorites.stream().anyMatch(fav -> Integer.valueOf(1).equals(fav.getContentType()));
+                    boolean isLiked = favorites.stream().anyMatch(fav -> Integer.valueOf(2).equals(fav.getContentType()));
+                    
+                    PhotoCheckInVO vo = convertToVO(photo);
+                    vo.setIsCollected(isCollected);
+                    vo.setIsLiked(isLiked);
+                    result.put(photoId, vo);
+                    
+                    // 缓存结果
+                    userInteractionCacheUtil.cacheUserInteractionStatus(userId, photoId, isCollected, isLiked);
+                    
+                    // 更新Bloom Filter
+                    if (isCollected || isLiked) {
+                        bloomFilterUtil.addUserInteractionToBloomFilter(userId, photoId);
+                    }
+                }
+            }
+        }
+        
+        // 处理缓存中的状态
+        cachedStatuses.forEach((photoId, status) -> {
+            PhotoCheckIn photo = photos.stream().filter(p -> p.getId().equals(photoId)).findFirst().orElse(null);
+            if (photo != null) {
+                PhotoCheckInVO vo = convertToVO(photo);
+                vo.setIsCollected(status.getOrDefault("collected", false));
+                vo.setIsLiked(status.getOrDefault("liked", false));
+                result.put(photoId, vo);
+            }
+        });
+        
+        // 按原始顺序返回结果
+        return photos.stream()
+            .map(photo -> result.getOrDefault(photo.getId(), convertToVO(photo)))
+            .collect(Collectors.toList());
     }
 
     /**

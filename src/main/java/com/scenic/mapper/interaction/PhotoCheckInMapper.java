@@ -28,9 +28,8 @@ public interface PhotoCheckInMapper {
      * @param photoCheckIn 照片打卡信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO photo_checkin(user_id, user_name, user_avatar, title, content, category_id, photo_id, like_count, view_count, status, version, deleted, create_time, update_time, create_by, update_by) " +
-            "VALUES(#{userId}, #{userName}, #{userAvatar}, #{title}, #{content}, #{categoryId}, #{photoId}, #{likeCount}, #{viewCount}, #{status}, #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
+    @Insert("INSERT INTO photo_checkin(id, user_id, user_name, user_avatar, title, content, category_id, photo_id, like_count, view_count, status, version, deleted, create_time, update_time, create_by, update_by) " +
+            "VALUES(#{id}, #{userId}, #{userName}, #{userAvatar}, #{title}, #{content}, #{categoryId}, #{photoId}, #{likeCount}, #{viewCount}, #{status}, #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
     int insert(PhotoCheckIn photoCheckIn);
     
     /**

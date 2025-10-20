@@ -50,10 +50,10 @@ public class PhotoCheckInController {
     /**
      * 小程序端 - 上传照片打卡
      * @param photo 照片文件
-     * @param description 描述
-     * @param category 分类
-     * @param latitude 纬度
-     * @param longitude 经度
+     * @param userId 用户ID
+     * @param userName 用户名
+     * @param title 标题
+     * @param categoryId 分类ID
      * @return 操作结果
      */
     @PostMapping(MINIAPP_PREFIX + "/photo-check-in/upload")
@@ -61,23 +61,19 @@ public class PhotoCheckInController {
             @RequestParam("photo") MultipartFile photo,
             @RequestParam("userId") Long userId,
             @RequestParam("userName") String userName,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam("category") String category,
-            @RequestParam("latitude") Double latitude,
-            @RequestParam("longitude") Double longitude) {
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam("categoryId") Long categoryId) {
         
         try {
-            // 处理文件上传
-            String photoUrl = fileUploadUtil.uploadFile(photo);
+        // 处理文件上传到照片打卡专用存储桶
+        String photoUrl = fileUploadUtil.uploadPhotoCheckinFile(photo);
             
             PhotoCheckInDTO photoCheckInDTO = new PhotoCheckInDTO();
             photoCheckInDTO.setUserId(userId);
             photoCheckInDTO.setUserName(userName);
             photoCheckInDTO.setPhotoUrl(photoUrl);
-            photoCheckInDTO.setDescription(description);
-            photoCheckInDTO.setCategory(category);
-            photoCheckInDTO.setLatitude(latitude);
-            photoCheckInDTO.setLongitude(longitude);
+            photoCheckInDTO.setTitle(title);
+            photoCheckInDTO.setCategoryId(categoryId);
             
             return photoCheckInService.uploadPhotoCheckIn(photoCheckInDTO);
         } catch (IOException e) {
@@ -96,7 +92,8 @@ public class PhotoCheckInController {
             @RequestParam(value = "params[pageNum]", defaultValue = "1") Integer pageNum,
             @RequestParam(value = "params[pageSize]", defaultValue = "10") Integer pageSize,
             @RequestParam(value = "params[title]", required = false) String title,
-            @RequestParam(value = "params[categoryId]", required = false) Long categoryId) {
+            @RequestParam(value = "params[categoryId]", required = false) Long categoryId,
+            @RequestParam(value = "params[userId]", required = false) Long userId) {
         
         // 处理title参数，如果是"undefined"字符串则转为null
         if (title != null && "undefined".equals(title)) {
@@ -109,7 +106,8 @@ public class PhotoCheckInController {
         queryDTO.setTitle(title);
         queryDTO.setCategoryId(categoryId);
         
-        return photoCheckInService.getAllPhotoCheckIns(queryDTO);
+        // 将userId传递给服务层，用于判断用户互动状态
+        return photoCheckInService.getAllPhotoCheckIns(queryDTO, userId);
     }
     
     /**
@@ -314,7 +312,8 @@ public class PhotoCheckInController {
             throw new IllegalArgumentException("Required parameter 'userId' is missing");
         }
         
-        return photoCheckInService.getPhotoCheckInsByUserAndCategory(userId, categoryId, pageNum, pageSize);
+        // 使用userId作为当前用户ID，确保正确设置互动状态
+        return photoCheckInService.getPhotoCheckInsByUserAndCategory(userId, categoryId, pageNum, pageSize, userId);
     }
     
     /**
