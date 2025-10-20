@@ -51,11 +51,10 @@ public interface ResourceFileMapper {
      * @param resourceFile 文件资源信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO resource_file(file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
+    @Insert("INSERT INTO resource_file(id, file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
             "duration, sha256, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
-            "VALUES(#{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
+            "VALUES(#{id}, #{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
             "#{duration}, #{sha256}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(ResourceFile resourceFile);
     
     /**

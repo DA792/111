@@ -235,4 +235,16 @@
         </set>
         WHERE id = #{id}
     </update>
+    
+    <!-- 批量插入个人预约人员 -->
+    <insert id="insertPersonsBatch">
+        INSERT INTO individual_reservation_person(reservation_id, name, id_type, id_number, phone, 
+            person_type, is_contact, visit_date, time_slot, version, deleted, create_time, update_time, create_by, update_by)
+        VALUES
+        <foreach collection="persons" item="person" separator=",">
+            (#{person.reservationId}, #{person.name}, #{person.idType}, #{person.idNumber}, #{person.phone},
+             #{person.personType}, #{person.isContact}, #{person.visitDate}, #{person.timeSlot}, #{person.version},
+             #{person.deleted}, #{person.createTime}, #{person.updateTime}, #{person.createBy}, #{person.updateBy})
+        </foreach>
+    </insert>
 </mapper>

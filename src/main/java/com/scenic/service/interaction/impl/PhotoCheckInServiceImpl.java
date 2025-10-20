@@ -28,6 +28,7 @@ import com.scenic.mapper.ResourceFileMapper;
 import com.scenic.mapper.user.UserMapper;
 import com.scenic.service.MinioService;
 import com.scenic.service.interaction.PhotoCheckInService;
+import com.scenic.utils.SnowflakeIdGenerator;
 import com.scenic.utils.UserContextUtil;
 
 /**
@@ -57,6 +58,9 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     @Autowired
     private UserMapper userMapper;
     
+    @Autowired
+    private SnowflakeIdGenerator snowflakeIdGenerator;
+    
     // Redis缓存键前缀
     private static final String PHOTO_CHECK_IN_CACHE_PREFIX = "photo_check_in:";
     private static final String ALL_PHOTOS_CACHE_KEY = "all_photos";
@@ -77,7 +81,69 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
      */
     @Override
     public Result<String> uploadPhotoCheckIn(PhotoCheckInDTO photoCheckInDTO) {
-        return null;
+        try {
+            // 参数验证
+            if (photoCheckInDTO == null) {
+                return Result.error("参数不能为空");
+            }
+            if (photoCheckInDTO.getUserId() == null) {
+                return Result.error("用户ID不能为空");
+            }
+            if (photoCheckInDTO.getPhotoUrl() == null || photoCheckInDTO.getPhotoUrl().trim().isEmpty()) {
+                return Result.error("照片URL不能为空");
+            }
+            
+            // 创建照片打卡记录
+            PhotoCheckIn photoCheckIn = new PhotoCheckIn();
+            photoCheckIn.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
+            photoCheckIn.setUserId(photoCheckInDTO.getUserId());
+            photoCheckIn.setUserName(photoCheckInDTO.getUserName());
+            photoCheckIn.setUserAvatar(photoCheckInDTO.getUserAvatar());
+            photoCheckIn.setTitle(photoCheckInDTO.getTitle());
+            photoCheckIn.setContent(photoCheckInDTO.getDescription());
+            photoCheckIn.setCategoryId(Long.parseLong(photoCheckInDTO.getCategory()));
+            
+            // 处理照片URL，保存到resource_file表
+            String photoUrl = photoCheckInDTO.getPhotoUrl();
+            ResourceFile resourceFile = new ResourceFile();
+            resourceFile.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
+            resourceFile.setFileName("photo_" + System.currentTimeMillis() + ".jpg");
+            resourceFile.setFileKey(photoUrl);
+            resourceFile.setBucketName("photo-checkin");
+            resourceFile.setFileType(1); // 1表示图片
+            resourceFile.setCreateTime(LocalDateTime.now());
+            resourceFile.setUpdateTime(LocalDateTime.now());
+            resourceFile.setUploadUserId(photoCheckInDTO.getUserId());
+            resourceFile.setCreateBy(photoCheckInDTO.getUserId());
+            resourceFile.setUpdateBy(photoCheckInDTO.getUserId());
+            
+            resourceFileMapper.insert(resourceFile);
+            
+            photoCheckIn.setPhotoId(resourceFile.getId());
+            photoCheckIn.setLikeCount(0);
+            photoCheckIn.setViewCount(0);
+            photoCheckIn.setStatus(1);
+            photoCheckIn.setVersion(0);
+            photoCheckIn.setDeleted(false);
+            photoCheckIn.setCreateTime(LocalDateTime.now());
+            photoCheckIn.setUpdateTime(LocalDateTime.now());
+            photoCheckIn.setCreateBy(photoCheckInDTO.getUserId());
+            photoCheckIn.setUpdateBy(photoCheckInDTO.getUserId());
+            
+            // 保存到数据库
+            photoCheckInMapper.insert(photoCheckIn);
+            
+            // 清除相关缓存
+            redisTemplate.delete(ALL_PHOTOS_CACHE_KEY);
+            redisTemplate.delete(PHOTOS_BY_CATEGORY_CACHE_PREFIX + photoCheckIn.getCategoryId());
+            redisTemplate.delete(PHOTOS_BY_USER_ID_CACHE_PREFIX + photoCheckIn.getUserId());
+            // 清除分页缓存
+            clearPageCaches();
+            
+            return Result.success("操作成功", "照片打卡成功，ID: " + photoCheckIn.getId());
+        } catch (Exception e) {
+            return Result.error("上传照片打卡失败：" + e.getMessage());
+        }
     }
     
     /**
@@ -553,6 +619,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             
             // 保存文件信息到resource_file表
             ResourceFile resourceFile = new ResourceFile();
+            resourceFile.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
             resourceFile.setFileName(originalFilename);
             resourceFile.setFileKey(uniqueFilename);
             resourceFile.setBucketName("photo-checkin"); // MinIO存储桶名称
@@ -571,6 +638,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
             
             // 创建照片打卡记录
             PhotoCheckIn photoCheckIn = new PhotoCheckIn();
+            photoCheckIn.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
             photoCheckIn.setTitle(title.trim());
             photoCheckIn.setCategoryId(categoryId);
             photoCheckIn.setPhotoId(resourceFile.getId());
@@ -706,6 +774,7 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
                 
                 // 保存文件信息到resource_file表
                 ResourceFile resourceFile = new ResourceFile();
+                resourceFile.setId(snowflakeIdGenerator.nextId()); // 生成雪花ID
                 resourceFile.setFileName(originalFilename);
                 resourceFile.setFileKey(uniqueFilename);
                 resourceFile.setBucketName("photo-checkin"); // MinIO存储桶名称
