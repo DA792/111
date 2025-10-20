@@ -47,12 +47,24 @@ public interface ActivityService {
     Result<String> deleteActivity(Long id);
     
     /**
-     * 管理端 - 分页获取活动列表
+     * 管理端 - 分页查询活动列表
      * @param title 活动标题（可选）
-     * @param enabled 是否启用（可选）
+     * @param status 活动状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param suitableCrowd 适合人群（可选）
      * @param pageNum 页码
      * @param pageSize 每页大小
-     * @return 分页活动列表
+     * @return 活动列表
      */
-    Result<Map<String, Object>> getActivityPage(String title, Integer enabled, Integer pageNum, Integer pageSize);
+    Result<List<ActivityDTO>> getActivityList(String title, Byte status, String startTime, String suitableCrowd, int pageNum, int pageSize);
+    
+    /**
+     * 管理端 - 获取活动总数
+     * @param title 活动标题（可选）
+     * @param status 活动状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param suitableCrowd 适合人群（可选）
+     * @return 活动总数
+     */
+    Result<Integer> getActivityCount(String title, Byte status, String startTime, String suitableCrowd);
 }

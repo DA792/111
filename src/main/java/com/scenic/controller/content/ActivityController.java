@@ -73,7 +73,7 @@ public class ActivityController {
             // 处理文件上传
             if (file != null && !file.isEmpty()) {
                 String imageUrl = fileUploadUtil.uploadFile(file);
-                // 由于imageUrl字段已被移除，这里不再设置
+                activityDTO.setCoverImageId(Long.valueOf(imageUrl)); // 这里需要根据实际情况调整
             }
             
             return activityService.addActivity(activityDTO);
@@ -91,6 +91,52 @@ public class ActivityController {
     @GetMapping(ADMIN_PREFIX + "/activity/list")
     public Result<List<ActivityDTO>> getAllActivitiesForAdmin() {
         return activityService.getAllActivities();
+    }
+    
+    /**
+     * 管理后台端 - 根据ID获取活动详情
+     * @param id 活动ID
+     * @return 活动详情
+     */
+    @GetMapping(ADMIN_PREFIX + "/activity/detail/{id}")
+    public Result<ActivityDTO> getActivityByIdForAdmin(@PathVariable Long id) {
+        return activityService.getActivityById(id);
+    }
+    
+    /**
+     * 管理后台端 - 分页查询活动列表
+     * @param title 活动标题（可选）
+     * @param status 活动状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param suitableCrowd 适合人群（可选）
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 活动列表
+     */
+    @GetMapping(ADMIN_PREFIX + "/activity/page")
+    public Result<List<ActivityDTO>> getActivityList(@RequestParam(required = false) String title,
+                                                     @RequestParam(required = false) Byte status,
+                                                     @RequestParam(required = false) String startTime,
+                                                     @RequestParam(required = false) String suitableCrowd,
+                                                     @RequestParam(defaultValue = "1") int pageNum,
+                                                     @RequestParam(defaultValue = "10") int pageSize) {
+        return activityService.getActivityList(title, status, startTime, suitableCrowd, pageNum, pageSize);
+    }
+    
+    /**
+     * 管理后台端 - 获取活动总数
+     * @param title 活动标题（可选）
+     * @param status 活动状态（可选）
+     * @param startTime 开始时间（可选）
+     * @param suitableCrowd 适合人群（可选）
+     * @return 活动总数
+     */
+    @GetMapping(ADMIN_PREFIX + "/activity/count")
+    public Result<Integer> getActivityCount(@RequestParam(required = false) String title,
+                                            @RequestParam(required = false) Byte status,
+                                            @RequestParam(required = false) String startTime,
+                                            @RequestParam(required = false) String suitableCrowd) {
+        return activityService.getActivityCount(title, status, startTime, suitableCrowd);
     }
     
     /**

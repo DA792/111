@@ -8,7 +8,6 @@ import javax.persistence.*;
 public class PhotoCheckIn {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "user_id", nullable = false)

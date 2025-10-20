@@ -9,7 +9,9 @@ public class PhotoCheckInDTO {
     private Long id;
     private Long userId; // 用户ID
     private String userName; // 用户名
+    private String userAvatar; // 用户头像
     private String photoUrl; // 照片URL
+    private String title; // 标题
     private String description; // 描述
     private String category; // 分类
     private Double latitude; // 纬度
@@ -47,12 +49,28 @@ public class PhotoCheckInDTO {
         this.userName = userName;
     }
 
+    public String getUserAvatar() {
+        return userAvatar;
+    }
+
+    public void setUserAvatar(String userAvatar) {
+        this.userAvatar = userAvatar;
+    }
+
     public String getPhotoUrl() {
         return photoUrl;
     }
 
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 
     public String getDescription() {

@@ -136,7 +136,8 @@ public class RedisUtil {
      */
     public boolean setIfAbsent(String key, Object value, long timeout) {
         try {
-            Boolean result = redisTemplate.opsForValue().setIfAbsent(key, value, timeout, TimeUnit.SECONDS);
+            redisTemplate.opsForValue().setIfAbsent(key, value, timeout, TimeUnit.SECONDS);
+            Boolean result = (Boolean) redisTemplate.exec().get(0);
             redisAvailable = true;
             return result != null && result;
         } catch (RedisConnectionFailureException e) {

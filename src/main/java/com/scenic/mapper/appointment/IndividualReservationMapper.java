@@ -86,6 +86,37 @@ public interface IndividualReservationMapper {
     int deleteById(@Param("id") Long id, @Param("updateBy") Long updateBy);
     
     /**
+     * 根据预约ID逻辑删除预约人员（设置deleted = 1）
+     * @param reservationId 预约ID
+     * @param updateBy 更新人
+     * @return 删除结果
+     */
+    @Update("UPDATE individual_reservation_person SET deleted = 1, update_time = NOW(), update_by = #{updateBy} WHERE reservation_id = #{reservationId}")
+    int deletePersonsByReservationId(@Param("reservationId") Long reservationId, @Param("updateBy") Long updateBy);
+    
+    /**
+     * 根据ID查询个人预约人员
+     * @param id 预约人员ID
+     * @return 个人预约人员信息
+     */
+    @Select("SELECT * FROM individual_reservation_person WHERE id = #{id} AND deleted = 0")
+    IndividualReservationPerson selectPersonById(Long id);
+    
+    /**
+     * 更新个人预约人员信息
+     * @param person 个人预约人员信息
+     * @return 更新结果
+     */
+    int updatePersonById(IndividualReservationPerson person);
+    
+    /**
+     * 批量更新个人预约人员信息
+     * @param persons 个人预约人员列表
+     * @return 更新结果
+     */
+    int updatePersonsBatch(@Param("persons") List<IndividualReservationPerson> persons);
+    
+    /**
      * 查询个人预约总数（带条件查询）
      * @param applicant 预约人（模糊查询）
      * @param appointmentTime 预约时间
@@ -153,6 +184,25 @@ public interface IndividualReservationMapper {
      */
     @Select("SELECT * FROM individual_reservation_person WHERE reservation_id = #{reservationId} AND is_contact = 1 AND deleted = 0")
     IndividualReservationPerson selectMainContactByReservationId(Long reservationId);
+    
+    /**
+     * 插入个人预约人员
+     * @param person 个人预约人员信息
+     * @return 插入结果
+     */
+    @Insert("INSERT INTO individual_reservation_person(reservation_id, name, id_type, id_number, phone, " +
+            "person_type, is_contact, visit_date, time_slot, version, deleted, create_time, update_time, create_by, update_by) " +
+            "VALUES(#{reservationId}, #{name}, #{idType}, #{idNumber}, #{phone}, " +
+            "#{personType}, #{isContact}, #{visitDate}, #{timeSlot}, #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insertPerson(IndividualReservationPerson person);
+    
+    /**
+     * 批量插入个人预约人员
+     * @param persons 个人预约人员列表
+     * @return 插入结果
+     */
+    int insertPersonsBatch(@Param("persons") List<IndividualReservationPerson> persons);
     
     /**
      * 根据预约ID查询所有预约人员信息
