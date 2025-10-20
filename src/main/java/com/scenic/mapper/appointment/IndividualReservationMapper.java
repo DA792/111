@@ -86,6 +86,15 @@ public interface IndividualReservationMapper {
     int deleteById(@Param("id") Long id, @Param("updateBy") Long updateBy);
     
     /**
+     * 根据预约ID逻辑删除预约人员（设置deleted = 1）
+     * @param reservationId 预约ID
+     * @param updateBy 更新人
+     * @return 删除结果
+     */
+    @Update("UPDATE individual_reservation_person SET deleted = 1, update_time = NOW(), update_by = #{updateBy} WHERE reservation_id = #{reservationId}")
+    int deletePersonsByReservationId(@Param("reservationId") Long reservationId, @Param("updateBy") Long updateBy);
+    
+    /**
      * 查询个人预约总数（带条件查询）
      * @param applicant 预约人（模糊查询）
      * @param appointmentTime 预约时间

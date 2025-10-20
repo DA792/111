@@ -90,7 +90,7 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             log.error("数据库访问异常", e);
             // 释放Redis锁
             reservationUtil.releaseReservationLock(reservation);
-            throw new ServiceUnavailableException("数据访问异常");
+            throw new ServiceUnavailableException("该预约订单中已经有人预约过了");
         } catch (Exception e) {
             log.error("预约创建异常", e);
             // 释放Redis锁
@@ -323,7 +323,10 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
                 return Result.error("预约记录不存在");
             }
             
-            // 逻辑删除
+            // 逻辑删除预约人员信息
+            individualReservationMapper.deletePersonsByReservationId(id, updateBy);
+            
+            // 逻辑删除预约主记录
             int result = individualReservationMapper.deleteById(id, updateBy);
             
             if (result > 0) {
