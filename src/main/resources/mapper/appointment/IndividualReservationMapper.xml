@@ -235,4 +235,62 @@
         </set>
         WHERE id = #{id}
     </update>
+    
+    <!-- 批量插入个人预约人员 -->
+    <insert id="insertPersonsBatch">
+        INSERT INTO individual_reservation_person(reservation_id, name, id_type, id_number, phone, 
+            person_type, is_contact, visit_date, time_slot, version, deleted, create_time, update_time, create_by, update_by)
+        VALUES
+        <foreach collection="persons" item="person" separator=",">
+            (#{person.reservationId}, #{person.name}, #{person.idType}, #{person.idNumber}, #{person.phone},
+             #{person.personType}, #{person.isContact}, #{person.visitDate}, #{person.timeSlot}, #{person.version},
+             #{person.deleted}, #{person.createTime}, #{person.updateTime}, #{person.createBy}, #{person.updateBy})
+        </foreach>
+    </insert>
+    
+    <!-- 更新个人预约人员信息 -->
+    <update id="updatePersonById" parameterType="com.scenic.entity.appointment.IndividualReservationPerson">
+        UPDATE individual_reservation_person
+        <set>
+            <if test="reservationId != null">
+                reservation_id = #{reservationId},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="idType != null">
+                id_type = #{idType},
+            </if>
+            <if test="idNumber != null and idNumber != ''">
+                id_number = #{idNumber},
+            </if>
+            <if test="phone != null and phone != ''">
+                phone = #{phone},
+            </if>
+            <if test="personType != null">
+                person_type = #{personType},
+            </if>
+            <if test="isContact != null">
+                is_contact = #{isContact},
+            </if>
+            <if test="visitDate != null">
+                visit_date = #{visitDate},
+            </if>
+            <if test="timeSlot != null">
+                time_slot = #{timeSlot},
+            </if>
+            <if test="version != null">
+                version = #{version},
+            </if>
+            <if test="deleted != null">
+                deleted = #{deleted},
+            </if>
+            update_time = NOW(),
+            <if test="updateBy != null">
+                update_by = #{updateBy},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
 </mapper>

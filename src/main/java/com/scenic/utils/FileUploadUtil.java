@@ -62,6 +62,32 @@ public class FileUploadUtil {
     }
 
     /**
+     * 上传拍照打卡文件到专门的存储桶
+     *
+     * @param file 文件
+     * @return 文件访问URL
+     * @throws Exception 异常
+     */
+    public String uploadPhotoCheckinFile(MultipartFile file) throws Exception {
+        if (file.isEmpty()) {
+            throw new IOException("文件不能为空");
+        }
+
+        // 获取文件原始名称
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            throw new IOException("文件名不能为空");
+        }
+
+        // 生成唯一文件名
+        String extension = FilenameUtils.getExtension(originalFilename);
+        String uniqueFilename = UUID.randomUUID().toString() + "." + extension;
+
+        // 使用MinIO存储到photo-checkin存储桶并返回访问URL
+        return minioService.uploadPhotoCheckinFile(file, uniqueFilename);
+    }
+
+    /**
      * 上传对象到指定存储桶
      *
      * @param bucketName 存储桶名称

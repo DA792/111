@@ -184,7 +184,7 @@ public class JwtUtil {
     }
     
     // 从JWT令牌中获取所有声明
-    private Claims getAllClaimsFromToken(String token, String secret) {
+    public Claims getAllClaimsFromToken(String token, String secret) {
         Key key = Keys.hmacShaKeyFor(secret.getBytes());
         return Jwts.parserBuilder()
                 .setSigningKey(key)

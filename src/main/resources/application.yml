@@ -1,5 +1,9 @@
 server:
+<<<<<<< HEAD
   port: 10034
+=======
+  port: 10039
+>>>>>>> 6cd0ce297cf5a68c5f0429c7abc1190a025c7b8b
 
 spring:
   datasource:
@@ -31,6 +35,14 @@ spring:
         max-idle: 8
         min-idle: 0
     timeout: 15000  # 增加Redis超时时间到15秒，与RestTemplate一致
+    
+  # Jackson配置
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+    date-format: yyyy-MM-dd
+    time-zone: GMT+8
+    default-property-inclusion: non_null
 
 # MyBatis配置
 mybatis:
@@ -85,6 +97,7 @@ minio:
   access-key: admin
   secret-key: zssg0325
   bucket-name: user-avatars
+  photo-checkin-bucket: photo-checkin
 
 # 微信小程序配置
 wechat:

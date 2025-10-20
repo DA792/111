@@ -55,11 +55,18 @@ public interface ResourceFileMapper {
      * @param resourceFile 文件资源信息
      * @return 插入结果
      */
+<<<<<<< HEAD
     @Insert("INSERT INTO resource_file(file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
             "duration, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
             "VALUES(#{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
             "#{duration}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
+=======
+    @Insert("INSERT INTO resource_file(id, file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
+            "duration, sha256, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
+            "VALUES(#{id}, #{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
+            "#{duration}, #{sha256}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
+>>>>>>> 6cd0ce297cf5a68c5f0429c7abc1190a025c7b8b
     int insert(ResourceFile resourceFile);
     
     /**
@@ -69,6 +76,7 @@ public interface ResourceFileMapper {
      */
     @Delete("DELETE FROM resource_file WHERE id = #{id}")
     int deleteById(Long id);
+<<<<<<< HEAD
     
     /**
      * 根据ID列表删除文件资源记录
@@ -94,3 +102,6 @@ public interface ResourceFileMapper {
     @Select("SELECT * FROM resource_file WHERE file_type = #{fileType} ORDER BY create_time DESC LIMIT 1")
     ResourceFile selectLatestVideoByType(Integer fileType);
 }
+=======
+}
+>>>>>>> 6cd0ce297cf5a68c5f0429c7abc1190a025c7b8b
