@@ -223,8 +223,18 @@ public class TeamAppointmentController {
     @PutMapping(ADMIN_PREFIX + "/team-appointments/{teamAppointmentId}")
     public Result<String> updateTeamAppointmentForAdmin(
             @PathVariable Long teamAppointmentId,
-            @RequestBody TeamAppointmentDTO appointmentDTO,
+            @Valid @RequestBody TeamAppointmentDTO appointmentDTO,
+            BindingResult bindingResult,
             HttpServletRequest request) {
+        // 参数验证
+        if (bindingResult.hasErrors()) {
+            List<ObjectError> errors = bindingResult.getAllErrors();
+            StringBuilder errorMsg = new StringBuilder();
+            for (ObjectError error : errors) {
+                errorMsg.append(error.getDefaultMessage()).append("; ");
+            }
+            return Result.error("参数验证失败: " + errorMsg.toString());
+        }
         // 从请求中获取用户ID作为updateBy
         String userInfoStr = request.getHeader("user-info");
         if (userInfoStr != null && !userInfoStr.isEmpty()) {

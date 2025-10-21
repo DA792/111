@@ -482,23 +482,26 @@ public class AppointmentServiceImpl implements AppointmentService {
                 return Result.error("团队预约记录不存在");
             }
             
-            // 更新团队预约主表记录
-            existingTeamAppointment.setTeamName(appointmentDTO.getTeamName());
-            existingTeamAppointment.setContactPerson(appointmentDTO.getContactPerson());
-            existingTeamAppointment.setContactPhone(appointmentDTO.getContactPhone());
-            existingTeamAppointment.setContactEmail(appointmentDTO.getContactEmail());
-            existingTeamAppointment.setScenicSpotId(appointmentDTO.getScenicSpotId());
-            existingTeamAppointment.setScenicSpotName(appointmentDTO.getScenicSpotName());
-            existingTeamAppointment.setAppointmentDate(appointmentDTO.getAppointmentDate());
+        // 更新团队预约主表记录
+        existingTeamAppointment.setTeamName(appointmentDTO.getTeamName());
+        existingTeamAppointment.setContactPerson(appointmentDTO.getContactPerson());
+        existingTeamAppointment.setContactPhone(appointmentDTO.getContactPhone());
+        existingTeamAppointment.setContactEmail(appointmentDTO.getContactEmail());
+        existingTeamAppointment.setScenicSpotId(appointmentDTO.getScenicSpotId());
+        existingTeamAppointment.setScenicSpotName(appointmentDTO.getScenicSpotName());
+        existingTeamAppointment.setAppointmentDate(appointmentDTO.getAppointmentDate());
+        // 只有当appointmentTime不为null时才更新该字段
+        if (appointmentDTO.getAppointmentTime() != null) {
             existingTeamAppointment.setAppointmentTime(appointmentDTO.getAppointmentTime());
-            existingTeamAppointment.setRemark(appointmentDTO.getRemark());
-            existingTeamAppointment.setAdminRemarks(appointmentDTO.getAdminRemarks());
-            existingTeamAppointment.setCheckInTime(appointmentDTO.getCheckInTime());
-            // 处理团队人数字段
-            if (appointmentDTO.getTeamSize() != null) {
-                existingTeamAppointment.setNumberOfPeople(appointmentDTO.getTeamSize());
-            }
-            existingTeamAppointment.setUpdateTime(LocalDateTime.now());
+        }
+        existingTeamAppointment.setRemark(appointmentDTO.getRemark());
+        existingTeamAppointment.setAdminRemarks(appointmentDTO.getAdminRemarks());
+        existingTeamAppointment.setCheckInTime(appointmentDTO.getCheckInTime());
+        // 处理团队人数字段
+        if (appointmentDTO.getTeamSize() != null) {
+            existingTeamAppointment.setNumberOfPeople(appointmentDTO.getTeamSize());
+        }
+        existingTeamAppointment.setUpdateTime(LocalDateTime.now());
             
             // 处理状态字段
             String statusStr = appointmentDTO.getStatus();
