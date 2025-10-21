@@ -101,12 +101,4 @@ public interface ResourceFileMapper {
      */
     @Select("SELECT * FROM resource_file WHERE file_type = #{fileType} ORDER BY create_time DESC LIMIT 1")
     ResourceFile selectLatestVideoByType(Integer fileType);
-    
-    /**
-     * 根据文件类型查询最新上传的文件（排除临时文件）
-     * @param fileType 文件类型（1-图片 2-视频 3-文档 4-其他）
-     * @return 文件资源信息
-     */
-    @Select("SELECT * FROM resource_file WHERE file_type = #{fileType} AND is_temp = 0 ORDER BY create_time DESC LIMIT 1")
-    ResourceFile selectLatestNonTempVideoByType(Integer fileType);
 }
