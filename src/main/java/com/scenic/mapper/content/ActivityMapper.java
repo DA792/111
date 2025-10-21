@@ -49,6 +49,14 @@ public interface ActivityMapper {
      * @return 删除结果
      */
     @Update("UPDATE activity SET deleted = 1, update_time = NOW() WHERE id = #{id}")
+    int logicalDeleteById(Long id);
+    
+    /**
+     * 根据ID物理删除活动
+     * @param id 活动ID
+     * @return 删除结果
+     */
+    @Delete("DELETE FROM activity WHERE id = #{id}")
     int deleteById(Long id);
     
     /**

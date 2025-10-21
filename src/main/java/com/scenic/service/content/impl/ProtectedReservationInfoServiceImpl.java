@@ -302,76 +302,33 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
     }
     
     /**
-     * 分页查询保护区介绍列表
+     * 根据ID获取保护区介绍（包含原始IDs信息）
      */
     @Override
-    public PageResult<ProtectedReservationInfoDTO> getProtectedReservationInfoPage(
-            Integer page, Integer size, String title, Byte contentType, Byte contentCategory) {
-        
-        LambdaQueryWrapper<ProtectedReservationInfo> queryWrapper = new LambdaQueryWrapper<>();
-        
-        if (title != null && !title.isEmpty()) {
-            queryWrapper.like(ProtectedReservationInfo::getTitle, title);
-        }
-        if (contentType != null) {
-            queryWrapper.eq(ProtectedReservationInfo::getContentType, contentType);
-        }
-        if (contentCategory != null) {
-            queryWrapper.eq(ProtectedReservationInfo::getContentCategory, contentCategory);
+    public com.scenic.dto.content.ProtectedReservationInfoWithIdsDTO getProtectedReservationInfoWithIdsById(Long id) {
+        // 获取实体对象
+        ProtectedReservationInfo entity = this.getById(id);
+        if (entity == null) {
+            return null;
         }
         
-        queryWrapper.orderByDesc(ProtectedReservationInfo::getCreateTime);
+        // 查询原始数据（包含原始JSON字符串）
+        java.util.Map<String, Object> rawData = protectedReservationInfoMapper.selectRawById(id);
         
-        IPage<ProtectedReservationInfo> pageResult = this.page(new Page<>(page, size), queryWrapper);
+        // 创建DTO对象
+        com.scenic.dto.content.ProtectedReservationInfoWithIdsDTO dto = new com.scenic.dto.content.ProtectedReservationInfoWithIdsDTO();
+        BeanUtils.copyProperties(entity, dto);
         
-        List<ProtectedReservationInfoDTO> dtoList = pageResult.getRecords().stream().map(entity -> {
-            ProtectedReservationInfoDTO dto = new ProtectedReservationInfoDTO();
-            BeanUtils.copyProperties(entity, dto);
-            return dto;
-        }).collect(Collectors.toList());
+        // 设置原始JSON字符串
+        if (rawData != null) {
+            dto.setContentImageIdsRaw((String) rawData.get("content_image_ids"));
+            dto.setCarouselFileIdsRaw((String) rawData.get("carousel_file_ids"));
+            dto.setGalleryFileIdsRaw((String) rawData.get("gallery_file_ids"));
+            dto.setAudioFileIdsRaw((String) rawData.get("audio_file_ids"));
+            dto.setVideoFileIdsRaw((String) rawData.get("video_file_ids"));
+        }
         
-        return new PageResult<ProtectedReservationInfoDTO>(pageResult.getTotal(), (int)pageResult.getSize(), (int)pageResult.getCurrent(), dtoList);
-    }
-    
-    /**
-     * 获取所有保护区介绍列表
-     */
-    @Override
-    public List<ProtectedReservationInfoDTO> getAllProtectedReservationInfo() {
-        LambdaQueryWrapper<ProtectedReservationInfo> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.orderByDesc(ProtectedReservationInfo::getCreateTime);
-        
-        return this.list(queryWrapper).stream().map(entity -> {
-            ProtectedReservationInfoDTO dto = new ProtectedReservationInfoDTO();
-            BeanUtils.copyProperties(entity, dto);
-            return dto;
-        }).collect(Collectors.toList());
-    }
-    
-    /**
-     * 根据内容类型获取保护区介绍列表
-     */
-    @Override
-    public List<ProtectedReservationInfoDTO> getProtectedReservationInfoByContentType(Byte contentType) {
-        List<ProtectedReservationInfo> entityList = protectedReservationInfoMapper.selectByContentType(contentType);
-        return entityList.stream().map(entity -> {
-            ProtectedReservationInfoDTO dto = new ProtectedReservationInfoDTO();
-            BeanUtils.copyProperties(entity, dto);
-            return dto;
-        }).collect(Collectors.toList());
-    }
-    
-    /**
-     * 根据内容分类获取保护区介绍列表
-     */
-    @Override
-    public List<ProtectedReservationInfoDTO> getProtectedReservationInfoByContentCategory(Byte contentCategory) {
-        List<ProtectedReservationInfo> entityList = protectedReservationInfoMapper.selectByContentCategory(contentCategory);
-        return entityList.stream().map(entity -> {
-            ProtectedReservationInfoDTO dto = new ProtectedReservationInfoDTO();
-            BeanUtils.copyProperties(entity, dto);
-            return dto;
-        }).collect(Collectors.toList());
+        return dto;
     }
     
     /**

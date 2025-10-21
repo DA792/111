@@ -118,8 +118,28 @@ public class FileController {
             
             // 根据文件类型选择不同的存储桶
             String bucketName = "files"; // 默认存储桶
-            if (type == 2 || "video".equalsIgnoreCase(typeStr)) {
-                bucketName = "content-management"; // 视频文件存储桶
+            switch (type) {
+                case 1: // 图片文件
+                    bucketName = "content-management-photo";
+                    break;
+                case 2: // 视频文件
+                    bucketName = "content-management";
+                    break;
+                case 3: // 音频文件
+                    bucketName = "content-management-audio";
+                    break;
+                default: // 其他文件
+                    bucketName = "files";
+                    break;
+            }
+            
+            // 兼容字符串类型的type参数
+            if ("image".equalsIgnoreCase(typeStr)) {
+                bucketName = "content-management-photo";
+            } else if ("video".equalsIgnoreCase(typeStr)) {
+                bucketName = "content-management";
+            } else if ("audio".equalsIgnoreCase(typeStr)) {
+                bucketName = "content-management-audio";
             }
             
             // 上传到MinIO
@@ -256,6 +276,37 @@ public class FileController {
             System.err.println("获取文件URL失败: " + e.getMessage());
             e.printStackTrace();
             return Result.error("获取文件URL失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取图片URL（短期有效）
+     *
+     * @param fileId 文件ID
+     * @return 短期有效的预签名URL
+     */
+    @GetMapping("/get-image-url")
+    public Result<String> getImageUrl(@RequestParam Long fileId) {
+        try {
+            // 根据ID查询文件信息
+            ResourceFile resourceFile = resourceFileMapper.selectById(fileId);
+            
+            if (resourceFile == null) {
+                return Result.error("文件不存在");
+            }
+            
+            // 生成短期有效的预签名URL（5分钟）
+            String presignedUrl = fileUploadUtil.getPresignedUrl(
+                resourceFile.getBucketName(),
+                resourceFile.getFileKey(),
+                300 // 5分钟有效期
+            );
+            
+            return Result.success(presignedUrl);
+        } catch (Exception e) {
+            System.err.println("获取图片URL失败: " + e.getMessage());
+            e.printStackTrace();
+            return Result.error("获取图片URL失败: " + e.getMessage());
         }
     }
     
