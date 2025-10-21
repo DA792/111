@@ -118,8 +118,28 @@ public class FileController {
             
             // 根据文件类型选择不同的存储桶
             String bucketName = "files"; // 默认存储桶
-            if (type == 2 || "video".equalsIgnoreCase(typeStr)) {
-                bucketName = "content-management"; // 视频文件存储桶
+            switch (type) {
+                case 1: // 图片文件
+                    bucketName = "content-management-photo";
+                    break;
+                case 2: // 视频文件
+                    bucketName = "content-management";
+                    break;
+                case 3: // 音频文件
+                    bucketName = "content-management-audio";
+                    break;
+                default: // 其他文件
+                    bucketName = "files";
+                    break;
+            }
+            
+            // 兼容字符串类型的type参数
+            if ("image".equalsIgnoreCase(typeStr)) {
+                bucketName = "content-management-photo";
+            } else if ("video".equalsIgnoreCase(typeStr)) {
+                bucketName = "content-management";
+            } else if ("audio".equalsIgnoreCase(typeStr)) {
+                bucketName = "content-management-audio";
             }
             
             // 上传到MinIO
