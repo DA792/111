@@ -438,57 +438,12 @@ public class ProtectedReservationInfoController {
     }
     
     /**
-     * 根据ID获取保护区介绍
+     * 根据ID获取保护区介绍（包含原始IDs信息）
      */
     @GetMapping("/{id}")
-    public Result<ProtectedReservationInfoDTO> getProtectedReservationInfoById(@PathVariable Long id) {
-        ProtectedReservationInfoDTO dto = protectedReservationInfoService.getProtectedReservationInfoById(id);
+    public Result<com.scenic.dto.content.ProtectedReservationInfoWithIdsDTO> getProtectedReservationInfoById(@PathVariable Long id) {
+        com.scenic.dto.content.ProtectedReservationInfoWithIdsDTO dto = protectedReservationInfoService.getProtectedReservationInfoWithIdsById(id);
         return Result.success(dto);
-    }
-    
-    /**
-     * 分页查询保护区介绍列表
-     */
-    @GetMapping("/page")
-    public Result<PageResult<ProtectedReservationInfoDTO>> getProtectedReservationInfoPage(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) Byte contentType,
-            @RequestParam(required = false) Byte contentCategory) {
-        
-        PageResult<ProtectedReservationInfoDTO> pageResult = protectedReservationInfoService.getProtectedReservationInfoPage(
-                page, size, title, contentType, contentCategory);
-        return Result.success(pageResult);
-    }
-    
-    /**
-     * 获取所有未删除的保护区介绍列表
-     */
-    @GetMapping("/list")
-    public Result<List<ProtectedReservationInfoDTO>> getAllProtectedReservationInfo() {
-        List<ProtectedReservationInfoDTO> list = protectedReservationInfoService.getAllProtectedReservationInfo();
-        return Result.success(list);
-    }
-    
-    /**
-     * 根据内容类型获取保护区介绍列表
-     */
-    @GetMapping("/list-by-type")
-    public Result<List<ProtectedReservationInfoDTO>> getProtectedReservationInfoByContentType(
-            @RequestParam Byte contentType) {
-        List<ProtectedReservationInfoDTO> list = protectedReservationInfoService.getProtectedReservationInfoByContentType(contentType);
-        return Result.success(list);
-    }
-    
-    /**
-     * 根据内容分类获取保护区介绍列表
-     */
-    @GetMapping("/list-by-category")
-    public Result<List<ProtectedReservationInfoDTO>> getProtectedReservationInfoByContentCategory(
-            @RequestParam Byte contentCategory) {
-        List<ProtectedReservationInfoDTO> list = protectedReservationInfoService.getProtectedReservationInfoByContentCategory(contentCategory);
-        return Result.success(list);
     }
     
     /**
