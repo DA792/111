@@ -116,6 +116,15 @@
         )
     </insert>
     
+    <!-- 批量插入团队成员 -->
+    <insert id="insertTeamMembers">
+        INSERT INTO team_member(team_appointment_id, name, id_card, phone, age, gender, remark, create_time, update_time)
+        VALUES
+        <foreach collection="members" item="member" separator=",">
+            (#{member.teamAppointmentId}, #{member.name}, #{member.idCard}, #{member.phone}, #{member.age}, #{member.gender}, #{member.remark}, #{member.createTime}, #{member.updateTime})
+        </foreach>
+    </insert>
+    
     <!-- 更新团队预约 -->
     <update id="updateById" parameterType="com.scenic.entity.appointment.TeamAppointment">
         UPDATE team_appointment

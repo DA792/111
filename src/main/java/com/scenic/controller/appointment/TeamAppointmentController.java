@@ -322,8 +322,8 @@ public class TeamAppointmentController {
      * @return 团队预约详情
      */
     @GetMapping(ADMIN_PREFIX + "/team-appointments/{teamAppointmentId}")
-    public Result<TeamAppointment> getTeamAppointmentDetailForAdmin(@PathVariable Long teamAppointmentId) {
-        return appointmentService.getTeamAppointmentDetail(teamAppointmentId);
+    public Result<TeamAppointmentDTO> getTeamAppointmentDetailForAdmin(@PathVariable Long teamAppointmentId) {
+        return appointmentService.getTeamAppointmentDetailWithMembers(teamAppointmentId);
     }
     
     /**

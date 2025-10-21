@@ -352,6 +352,28 @@ public class AppointmentServiceImpl implements AppointmentService {
             // 保存团队预约主表记录
             teamAppointmentMapper.insert(teamAppointment);
             
+            // 保存团队成员信息
+            if (appointmentDTO.getMembers() != null && !appointmentDTO.getMembers().isEmpty()) {
+                List<TeamMember> members = appointmentDTO.getMembers().stream()
+                    .map(dto -> {
+                        TeamMember member = new TeamMember();
+                        member.setTeamAppointmentId(teamAppointment.getId());
+                        member.setName(dto.getName());
+                        member.setIdCard(dto.getIdCard());
+                        member.setPhone(dto.getPhone());
+                        member.setAge(dto.getAge());
+                        member.setGender(dto.getGender());
+                        member.setRemark(dto.getRemark());
+                        member.setCreateTime(LocalDateTime.now());
+                        member.setUpdateTime(LocalDateTime.now());
+                        return member;
+                    })
+                    .collect(Collectors.toList());
+                
+                // 批量插入团队成员信息
+                teamMemberMapper.insertBatch(members);
+            }
+            
             return Result.success("预约成功", "TEAM" + teamAppointment.getId());
         } catch (Exception e) {
             return Result.error("预约失败：" + e.getMessage());
@@ -901,6 +923,51 @@ public class AppointmentServiceImpl implements AppointmentService {
             }
             
             return Result.success("查询成功", teamAppointment);
+        } catch (Exception e) {
+            return Result.error("查询失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取团队预约详情（包含团队成员信息）
+     * @param teamAppointmentId 团队预约ID
+     * @return 团队预约详情（包含团队成员信息）
+     */
+    @Override
+    public Result<TeamAppointmentDTO> getTeamAppointmentDetailWithMembers(Long teamAppointmentId) {
+        try {
+            TeamAppointment teamAppointment = teamAppointmentMapper.selectById(teamAppointmentId);
+            
+            if (teamAppointment == null) {
+                return Result.error("团队预约记录不存在");
+            }
+            
+            // 创建DTO并复制属性
+            TeamAppointmentDTO teamAppointmentDTO = new TeamAppointmentDTO();
+            teamAppointmentDTO.setAppointmentNo(teamAppointment.getAppointmentNo());
+            teamAppointmentDTO.setUserId(teamAppointment.getUserId());
+            teamAppointmentDTO.setTeamName(teamAppointment.getTeamName());
+            teamAppointmentDTO.setContactPerson(teamAppointment.getContactPerson());
+            teamAppointmentDTO.setContactPhone(teamAppointment.getContactPhone());
+            teamAppointmentDTO.setContactEmail(teamAppointment.getContactEmail());
+            teamAppointmentDTO.setScenicSpotId(teamAppointment.getScenicSpotId());
+            teamAppointmentDTO.setScenicSpotName(teamAppointment.getScenicSpotName());
+            teamAppointmentDTO.setAppointmentDate(teamAppointment.getAppointmentDate());
+            teamAppointmentDTO.setAppointmentTime(teamAppointment.getAppointmentTime());
+            teamAppointmentDTO.setRemark(teamAppointment.getRemark());
+            teamAppointmentDTO.setTeamSize(teamAppointment.getNumberOfPeople());
+            teamAppointmentDTO.setFormFileId(teamAppointment.getFormFileId());
+            teamAppointmentDTO.setAdminRemarks(teamAppointment.getAdminRemarks());
+            teamAppointmentDTO.setCheckInTime(teamAppointment.getCheckInTime());
+            teamAppointmentDTO.setStatus(String.valueOf(teamAppointment.getStatus()));
+            teamAppointmentDTO.setCreateBy(String.valueOf(teamAppointment.getCreateBy()));
+            teamAppointmentDTO.setUpdateBy(teamAppointment.getUpdateBy());
+            
+            // 获取团队成员信息
+            List<TeamMember> members = teamMemberMapper.selectByTeamAppointmentId(teamAppointmentId);
+            teamAppointmentDTO.setMembers(members);
+            
+            return Result.success("查询成功", teamAppointmentDTO);
         } catch (Exception e) {
             return Result.error("查询失败：" + e.getMessage());
         }

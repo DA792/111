@@ -11,6 +11,7 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.scenic.entity.appointment.TeamAppointment;
+import com.scenic.entity.appointment.TeamMember;
 
 @Mapper
 public interface TeamAppointmentMapper {
@@ -30,6 +31,19 @@ public interface TeamAppointmentMapper {
      */
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(TeamAppointment teamAppointment);
+    
+    /**
+     * 批量插入团队成员
+     * @param members 团队成员列表
+     * @return 插入结果
+     */
+    @Insert("<script>" +
+            "INSERT INTO team_member(team_appointment_id, name, id_card, phone, age, gender, remark, create_time, update_time) VALUES " +
+            "<foreach collection='members' item='member' separator=','>" +
+            "(#{member.teamAppointmentId}, #{member.name}, #{member.idCard}, #{member.phone}, #{member.age}, #{member.gender}, #{member.remark}, #{member.createTime}, #{member.updateTime})" +
+            "</foreach>" +
+            "</script>")
+    int insertTeamMembers(@Param("members") List<TeamMember> members);
     
     /**
      * 更新团队预约信息

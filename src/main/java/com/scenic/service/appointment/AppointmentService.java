@@ -152,6 +152,13 @@ public interface AppointmentService {
     Result<TeamAppointment> getTeamAppointmentDetail(Long teamAppointmentId);
     
     /**
+     * 获取团队预约详情（包含团队成员信息）
+     * @param teamAppointmentId 团队预约ID
+     * @return 团队预约详情（包含团队成员信息）
+     */
+    Result<TeamAppointmentDTO> getTeamAppointmentDetailWithMembers(Long teamAppointmentId);
+    
+    /**
      * 获取活动预约详情
      * @param activityAppointmentId 活动预约ID
      * @return 活动预约详情
