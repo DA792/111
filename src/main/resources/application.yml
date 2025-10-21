@@ -1,6 +1,6 @@
 
-  port: 10033
-
+server:
+  port: 10032
 
 spring:
   datasource:

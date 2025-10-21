@@ -47,10 +47,10 @@
         <where>
             pc.deleted = 0
             <if test="title != null and title != ''">
-                AND title LIKE CONCAT('%', #{title}, '%')
+                AND pc.title LIKE CONCAT('%', #{title}, '%')
             </if>
             <if test="userName != null and userName != ''">
-                AND user_name LIKE CONCAT('%', #{userName}, '%')
+                AND pc.user_name LIKE CONCAT('%', #{userName}, '%')
             </if>
             <if test="categoryId != null">
                 AND pc.category_id = #{categoryId}
@@ -65,20 +65,53 @@
     <!-- 管理员查询照片打卡总数 -->
     <select id="selectCountForAdmin" resultType="java.lang.Integer">
         SELECT COUNT(*)
-        FROM photo_checkin
+        FROM photo_checkin pc
         <where>
-            deleted = 0
+            pc.deleted = 0
             <if test="title != null and title != ''">
-                AND title LIKE CONCAT('%', #{title}, '%')
+                AND pc.title LIKE CONCAT('%', #{title}, '%')
             </if>
             <if test="userName != null and userName != ''">
-                AND user_name LIKE CONCAT('%', #{userName}, '%')
+                AND pc.user_name LIKE CONCAT('%', #{userName}, '%')
             </if>
             <if test="categoryId != null">
-                AND category_id = #{categoryId}
+                AND pc.category_id = #{categoryId}
             </if>
             <if test="createTime != null">
-                AND DATE(create_time) = DATE(#{createTime})
+                AND DATE(pc.create_time) = DATE(#{createTime})
+            </if>
+        </where>
+    </select>
+    
+    <!-- 小程序端查询照片打卡列表 -->
+    <select id="selectForMiniapp" resultMap="PhotoCheckInResultMap">
+        SELECT 
+        <include refid="PhotoCheckIn_Column_List"/>
+        FROM photo_checkin pc
+        LEFT JOIN checkin_category cc ON pc.category_id = cc.id
+        <where>
+            pc.status = 1 AND pc.deleted = 0
+            <if test="title != null and title != ''">
+                AND pc.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND pc.category_id = #{categoryId}
+            </if>
+        </where>
+        ORDER BY pc.like_count DESC, pc.create_time DESC
+    </select>
+    
+    <!-- 小程序端查询照片打卡总数 -->
+    <select id="selectCountForMiniapp" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM photo_checkin pc
+        <where>
+            pc.status = 1 AND pc.deleted = 0
+            <if test="title != null and title != ''">
+                AND pc.title LIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND pc.category_id = #{categoryId}
             </if>
         </where>
     </select>

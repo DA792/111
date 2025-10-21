@@ -93,7 +93,31 @@ public interface ActivityMapper {
      * 查询所有未结束的活动
      * @return 活动列表
      */
-    @Select("SELECT * FROM activity WHERE status = 1 ORDER BY create_time DESC")
     @Select("SELECT * FROM activity WHERE status = 0 AND (deleted IS NULL OR deleted = 0) ORDER BY create_time DESC")
     List<Activity> selectAllEnabled();
+    
+    /**
+     * 根据启用状态查询活动列表
+     * @param title 活动标题（可选）
+     * @param enabled 是否启用（可选）
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 活动列表
+     */
+    @Select("<script>SELECT * FROM activity WHERE (deleted IS NULL OR deleted = 0) " +
+            "<if test='title != null and title != \"\"'>AND title LIKE CONCAT('%', #{title}, '%') </if>" +
+            "<if test='enabled != null'>AND enabled = #{enabled} </if>" +
+            "ORDER BY create_time DESC LIMIT #{offset}, #{limit}</script>")
+    List<Activity> selectByEnabledStatus(@Param("title") String title, @Param("enabled") Integer enabled, @Param("offset") int offset, @Param("limit") int limit);
+    
+    /**
+     * 根据启用状态查询活动总数
+     * @param title 活动标题（可选）
+     * @param enabled 是否启用（可选）
+     * @return 活动总数
+     */
+    @Select("<script>SELECT COUNT(*) FROM activity WHERE (deleted IS NULL OR deleted = 0) " +
+            "<if test='title != null and title != \"\"'>AND title LIKE CONCAT('%', #{title}, '%') </if>" +
+            "<if test='enabled != null'>AND enabled = #{enabled} </if></script>")
+    int selectCountByEnabledStatus(@Param("title") String title, @Param("enabled") Integer enabled);
 }

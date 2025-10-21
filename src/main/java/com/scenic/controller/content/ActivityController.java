@@ -104,7 +104,7 @@ public class ActivityController {
     }
     
     /**
-     * 管理后台端 - 分页查询活动列表
+     * 管理后台端 - 分页查询活动列表（按状态和时间）
      * @param title 活动标题（可选）
      * @param status 活动状态（可选）
      * @param startTime 开始时间（可选）
@@ -113,7 +113,7 @@ public class ActivityController {
      * @param pageSize 每页大小
      * @return 活动列表
      */
-    @GetMapping(ADMIN_PREFIX + "/activity/page")
+    @GetMapping(ADMIN_PREFIX + "/activity/list/page")
     public Result<List<ActivityDTO>> getActivityList(@RequestParam(required = false) String title,
                                                      @RequestParam(required = false) Byte status,
                                                      @RequestParam(required = false) String startTime,

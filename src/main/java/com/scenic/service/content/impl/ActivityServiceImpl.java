@@ -274,6 +274,43 @@ public class ActivityServiceImpl implements ActivityService {
     }
     
     /**
+     * 管理端 - 分页获取活动列表
+     * @param title 活动标题（可选）
+     * @param enabled 是否启用（可选）
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 分页活动列表
+     */
+    @Override
+    public Result<Map<String, Object>> getActivityPage(String title, Integer enabled, Integer pageNum, Integer pageSize) {
+        try {
+            int offset = (pageNum - 1) * pageSize;
+            
+            // 查询活动列表
+            List<Activity> activities = activityMapper.selectByEnabledStatus(title, enabled, offset, pageSize);
+            
+            // 查询总数
+            int total = activityMapper.selectCountByEnabledStatus(title, enabled);
+            
+            // 转换为DTO
+            List<ActivityDTO> activityDTOs = activities.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+            
+            // 构造返回结果
+            Map<String, Object> result = new HashMap<>();
+            result.put("total", total);
+            result.put("list", activityDTOs);
+            result.put("pageNum", pageNum);
+            result.put("pageSize", pageSize);
+            
+            return Result.success("查询成功", result);
+        } catch (Exception e) {
+            return Result.error("查询失败：" + e.getMessage());
+        }
+    }
+    
+    /**
      * 将Activity实体转换为ActivityDTO
      * @param activity Activity实体
      * @return ActivityDTO

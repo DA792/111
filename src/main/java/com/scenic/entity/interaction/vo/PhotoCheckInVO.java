@@ -38,6 +38,21 @@ public class PhotoCheckInVO {
      * 照片路径
      */
     private String photoPath;
+    
+    /**
+     * 是否收藏
+     */
+    private Boolean isCollected;
+    
+    /**
+     * 是否点赞
+     */
+    private Boolean isLiked;
+    
+    /**
+     * 用户头像URL
+     */
+    private String userAvatarUrl;
 
     // Getter和Setter方法
     public Long getId() {
@@ -94,5 +109,29 @@ public class PhotoCheckInVO {
 
     public void setPhotoPath(String photoPath) {
         this.photoPath = photoPath;
+    }
+    
+    public Boolean getIsCollected() {
+        return isCollected;
+    }
+
+    public void setIsCollected(Boolean isCollected) {
+        this.isCollected = isCollected;
+    }
+
+    public Boolean getIsLiked() {
+        return isLiked;
+    }
+
+    public void setIsLiked(Boolean isLiked) {
+        this.isLiked = isLiked;
+    }
+    
+    public String getUserAvatarUrl() {
+        return userAvatarUrl;
+    }
+
+    public void setUserAvatarUrl(String userAvatarUrl) {
+        this.userAvatarUrl = userAvatarUrl;
     }
 }

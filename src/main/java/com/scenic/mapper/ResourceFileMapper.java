@@ -25,6 +25,14 @@ public interface ResourceFileMapper {
     ResourceFile selectById(Long id);
     
     /**
+     * 根据文件键查询文件资源
+     * @param fileKey 文件键
+     * @return 文件资源信息
+     */
+    @Select("SELECT * FROM resource_file WHERE file_key = #{fileKey}")
+    ResourceFile selectByFileKey(String fileKey);
+    
+    /**
      * 根据文件路径和存储桶名称查询文件资源
      * @param bucketName 存储桶名称
      * @param fileKey 文件路径
@@ -55,18 +63,11 @@ public interface ResourceFileMapper {
      * @param resourceFile 文件资源信息
      * @return 插入结果
      */
-<<<<<<< HEAD
-    @Insert("INSERT INTO resource_file(file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
-            "duration, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
-            "VALUES(#{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
-            "#{duration}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
-=======
     @Insert("INSERT INTO resource_file(id, file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
             "duration, sha256, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
             "VALUES(#{id}, #{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
             "#{duration}, #{sha256}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
->>>>>>> 6cd0ce297cf5a68c5f0429c7abc1190a025c7b8b
+    @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(ResourceFile resourceFile);
     
     /**
@@ -76,7 +77,6 @@ public interface ResourceFileMapper {
      */
     @Delete("DELETE FROM resource_file WHERE id = #{id}")
     int deleteById(Long id);
-<<<<<<< HEAD
     
     /**
      * 根据ID列表删除文件资源记录
@@ -101,7 +101,12 @@ public interface ResourceFileMapper {
      */
     @Select("SELECT * FROM resource_file WHERE file_type = #{fileType} ORDER BY create_time DESC LIMIT 1")
     ResourceFile selectLatestVideoByType(Integer fileType);
+    
+    /**
+     * 根据文件类型查询最新上传的文件（排除临时文件）
+     * @param fileType 文件类型（1-图片 2-视频 3-文档 4-其他）
+     * @return 文件资源信息
+     */
+    @Select("SELECT * FROM resource_file WHERE file_type = #{fileType} AND is_temp = 0 ORDER BY create_time DESC LIMIT 1")
+    ResourceFile selectLatestNonTempVideoByType(Integer fileType);
 }
-=======
-}
->>>>>>> 6cd0ce297cf5a68c5f0429c7abc1190a025c7b8b

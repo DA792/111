@@ -29,6 +29,7 @@ public class Activity {
     private Long updateBy; // 更新人
     private Byte reservationPriority; // 预约优先级（1=高于全局规则，0=遵循全局规则）
     private Integer deleted; // 1-删除，0-未删除
+    private Boolean enabled; // 是否启用
 
     // 构造函数
     public Activity() {}
@@ -56,6 +57,8 @@ public class Activity {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     public LocalDate getStartTime() {
         return startTime;
@@ -90,38 +93,20 @@ public class Activity {
         this.location = location;
     }
 
-    public String getSuitableCrowd() {
-        return suitableCrowd;
-    }
-
-    public void setSuitableCrowd(String suitableCrowd) {
-        this.suitableCrowd = suitableCrowd;
-    }
-
     public Boolean getEnabled() {
         return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public String getPrice() {
         return price;
     }
 
     public void setPrice(String price) {
         this.price = price;
-    }
-
-    public String getTeamLimit() {
-        return teamLimit;
-    }
-
-    public void setTeamLimit(String teamLimit) {
-        this.teamLimit = teamLimit;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 
     public List<Long> getContentImageIds() {
@@ -165,30 +150,6 @@ public class Activity {
     public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
     }
-    
-    public LocalDate getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalDate startTime) {
-        this.startTime = startTime;
-    }
-
-    public LocalDate getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDate endTime) {
-        this.endTime = endTime;
-    }
-
-    public String getTeamLimit() {
-        return teamLimit;
-    }
-
-    public void setTeamLimit(String teamLimit) {
-        this.teamLimit = teamLimit;
-    }
 
     public Long getCreateBy() {
         return createBy;
@@ -212,6 +173,14 @@ public class Activity {
 
     public void setReservationPriority(Byte reservationPriority) {
         this.reservationPriority = reservationPriority;
+    }
+    
+    public String getTeamLimit() {
+        return teamLimit;
+    }
+
+    public void setTeamLimit(String teamLimit) {
+        this.teamLimit = teamLimit;
     }
     
     public Integer getDeleted() {
@@ -243,6 +212,7 @@ public class Activity {
                 ", updateBy=" + updateBy +
                 ", reservationPriority=" + reservationPriority +
                 ", deleted=" + deleted +
+                ", enabled=" + enabled +
                 '}';
     }
 }

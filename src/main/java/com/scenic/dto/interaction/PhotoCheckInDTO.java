@@ -12,10 +12,8 @@ public class PhotoCheckInDTO {
     private String userAvatar; // 用户头像
     private String photoUrl; // 照片URL
     private String title; // 标题
-    private String description; // 描述
     private String category; // 分类
-    private Double latitude; // 纬度
-    private Double longitude; // 经度
+    private Long categoryId; // 分类ID
     private Integer likes; // 点赞数
     private Boolean enabled; // 是否启用
     private LocalDateTime createTime;
@@ -73,14 +71,6 @@ public class PhotoCheckInDTO {
         this.title = title;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public String getCategory() {
         return category;
     }
@@ -89,20 +79,12 @@ public class PhotoCheckInDTO {
         this.category = category;
     }
 
-    public Double getLatitude() {
-        return latitude;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
     }
 
     public Integer getLikes() {
