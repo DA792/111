@@ -213,44 +213,34 @@ public class TeamAppointmentController {
         return appointmentService.createTeamAppointment(teamAppointmentDTO);
     }
     
-    /**
-     * 管理后台端 - 更新团队预约
-     * @param teamAppointmentId 团队预约ID
-     * @param appointmentDTO 团队预约信息
-     * @param request HTTP请求对象，用于获取用户信息
-     * @return 更新结果
-     */
-    @PutMapping(ADMIN_PREFIX + "/team-appointments/{teamAppointmentId}")
-    public Result<String> updateTeamAppointmentForAdmin(
-            @PathVariable Long teamAppointmentId,
-            @Valid @RequestBody TeamAppointmentDTO appointmentDTO,
-            BindingResult bindingResult,
-            HttpServletRequest request) {
-        // 参数验证
-        if (bindingResult.hasErrors()) {
-            List<ObjectError> errors = bindingResult.getAllErrors();
-            StringBuilder errorMsg = new StringBuilder();
-            for (ObjectError error : errors) {
-                errorMsg.append(error.getDefaultMessage()).append("; ");
+        /**
+         * 管理后台端 - 更新团队预约
+         * @param teamAppointmentId 团队预约ID
+         * @param appointmentDTO 团队预约信息
+         * @param request HTTP请求对象，用于获取用户信息
+         * @return 更新结果
+         */
+        @PutMapping(ADMIN_PREFIX + "/team-appointments/{teamAppointmentId}")
+        public Result<String> updateTeamAppointmentForAdmin(
+                @PathVariable Long teamAppointmentId,
+                @RequestBody TeamAppointmentDTO appointmentDTO,
+                HttpServletRequest request) {
+            // 从请求中获取用户ID作为updateBy
+            String userInfoStr = request.getHeader("user-info");
+            if (userInfoStr != null && !userInfoStr.isEmpty()) {
+                try {
+                    // 解析JSON字符串获取用户ID
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    JsonNode userInfo = objectMapper.readTree(userInfoStr);
+                    Long userId = userInfo.get("id").asLong();
+                    appointmentDTO.setUpdateBy(userId);
+                } catch (Exception e) {
+                    System.err.println("解析用户信息失败: " + e.getMessage());
+                }
             }
-            return Result.error("参数验证失败: " + errorMsg.toString());
+            return appointmentService.updateTeamAppointment(teamAppointmentId, appointmentDTO);
         }
-        // 从请求中获取用户ID作为updateBy
-        String userInfoStr = request.getHeader("user-info");
-        if (userInfoStr != null && !userInfoStr.isEmpty()) {
-            try {
-                // 解析JSON字符串获取用户ID
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode userInfo = objectMapper.readTree(userInfoStr);
-                Long userId = userInfo.get("id").asLong();
-                appointmentDTO.setUpdateBy(userId);
-            } catch (Exception e) {
-                System.err.println("解析用户信息失败: " + e.getMessage());
-            }
-        }
-        return appointmentService.updateTeamAppointment(teamAppointmentId, appointmentDTO);
-    }
-    
+        
     /**
      * 小程序端 - 上传团队预约文件
      * @param file 上传的文件
