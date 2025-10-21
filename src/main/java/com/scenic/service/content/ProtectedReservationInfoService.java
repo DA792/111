@@ -45,16 +45,11 @@ public interface ProtectedReservationInfoService extends IService<ProtectedReser
     ProtectedReservationInfoDTO getProtectedReservationInfoById(Long id);
     
     /**
-     * 分页查询保护区介绍列表
-     * @param page 页码
-     * @param size 每页大小
-     * @param title 标题（可选）
-     * @param contentType 内容类型（可选）
-     * @param contentCategory 内容分类（可选）
-     * @return 分页结果
+     * 根据ID获取保护区介绍（包含原始IDs信息）
+     * @param id 保护区介绍ID
+     * @return 保护区介绍DTO（包含原始IDs信息）
      */
-    PageResult<ProtectedReservationInfoDTO> getProtectedReservationInfoPage(
-            Integer page, Integer size, String title, Byte contentType, Byte contentCategory);
+    com.scenic.dto.content.ProtectedReservationInfoWithIdsDTO getProtectedReservationInfoWithIdsById(Long id);
     
     /**
      * 分页查询保护区介绍列表（增强版，支持发布人、发布时间、内容类型搜索）
@@ -70,26 +65,6 @@ public interface ProtectedReservationInfoService extends IService<ProtectedReser
     PageResult<java.util.Map<String, Object>> getProtectedReservationInfoPageEnhanced(
             Integer page, Integer size, String title, String creatorName, 
             LocalDateTime startTime, LocalDateTime endTime, Byte contentType);
-    
-    /**
-     * 获取所有未删除的保护区介绍列表
-     * @return 保护区介绍列表
-     */
-    List<ProtectedReservationInfoDTO> getAllProtectedReservationInfo();
-    
-    /**
-     * 根据内容类型获取保护区介绍列表
-     * @param contentType 内容类型
-     * @return 保护区介绍列表
-     */
-    List<ProtectedReservationInfoDTO> getProtectedReservationInfoByContentType(Byte contentType);
-    
-    /**
-     * 根据内容分类获取保护区介绍列表
-     * @param contentCategory 内容分类
-     * @return 保护区介绍列表
-     */
-    List<ProtectedReservationInfoDTO> getProtectedReservationInfoByContentCategory(Byte contentCategory);
     
     /**
      * 保存保护区介绍（包含文件上传处理）
