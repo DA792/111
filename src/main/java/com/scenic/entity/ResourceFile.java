@@ -16,6 +16,7 @@ public class ResourceFile {
     private Integer width;
     private Integer height;
     private Integer duration;
+    private String sha256;
     private Long uploadUserId;
     private Integer isTemp;
     private LocalDateTime createTime;
@@ -105,6 +106,14 @@ public class ResourceFile {
 
     public void setDuration(Integer duration) {
         this.duration = duration;
+    }
+
+    public String getSha256() {
+        return sha256;
+    }
+
+    public void setSha256(String sha256) {
+        this.sha256 = sha256;
     }
 
     public Long getUploadUserId() {
