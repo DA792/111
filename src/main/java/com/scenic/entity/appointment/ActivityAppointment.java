@@ -6,18 +6,23 @@ import java.time.LocalDateTime;
  */
 public class ActivityAppointment {
     private Long id;
+    private String registrationNo;
     private String activityName;
+    private String teamName;
     private String contactPerson;
     private String contactPhone;
     private String contactEmail;
     private Long activityId;
+    private Long userId;
+    private Long formFileId;
     private LocalDateTime activityDate;
     private String activityTime;
     private Integer numberOfPeople;
     private String remark;
-    private String status;
+    private Integer status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long createBy;
 
     // 构造函数
     public ActivityAppointment() {}
@@ -31,12 +36,28 @@ public class ActivityAppointment {
         this.id = id;
     }
 
+    public String getRegistrationNo() {
+        return registrationNo;
+    }
+
+    public void setRegistrationNo(String registrationNo) {
+        this.registrationNo = registrationNo;
+    }
+
     public String getActivityName() {
         return activityName;
     }
 
     public void setActivityName(String activityName) {
         this.activityName = activityName;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
     }
 
     public String getContactPerson() {
@@ -71,6 +92,22 @@ public class ActivityAppointment {
         this.activityId = activityId;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Long getFormFileId() {
+        return formFileId;
+    }
+
+    public void setFormFileId(Long formFileId) {
+        this.formFileId = formFileId;
+    }
+
     public LocalDateTime getActivityDate() {
         return activityDate;
     }
@@ -103,11 +140,11 @@ public class ActivityAppointment {
         this.remark = remark;
     }
 
-    public String getStatus() {
+    public Integer getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Integer status) {
         this.status = status;
     }
 
@@ -131,18 +168,31 @@ public class ActivityAppointment {
     public String toString() {
         return "ActivityAppointment{" +
                 "id=" + id +
+                ", registrationNo='" + registrationNo + '\'' +
                 ", activityName='" + activityName + '\'' +
+                ", teamName='" + teamName + '\'' +
                 ", contactPerson='" + contactPerson + '\'' +
                 ", contactPhone='" + contactPhone + '\'' +
                 ", contactEmail='" + contactEmail + '\'' +
                 ", activityId=" + activityId +
+                ", userId=" + userId +
+                ", formFileId=" + formFileId +
                 ", activityDate=" + activityDate +
                 ", activityTime='" + activityTime + '\'' +
                 ", numberOfPeople=" + numberOfPeople +
                 ", remark='" + remark + '\'' +
-                ", status='" + status + '\'' +
+                ", status=" + status +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
+                ", createBy=" + createBy +
                 '}';
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 }

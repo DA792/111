@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -152,6 +155,8 @@ public class TeamAppointmentController {
         teamAppointmentDTO.setScenicSpotName(appointmentDTO.getScenicSpotName());
         teamAppointmentDTO.setRemark(appointmentDTO.getRemarks());
         teamAppointmentDTO.setMembers(appointmentDTO.getMembers());
+        // 处理团队人数字段 - 从teamSize转换为numberOfPeople
+        teamAppointmentDTO.setTeamSize(appointmentDTO.getTeamSize());
         
         // 处理formFileId类型转换
         if (appointmentDTO.getFormFileId() != null && !appointmentDTO.getFormFileId().isEmpty()) {
@@ -212,12 +217,27 @@ public class TeamAppointmentController {
      * 管理后台端 - 更新团队预约
      * @param teamAppointmentId 团队预约ID
      * @param appointmentDTO 团队预约信息
+     * @param request HTTP请求对象，用于获取用户信息
      * @return 更新结果
      */
     @PutMapping(ADMIN_PREFIX + "/team-appointments/{teamAppointmentId}")
     public Result<String> updateTeamAppointmentForAdmin(
             @PathVariable Long teamAppointmentId,
-            @RequestBody TeamAppointmentDTO appointmentDTO) {
+            @RequestBody TeamAppointmentDTO appointmentDTO,
+            HttpServletRequest request) {
+        // 从请求中获取用户ID作为updateBy
+        String userInfoStr = request.getHeader("user-info");
+        if (userInfoStr != null && !userInfoStr.isEmpty()) {
+            try {
+                // 解析JSON字符串获取用户ID
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode userInfo = objectMapper.readTree(userInfoStr);
+                Long userId = userInfo.get("id").asLong();
+                appointmentDTO.setUpdateBy(userId);
+            } catch (Exception e) {
+                System.err.println("解析用户信息失败: " + e.getMessage());
+            }
+        }
         return appointmentService.updateTeamAppointment(teamAppointmentId, appointmentDTO);
     }
     

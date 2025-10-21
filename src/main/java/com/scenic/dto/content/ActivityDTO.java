@@ -1,7 +1,8 @@
 package com.scenic.dto.content;
 
-import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -20,12 +21,15 @@ public class ActivityDTO {
     private List<Long> contentImageIds; // 详情内容中的图片ID数组
     private Long coverImageId; // 封面图片ID
     private Byte status; // 活动状态：0-未结束，1-已结束
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createTime; // 创建时间
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime updateTime; // 更新时间
     private Long createBy; // 创建人
     private Long updateBy; // 更新人
     private String publisher; // 发布人姓名
     private Byte reservationPriority; // 预约优先级（1=高于全局规则，0=遵循全局规则）
+    private Boolean enabled; // 是否启用
 
     // 构造函数
     public ActivityDTO() {}
@@ -77,6 +81,14 @@ public class ActivityDTO {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
     }
 
     public String getPrice() {

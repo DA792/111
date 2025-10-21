@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.scenic.common.constant.AppointmentConstants;
 import com.scenic.common.dto.PageResult;
 import com.scenic.common.dto.Result;
 import com.scenic.config.WechatConfig;
@@ -596,7 +597,7 @@ public class UserServiceImpl implements UserService {
             }
             
             // 更新预约状态为取消
-            appointment.setStatus("CANCELLED");
+            appointment.setStatus(AppointmentConstants.STATUS_CANCELLED);
             appointment.setUpdateTime(java.time.LocalDateTime.now());
             int result = appointmentMapper.updateById(appointment);
             if (result > 0) {

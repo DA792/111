@@ -4,17 +4,23 @@ import java.time.LocalDateTime;
 
 /**
  * 活动预约DTO类
+ * 与activity_registration表字段对应
  */
 public class ActivityAppointmentDTO {
-    private String activityName;
-    private String contactPerson;
-    private String contactPhone;
-    private String contactEmail;
-    private Long activityId;
-    private LocalDateTime activityDate;
-    private String activityTime;
-    private Integer numberOfPeople;
-    private String remark;
+    private String activityName;      // 对应 activity_title
+    private String teamName;          // 团队名称
+    private String contactPerson;     // 对应 team_leader
+    private String contactPhone;      // 对应 contact_phone
+    private String contactEmail;      // 对应 contact_email
+    private Long activityId;          // 对应 activity_id
+    private Long userId;              // 对应 user_id
+    private Long formFileId;          // 对应 form_file_id
+    private LocalDateTime activityDate; // 对应 registration_time
+    private String activityTime;      // 对应 activity_time
+    private Integer numberOfPeople;   // 对应 team_size
+    private String remark;            // 对应 remarks
+    private Integer status;           // 状态
+    private Long createBy;            // 创建者ID
 
     // 构造函数
     public ActivityAppointmentDTO() {}
@@ -26,6 +32,14 @@ public class ActivityAppointmentDTO {
 
     public void setActivityName(String activityName) {
         this.activityName = activityName;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
     }
 
     public String getContactPerson() {
@@ -60,6 +74,22 @@ public class ActivityAppointmentDTO {
         this.activityId = activityId;
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Long getFormFileId() {
+        return formFileId;
+    }
+
+    public void setFormFileId(Long formFileId) {
+        this.formFileId = formFileId;
+    }
+
     public LocalDateTime getActivityDate() {
         return activityDate;
     }
@@ -92,18 +122,39 @@ public class ActivityAppointmentDTO {
         this.remark = remark;
     }
 
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         return "ActivityAppointmentDTO{" +
                 "activityName='" + activityName + '\'' +
+                ", teamName='" + teamName + '\'' +
                 ", contactPerson='" + contactPerson + '\'' +
                 ", contactPhone='" + contactPhone + '\'' +
                 ", contactEmail='" + contactEmail + '\'' +
                 ", activityId=" + activityId +
+                ", userId=" + userId +
+                ", formFileId=" + formFileId +
                 ", activityDate=" + activityDate +
                 ", activityTime='" + activityTime + '\'' +
                 ", numberOfPeople=" + numberOfPeople +
                 ", remark='" + remark + '\'' +
+                ", status=" + status +
+                ", createBy=" + createBy +
                 '}';
+    }
+
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
     }
 }

@@ -52,9 +52,17 @@ public class TeamAppointmentDTO {
     
     private Long formFileId; // 表单文件ID
     
+    private Integer teamSize; // 团队人数
+    
+    private String adminRemarks; // 管理员备注
+    
+    private LocalDateTime checkInTime; // 签到时间
+    
     private List<TeamMember> members;
     
     private String createBy;
+    
+    private Long updateBy;
 
     // 构造函数
     public TeamAppointmentDTO() {}
@@ -180,6 +188,46 @@ public class TeamAppointmentDTO {
         this.formFileId = formFileId;
     }
 
+    public Integer getTeamSize() {
+        return teamSize;
+    }
+
+    public void setTeamSize(Integer teamSize) {
+        this.teamSize = teamSize;
+    }
+
+    public Integer getNumberOfPeople() {
+        return this.teamSize;
+    }
+
+    public void setNumberOfPeople(Integer numberOfPeople) {
+        this.teamSize = numberOfPeople;
+    }
+
+    public String getAdminRemarks() {
+        return adminRemarks;
+    }
+
+    public void setAdminRemarks(String adminRemarks) {
+        this.adminRemarks = adminRemarks;
+    }
+
+    public LocalDateTime getCheckInTime() {
+        return checkInTime;
+    }
+
+    public void setCheckInTime(LocalDateTime checkInTime) {
+        this.checkInTime = checkInTime;
+    }
+
+    public Long getUpdateBy() {
+        return updateBy;
+    }
+
+    public void setUpdateBy(Long updateBy) {
+        this.updateBy = updateBy;
+    }
+
     @Override
     public String toString() {
         return "TeamAppointmentDTO{" +
@@ -196,8 +244,12 @@ public class TeamAppointmentDTO {
                 ", remark='" + remark + '\'' +
                 ", status='" + status + '\'' +
                 ", formFileId=" + formFileId +
+                ", teamSize=" + teamSize +
+                ", adminRemarks='" + adminRemarks + '\'' +
+                ", checkInTime=" + checkInTime +
                 ", members=" + members +
                 ", createBy='" + createBy + '\'' +
+                ", updateBy=" + updateBy +
                 '}';
     }
 }

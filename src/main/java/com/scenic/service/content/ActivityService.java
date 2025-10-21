@@ -1,6 +1,7 @@
 package com.scenic.service.content;
 
 import java.util.List;
+import java.util.Map;
 
 import com.scenic.common.dto.Result;
 import com.scenic.dto.content.ActivityDTO;
@@ -66,4 +67,14 @@ public interface ActivityService {
      * @return 活动总数
      */
     Result<Integer> getActivityCount(String title, Byte status, String startTime, String suitableCrowd);
+    
+    /**
+     * 管理端 - 分页获取活动列表
+     * @param title 活动标题（可选）
+     * @param enabled 是否启用（可选）
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 分页活动列表
+     */
+    Result<Map<String, Object>> getActivityPage(String title, Integer enabled, Integer pageNum, Integer pageSize);
 }

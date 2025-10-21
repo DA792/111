@@ -63,6 +63,18 @@ public class JwtInterceptor implements HandlerInterceptor {
         // 小程序端请求不需要JWT验证，直接放行
         if (requestURI.startsWith(miniappPrefix)) {
             System.out.println("放行小程序接口: " + requestURI);
+            // 从小程序请求参数中获取userId并设置到用户上下文
+            String userIdParam = request.getParameter("userId");
+            if (userIdParam != null) {
+                try {
+                    Long userId = Long.parseLong(userIdParam);
+                    User user = new User();
+                    user.setId(userId);
+                    userContextUtil.setCurrentUser(user);
+                } catch (NumberFormatException e) {
+                    System.out.println("无效的userId参数: " + userIdParam);
+                }
+            }
             return true;
         }
         

@@ -2,6 +2,7 @@ package com.scenic.entity.content;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -28,6 +29,7 @@ public class Activity {
     private Long updateBy; // 更新人
     private Byte reservationPriority; // 预约优先级（1=高于全局规则，0=遵循全局规则）
     private Integer deleted; // 1-删除，0-未删除
+    private Boolean enabled; // 是否启用
 
     // 构造函数
     public Activity() {}
@@ -47,6 +49,14 @@ public class Activity {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
     }
 
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -83,28 +93,20 @@ public class Activity {
         this.location = location;
     }
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public String getPrice() {
         return price;
     }
 
     public void setPrice(String price) {
         this.price = price;
-    }
-
-    public String getTeamLimit() {
-        return teamLimit;
-    }
-
-    public void setTeamLimit(String teamLimit) {
-        this.teamLimit = teamLimit;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 
     public List<Long> getContentImageIds() {
@@ -173,6 +175,14 @@ public class Activity {
         this.reservationPriority = reservationPriority;
     }
     
+    public String getTeamLimit() {
+        return teamLimit;
+    }
+
+    public void setTeamLimit(String teamLimit) {
+        this.teamLimit = teamLimit;
+    }
+    
     public Integer getDeleted() {
         return deleted;
     }
@@ -202,6 +212,7 @@ public class Activity {
                 ", updateBy=" + updateBy +
                 ", reservationPriority=" + reservationPriority +
                 ", deleted=" + deleted +
+                ", enabled=" + enabled +
                 '}';
     }
 }

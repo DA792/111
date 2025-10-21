@@ -2,6 +2,7 @@ package com.scenic.controller.content;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -103,7 +104,7 @@ public class ActivityController {
     }
     
     /**
-     * 管理后台端 - 分页查询活动列表
+     * 管理后台端 - 分页查询活动列表（按状态和时间）
      * @param title 活动标题（可选）
      * @param status 活动状态（可选）
      * @param startTime 开始时间（可选）
@@ -112,7 +113,7 @@ public class ActivityController {
      * @param pageSize 每页大小
      * @return 活动列表
      */
-    @GetMapping(ADMIN_PREFIX + "/activity/page")
+    @GetMapping(ADMIN_PREFIX + "/activity/list/page")
     public Result<List<ActivityDTO>> getActivityList(@RequestParam(required = false) String title,
                                                      @RequestParam(required = false) Byte status,
                                                      @RequestParam(required = false) String startTime,
@@ -157,5 +158,22 @@ public class ActivityController {
     @DeleteMapping(ADMIN_PREFIX + "/activity/delete/{id}")
     public Result<String> deleteActivity(@PathVariable Long id) {
         return activityService.deleteActivity(id);
+    }
+    
+    /**
+     * 管理后台端 - 分页获取活动列表
+     * @param title 活动标题（可选）
+     * @param enabled 是否启用（可选）
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 分页活动列表
+     */
+    @GetMapping(ADMIN_PREFIX + "/activity/page")
+    public Result<Map<String, Object>> getActivityPage(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Integer enabled,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return activityService.getActivityPage(title, enabled, pageNum, pageSize);
     }
 }

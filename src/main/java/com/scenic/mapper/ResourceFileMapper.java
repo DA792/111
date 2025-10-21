@@ -25,6 +25,14 @@ public interface ResourceFileMapper {
     ResourceFile selectById(Long id);
     
     /**
+     * 根据文件键查询文件资源
+     * @param fileKey 文件键
+     * @return 文件资源信息
+     */
+    @Select("SELECT * FROM resource_file WHERE file_key = #{fileKey}")
+    ResourceFile selectByFileKey(String fileKey);
+    
+    /**
      * 根据文件路径和存储桶名称查询文件资源
      * @param bucketName 存储桶名称
      * @param fileKey 文件路径
@@ -55,13 +63,11 @@ public interface ResourceFileMapper {
      * @param resourceFile 文件资源信息
      * @return 插入结果
      */
-
     @Insert("INSERT INTO resource_file(id, file_name, file_key, bucket_name, file_size, mime_type, file_type, width, height, " +
             "duration, sha256, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
             "VALUES(#{id}, #{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
             "#{duration}, #{sha256}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
-
     int insert(ResourceFile resourceFile);
     
     /**
@@ -71,7 +77,7 @@ public interface ResourceFileMapper {
      */
     @Delete("DELETE FROM resource_file WHERE id = #{id}")
     int deleteById(Long id);
-
+    
     /**
      * 根据ID列表删除文件资源记录
      * @param ids 文件资源ID列表

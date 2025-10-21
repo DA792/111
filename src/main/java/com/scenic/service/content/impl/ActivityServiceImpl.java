@@ -11,7 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -67,7 +70,14 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public Result<List<ActivityDTO>> getAllActivities() {
         try {
-            List<Activity> activities = activityMapper.selectAllEnabled();
+            // 先从Redis缓存中获取
+            List<ActivityDTO> cachedActivities = (List<ActivityDTO>) redisTemplate.opsForValue().get(ALL_ACTIVITIES_CACHE_KEY);
+            if (cachedActivities != null) {
+                return Result.success("查询成功", cachedActivities);
+            }
+            
+            // 缓存中没有则从数据库查询所有活动（包括禁用的）
+            List<Activity> activities = activityMapper.selectList(0, 1000); // 获取前1000个活动
             List<ActivityDTO> activityDTOs = activities.stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
@@ -218,6 +228,43 @@ public class ActivityServiceImpl implements ActivityService {
         try {
             int count = activityMapper.selectCountForAdmin(title, status, startTime, suitableCrowd);
             return Result.success("查询成功", count);
+        } catch (Exception e) {
+            return Result.error("查询失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 管理端 - 分页获取活动列表
+     * @param title 活动标题（可选）
+     * @param enabled 是否启用（可选）
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 分页活动列表
+     */
+    @Override
+    public Result<Map<String, Object>> getActivityPage(String title, Integer enabled, Integer pageNum, Integer pageSize) {
+        try {
+            int offset = (pageNum - 1) * pageSize;
+            
+            // 查询活动列表
+            List<Activity> activities = activityMapper.selectByEnabledStatus(title, enabled, offset, pageSize);
+            
+            // 查询总数
+            int total = activityMapper.selectCountByEnabledStatus(title, enabled);
+            
+            // 转换为DTO
+            List<ActivityDTO> activityDTOs = activities.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+            
+            // 构造返回结果
+            Map<String, Object> result = new HashMap<>();
+            result.put("total", total);
+            result.put("list", activityDTOs);
+            result.put("pageNum", pageNum);
+            result.put("pageSize", pageSize);
+            
+            return Result.success("查询成功", result);
         } catch (Exception e) {
             return Result.error("查询失败：" + e.getMessage());
         }
