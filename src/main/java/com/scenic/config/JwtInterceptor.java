@@ -59,6 +59,7 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         }
         
+        
         // 小程序端请求不需要JWT验证，直接放行
         if (requestURI.startsWith(miniappPrefix)) {
             System.out.println("放行小程序接口: " + requestURI);

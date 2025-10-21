@@ -1,11 +1,14 @@
 package com.scenic.entity;
 
 import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.IdType;
 
 /**
  * 文件资源实体类
  */
 public class ResourceFile {
+    @TableId(type = IdType.AUTO)
     private Long id;
     private String fileName;
     private String fileKey;

@@ -60,6 +60,7 @@ public interface ResourceFileMapper {
             "duration, sha256, upload_user_id, is_temp, create_time, update_time, create_by, update_by) " +
             "VALUES(#{id}, #{fileName}, #{fileKey}, #{bucketName}, #{fileSize}, #{mimeType}, #{fileType}, #{width}, #{height}, " +
             "#{duration}, #{sha256}, #{uploadUserId}, #{isTemp}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
 
     int insert(ResourceFile resourceFile);
     

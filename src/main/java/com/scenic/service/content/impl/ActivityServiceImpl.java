@@ -8,12 +8,10 @@ import com.scenic.mapper.content.ActivityMapper;
 import com.scenic.mapper.user.UserMapper;
 import com.scenic.service.content.ActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -27,13 +25,6 @@ public class ActivityServiceImpl implements ActivityService {
     
     @Autowired
     private UserMapper userMapper;
-    
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
-    
-    // Redis缓存键前缀
-    private static final String ACTIVITY_CACHE_PREFIX = "activity:";
-    private static final String ALL_ACTIVITIES_CACHE_KEY = "all_activities";
     
     /**
      * 新增活动
@@ -63,9 +54,6 @@ public class ActivityServiceImpl implements ActivityService {
             
             activityMapper.insert(activity);
             
-            // 清除所有活动列表缓存
-            redisTemplate.delete(ALL_ACTIVITIES_CACHE_KEY);
-            
             return Result.success("操作成功", "活动新增成功");
         } catch (Exception e) {
             return Result.error("操作失败：" + e.getMessage());
@@ -79,20 +67,10 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public Result<List<ActivityDTO>> getAllActivities() {
         try {
-            // 先从Redis缓存中获取
-            List<ActivityDTO> cachedActivities = (List<ActivityDTO>) redisTemplate.opsForValue().get(ALL_ACTIVITIES_CACHE_KEY);
-            if (cachedActivities != null) {
-                return Result.success("查询成功", cachedActivities);
-            }
-            
-            // 缓存中没有则从数据库查询
             List<Activity> activities = activityMapper.selectAllEnabled();
             List<ActivityDTO> activityDTOs = activities.stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
-            
-            // 将结果存入Redis缓存，过期时间1小时
-            redisTemplate.opsForValue().set(ALL_ACTIVITIES_CACHE_KEY, activityDTOs, 1, TimeUnit.HOURS);
             
             return Result.success("查询成功", activityDTOs);
         } catch (Exception e) {
@@ -108,21 +86,10 @@ public class ActivityServiceImpl implements ActivityService {
     @Override
     public Result<ActivityDTO> getActivityById(Long id) {
         try {
-            // 清除缓存，避免使用旧的缓存数据
-            String cacheKey = ACTIVITY_CACHE_PREFIX + id;
-            redisTemplate.delete(cacheKey);
-            redisTemplate.delete(ALL_ACTIVITIES_CACHE_KEY);
-            
-            // 从数据库查询
-            
-            // 缓存中没有则从数据库查询
             Activity activity = activityMapper.selectById(id);
             
             if (activity != null && activity.getStatus() == 0) {
                 ActivityDTO activityDTO = convertToDTO(activity);
-                
-                // 将结果存入Redis缓存，过期时间1小时
-                redisTemplate.opsForValue().set(cacheKey, activityDTO, 1, TimeUnit.HOURS);
                 return Result.success("查询成功", activityDTO);
             } else {
                 return Result.error("活动不存在或已结束");
@@ -185,14 +152,6 @@ public class ActivityServiceImpl implements ActivityService {
                 
                 activityMapper.updateById(activity);
                 
-                // 更新缓存
-                String cacheKey = ACTIVITY_CACHE_PREFIX + id;
-                ActivityDTO updatedDTO = convertToDTO(activity);
-                redisTemplate.opsForValue().set(cacheKey, updatedDTO, 1, TimeUnit.HOURS);
-                
-                // 清除所有活动列表缓存
-                redisTemplate.delete(ALL_ACTIVITIES_CACHE_KEY);
-                
                 return Result.success("操作成功", "活动更新成功");
             }
             return Result.error("活动不存在或已结束");
@@ -213,13 +172,6 @@ public class ActivityServiceImpl implements ActivityService {
             if (activity != null) {
                 // 使用逻辑删除，设置deleted为1
                 activityMapper.deleteById(id);
-                
-                // 删除缓存
-                String cacheKey = ACTIVITY_CACHE_PREFIX + id;
-                redisTemplate.delete(cacheKey);
-                
-                // 清除所有活动列表缓存
-                redisTemplate.delete(ALL_ACTIVITIES_CACHE_KEY);
                 
                 return Result.success("操作成功", "活动已删除");
             }
