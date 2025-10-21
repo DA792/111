@@ -77,4 +77,12 @@ public interface ActivityService {
      * @return 分页活动列表
      */
     Result<Map<String, Object>> getActivityPage(String title, Integer enabled, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 小程序端 - 分页获取活动列表
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 分页活动列表
+     */
+    Result<Map<String, Object>> getActivityPageForMiniapp(int pageNum, int pageSize);
 }
