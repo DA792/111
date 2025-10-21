@@ -20,6 +20,7 @@ import com.scenic.common.dto.Result;
 import com.scenic.dto.appointment.PersonalAppointmentDTO;
 import com.scenic.entity.appointment.Appointment;
 import com.scenic.entity.appointment.AppointmentSetting;
+import com.scenic.entity.appointment.IndividualReservation;
 import com.scenic.service.appointment.AppointmentService;
 import com.scenic.service.appointment.AppointmentSettingService;
 
@@ -61,7 +62,7 @@ public class AppointmentController {
      * @return 预约列表
      */
     @GetMapping(MINIAPP_PREFIX + "/users/{userId}/appointments")
-    public Result<PageResult<Appointment>> getMyAppointments(
+    public Result<PageResult<IndividualReservation>> getMyAppointments(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {

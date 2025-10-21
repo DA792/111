@@ -41,8 +41,10 @@ public class TeamAppointmentDTO {
     private String scenicSpotName;
     
     @NotNull(message = "预约日期不能为空")
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime appointmentDate;
     
+    @com.fasterxml.jackson.annotation.JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime appointmentTime;
     
     @Size(max = 500, message = "备注长度不能超过500个字符")
