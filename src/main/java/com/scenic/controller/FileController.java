@@ -260,6 +260,37 @@ public class FileController {
     }
     
     /**
+     * 获取图片URL（短期有效）
+     *
+     * @param fileId 文件ID
+     * @return 短期有效的预签名URL
+     */
+    @GetMapping("/get-image-url")
+    public Result<String> getImageUrl(@RequestParam Long fileId) {
+        try {
+            // 根据ID查询文件信息
+            ResourceFile resourceFile = resourceFileMapper.selectById(fileId);
+            
+            if (resourceFile == null) {
+                return Result.error("文件不存在");
+            }
+            
+            // 生成短期有效的预签名URL（5分钟）
+            String presignedUrl = fileUploadUtil.getPresignedUrl(
+                resourceFile.getBucketName(),
+                resourceFile.getFileKey(),
+                300 // 5分钟有效期
+            );
+            
+            return Result.success(presignedUrl);
+        } catch (Exception e) {
+            System.err.println("获取图片URL失败: " + e.getMessage());
+            e.printStackTrace();
+            return Result.error("获取图片URL失败: " + e.getMessage());
+        }
+    }
+    
+    /**
      * 获取用户头像URL
      *
      * @param userId 用户ID
