@@ -20,6 +20,7 @@ public interface ActivityAppointmentMapper {
      * @param id 活动预约ID
      * @return 活动预约信息
      */
+    @Select("SELECT * FROM activity_registration WHERE id = #{id}")
     ActivityAppointment selectById(Long id);
     
     /**
@@ -27,6 +28,8 @@ public interface ActivityAppointmentMapper {
      * @param activityAppointment 活动预约信息
      * @return 插入结果
      */
+    @Insert("INSERT INTO activity_registration(registration_no, activity_title, team_name, team_leader, contact_phone, contact_email, activity_id, user_id, form_file_id, registration_time, activity_time, team_size, remarks, status, create_time, update_time, create_by) VALUES(#{registrationNo}, #{activityName}, #{teamName}, #{contactPerson}, #{contactPhone}, #{contactEmail}, #{activityId}, #{userId}, #{formFileId}, #{activityDate}, #{activityTime}, #{numberOfPeople}, #{remark}, #{status}, #{createTime}, #{updateTime}, #{createBy})")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(ActivityAppointment activityAppointment);
     
     /**
@@ -41,6 +44,7 @@ public interface ActivityAppointmentMapper {
      * @param id 活动预约ID
      * @return 删除结果
      */
+    @Delete("DELETE FROM activity_registration WHERE id = #{id}")
     int deleteById(Long id);
     
     /**

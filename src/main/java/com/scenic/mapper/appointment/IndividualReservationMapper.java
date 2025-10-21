@@ -15,7 +15,6 @@ public interface IndividualReservationMapper {
      * @param id 预约ID
      * @return 个人预约信息
      */
-    @Select("SELECT * FROM individual_reservation WHERE id = #{id}")
     IndividualReservation selectById(Long id);
     
     /**
@@ -42,7 +41,6 @@ public interface IndividualReservationMapper {
      * @param limit 限制数量
      * @return 个人预约列表
      */
-    @Select("SELECT * FROM individual_reservation WHERE user_id = #{userId} ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
     List<IndividualReservation> selectByUserId(@Param("userId") Long userId, @Param("offset") int offset, @Param("limit") int limit);
     
     /**
@@ -52,21 +50,27 @@ public interface IndividualReservationMapper {
      * @param limit 限制数量
      * @return 个人预约列表
      */
-    @Select("SELECT * FROM individual_reservation WHERE status = #{status} ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
     List<IndividualReservation> selectByStatus(@Param("status") Integer status, @Param("offset") int offset, @Param("limit") int limit);
+    
+    /**
+     * 查询个人预约列表
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 个人预约列表
+     */
+    List<IndividualReservation> selectList(@Param("offset") int offset, @Param("limit") int limit);
+    
+    /**
+     * 查询个人预约总数
+     * @return 个人预约总数
+     */
+    int selectCount();
     
     /**
      * 插入个人预约
      * @param reservation 个人预约信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO individual_reservation(reservation_no, user_id, scenic_id, visit_date, time_slot, " +
-            "adult_count, child_count, total_count, status, verification_time, operator_id, verification_location, " +
-            "device_info, verification_remark, cancel_time, cancel_reason, version, deleted, create_time, update_time, create_by, update_by) " +
-            "VALUES(#{reservationNo}, #{userId}, #{scenicId}, #{visitDate}, #{timeSlot}, " +
-            "#{adultCount}, #{childCount}, #{totalCount}, #{status}, #{verificationTime}, #{operatorId}, #{verificationLocation}, " +
-            "#{deviceInfo}, #{verificationRemark}, #{cancelTime}, #{cancelReason}, #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(IndividualReservation reservation);
     
     /**
@@ -82,7 +86,6 @@ public interface IndividualReservationMapper {
      * @param updateBy 更新人
      * @return 删除结果
      */
-    @Update("UPDATE individual_reservation SET deleted = 1, update_time = NOW(), update_by = #{updateBy} WHERE id = #{id}")
     int deleteById(@Param("id") Long id, @Param("updateBy") Long updateBy);
     
     /**

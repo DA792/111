@@ -34,6 +34,20 @@
         admin_remarks, check_in_time, create_time, update_time, create_by, update_by
     </sql>
 
+    <!-- 查询团队预约列表 -->
+    <select id="selectList" resultMap="TeamAppointmentResultMap">
+        SELECT 
+        <include refid="TeamAppointment_Column_List"/>
+        FROM team_appointment
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询团队预约总数 -->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM team_appointment
+    </select>
+
     <!-- 管理员查询团队预约列表 -->
     <select id="selectForAdmin" resultMap="TeamAppointmentResultMap">
         SELECT 

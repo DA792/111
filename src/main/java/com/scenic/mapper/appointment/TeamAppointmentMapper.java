@@ -59,14 +59,12 @@ public interface TeamAppointmentMapper {
      * @param limit 限制数量
      * @return 团队预约列表
      */
-    @Select("SELECT * FROM team_appointment ORDER BY create_time DESC LIMIT #{offset}, #{limit}")
     List<TeamAppointment> selectList(@Param("offset") int offset, @Param("limit") int limit);
     
     /**
      * 查询团队预约总数
      * @return 团队预约总数
      */
-    @Select("SELECT COUNT(*) FROM team_appointment")
     int selectCount();
     
     /**

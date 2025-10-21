@@ -30,6 +30,20 @@
         registration_time, activity_time, team_size, remarks, status, create_time, update_time, create_by
     </sql>
 
+    <!-- 查询活动预约列表 -->
+    <select id="selectList" resultMap="ActivityAppointmentResultMap">
+        SELECT 
+        <include refid="ActivityAppointment_Column_List"/>
+        FROM activity_registration
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询活动预约总数 -->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM activity_registration
+    </select>
+
     <!-- 管理员查询活动预约列表 -->
     <select id="selectForAdmin" resultMap="ActivityAppointmentResultMap">
         SELECT 
@@ -150,18 +164,4 @@
     <delete id="deleteById" parameterType="java.lang.Long">
         DELETE FROM activity_registration WHERE id = #{id}
     </delete>
-    
-    <!-- 查询活动预约列表 -->
-    <select id="selectList" resultMap="ActivityAppointmentResultMap">
-        SELECT 
-        <include refid="ActivityAppointment_Column_List"/>
-        FROM activity_registration
-        ORDER BY create_time DESC
-        LIMIT #{offset}, #{limit}
-    </select>
-    
-    <!-- 查询活动预约总数 -->
-    <select id="selectCount" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM activity_registration
-    </select>
 </mapper>

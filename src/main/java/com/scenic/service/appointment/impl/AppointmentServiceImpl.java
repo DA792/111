@@ -18,11 +18,13 @@ import com.scenic.dto.appointment.TeamAppointmentDTO;
 import com.scenic.entity.appointment.ActivityAppointment;
 import com.scenic.entity.appointment.Appointment;
 import com.scenic.entity.appointment.AppointmentPerson;
+import com.scenic.entity.appointment.IndividualReservation;
 import com.scenic.entity.appointment.TeamAppointment;
 import com.scenic.entity.appointment.TeamMember;
 import com.scenic.mapper.appointment.ActivityAppointmentMapper;
 import com.scenic.mapper.appointment.AppointmentMapper;
 import com.scenic.mapper.appointment.AppointmentPersonMapper;
+import com.scenic.mapper.appointment.IndividualReservationMapper;
 import com.scenic.mapper.appointment.TeamAppointmentMapper;
 import com.scenic.mapper.appointment.TeamMemberMapper;
 import com.scenic.service.appointment.AppointmentService;
@@ -48,6 +50,9 @@ public class AppointmentServiceImpl implements AppointmentService {
     
     @Autowired
     private ActivityAppointmentMapper activityAppointmentMapper;
+    
+    @Autowired
+    private IndividualReservationMapper individualReservationMapper;
     
     @Autowired
     private UserContextUtil userContextUtil;
@@ -770,22 +775,44 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
     
     /**
-     * 获取用户预约列表
+     * 获取用户预约列表（小程序端）
      * @param userId 用户ID
      * @param page 页码
      * @param size 每页大小
      * @return 预约列表
      */
     @Override
-    public Result<PageResult<Appointment>> getUserAppointments(Long userId, int page, int size) {
+    public Result<PageResult<IndividualReservation>> getUserAppointments(Long userId, int page, int size) {
         try {
-            // 分页获取用户预约记录
-            List<Appointment> userAppointments = appointmentMapper.selectByUserId(userId, (page - 1) * size, size);
+            // 分页获取用户个人预约记录
+            List<IndividualReservation> individualReservations = individualReservationMapper.selectByUserId(userId, (page - 1) * size, size);
             
             // 获取总数
-            int total = appointmentMapper.selectCountByUserId(userId);
+            int total = individualReservationMapper.selectCountByUserId(userId);
             
-            PageResult<Appointment> pageResult = PageResult.of(total, size, page, userAppointments);
+            PageResult<IndividualReservation> pageResult = PageResult.of(total, size, page, individualReservations);
+            return Result.success("查询成功", pageResult);
+        } catch (Exception e) {
+            return Result.error("查询失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 获取个人预约列表（小程序端）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 个人预约列表
+     */
+    @Override
+    public Result<PageResult<IndividualReservation>> getIndividualReservations(int page, int size) {
+        try {
+            // 分页获取个人预约记录
+            List<IndividualReservation> individualReservations = individualReservationMapper.selectList((page - 1) * size, size);
+            
+            // 获取总数
+            int total = individualReservationMapper.selectCount();
+            
+            PageResult<IndividualReservation> pageResult = PageResult.of(total, size, page, individualReservations);
             return Result.success("查询成功", pageResult);
         } catch (Exception e) {
             return Result.error("查询失败：" + e.getMessage());

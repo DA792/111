@@ -7,6 +7,7 @@ import com.scenic.dto.appointment.PersonalAppointmentDTO;
 import com.scenic.dto.appointment.TeamAppointmentDTO;
 import com.scenic.entity.appointment.ActivityAppointment;
 import com.scenic.entity.appointment.Appointment;
+import com.scenic.entity.appointment.IndividualReservation;
 import com.scenic.entity.appointment.TeamAppointment;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -104,13 +105,21 @@ public interface AppointmentService {
     Result<String> cancelActivityAppointment(Long activityAppointmentId);
     
     /**
-     * 获取用户预约列表
+     * 获取个人预约列表（小程序端）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 个人预约列表
+     */
+    Result<PageResult<IndividualReservation>> getIndividualReservations(int page, int size);
+    
+    /**
+     * 获取用户预约列表（小程序端）
      * @param userId 用户ID
      * @param page 页码
      * @param size 每页大小
      * @return 预约列表
      */
-    Result<PageResult<Appointment>> getUserAppointments(Long userId, int page, int size);
+    Result<PageResult<IndividualReservation>> getUserAppointments(Long userId, int page, int size);
     
     /**
      * 获取团队预约列表
