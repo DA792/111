@@ -51,6 +51,19 @@ public class ActivityController {
     }
     
     /**
+     * 小程序端 - 分页获取活动列表
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 分页活动列表
+     */
+    @GetMapping(MINIAPP_PREFIX + "/activity/list/page")
+    public Result<Map<String, Object>> getActivityPageForMiniapp(
+            @RequestParam(defaultValue = "1") int pageNum,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return activityService.getActivityPageForMiniapp(pageNum, pageSize);
+    }
+    
+    /**
      * 小程序端 - 根据ID获取活动详情
      * @param id 活动ID
      * @return 活动详情
