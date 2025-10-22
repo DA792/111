@@ -103,11 +103,11 @@ public class ActivityServiceImpl implements ActivityService {
         try {
             Activity activity = activityMapper.selectById(id);
             
-            if (activity != null && activity.getStatus() == 0) {
+            if (activity != null) {
                 ActivityDTO activityDTO = convertToDTO(activity);
                 return Result.success("查询成功", activityDTO);
             } else {
-                return Result.error("活动不存在或已结束");
+                return Result.error("活动不存在");
             }
         } catch (Exception e) {
             return Result.error("查询失败：" + e.getMessage());
@@ -124,7 +124,7 @@ public class ActivityServiceImpl implements ActivityService {
     public Result<String> updateActivity(Long id, ActivityDTO activityDTO) {
         try {
             Activity existingActivity = activityMapper.selectById(id);
-            if (existingActivity != null && existingActivity.getStatus() == 0) {
+            if (existingActivity != null) {
                 // 只更新非空字段，避免未传输字段被置空
                 if (activityDTO.getTitle() != null) {
                     existingActivity.setTitle(activityDTO.getTitle());
@@ -188,7 +188,7 @@ public class ActivityServiceImpl implements ActivityService {
                 
                 return Result.success("操作成功", "活动更新成功");
             }
-            return Result.error("活动不存在或已结束");
+            return Result.error("活动不存在");
         } catch (Exception e) {
             return Result.error("操作失败：" + e.getMessage());
         }
