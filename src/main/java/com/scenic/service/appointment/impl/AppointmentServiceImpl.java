@@ -916,7 +916,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Override
     public Result<TeamAppointment> getTeamAppointmentDetail(Long teamAppointmentId) {
         try {
-            TeamAppointment teamAppointment = teamAppointmentMapper.selectById(teamAppointmentId);
+            TeamAppointment teamAppointment = teamAppointmentMapper.selectByIdWithMembers(teamAppointmentId);
             
             if (teamAppointment == null) {
                 return Result.error("团队预约记录不存在");
