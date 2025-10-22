@@ -96,6 +96,10 @@ minio:
   secret-key: zssg0325
   bucket-name: user-avatars
   photo-checkin-bucket: photo-checkin
+  content-management-video-bucket: content-management
+  content-management-audio-bucket: content-management-audio
+  content-management-photo-bucket: content-management-photo
+  files-bucket: files
 
 # 微信小程序配置
 wechat:

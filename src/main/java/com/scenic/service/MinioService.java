@@ -24,6 +24,35 @@ public class MinioService {
     
     @Value("${minio.photo-checkin-bucket:photo-checkin}")
     private String photoCheckinBucket;
+    
+    @Value("${minio.content-management-video-bucket:content-management}")
+    private String contentManagementVideoBucket;
+    
+    @Value("${minio.content-management-audio-bucket:content-management-audio}")
+    private String contentManagementAudioBucket;
+    
+    @Value("${minio.content-management-photo-bucket:content-management-photo}")
+    private String contentManagementPhotoBucket;
+    
+    @Value("${minio.files-bucket:files}")
+    private String filesBucket;
+    
+    // Getter方法
+    public String getContentManagementVideoBucket() {
+        return contentManagementVideoBucket;
+    }
+    
+    public String getContentManagementAudioBucket() {
+        return contentManagementAudioBucket;
+    }
+    
+    public String getContentManagementPhotoBucket() {
+        return contentManagementPhotoBucket;
+    }
+    
+    public String getFilesBucket() {
+        return filesBucket;
+    }
 
     /**
      * 检查存储桶是否存在，不存在则创建
