@@ -238,6 +238,14 @@ public class TeamAppointmentController {
                     System.err.println("解析用户信息失败: " + e.getMessage());
                 }
             }
+            
+            // 确保使用路径变量中的ID，而不是DTO中的ID
+            // 如果DTO中的ID与路径变量不一致，以路径变量为准
+            if (appointmentDTO.getId() != null && !appointmentDTO.getId().equals(teamAppointmentId)) {
+                System.out.println("警告: DTO中的ID与路径变量ID不一致，使用路径变量ID: " + teamAppointmentId);
+            }
+            // 强制使用路径变量中的ID
+            appointmentDTO.setId(teamAppointmentId);
             return appointmentService.updateTeamAppointment(teamAppointmentId, appointmentDTO);
         }
         

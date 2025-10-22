@@ -128,8 +128,8 @@ public class ActivityAppointmentController {
      * @return 活动预约详情
      */
     @GetMapping(ADMIN_PREFIX + "/activity-appointments/{id}")
-    public Result<ActivityAppointment> getActivityAppointmentDetailForAdmin(@PathVariable Long id) {
-        return appointmentService.getActivityAppointmentDetail(id);
+    public Result<ActivityAppointmentDTO> getActivityAppointmentDetailForAdmin(@PathVariable Long id) {
+        return appointmentService.getActivityAppointmentDetailWithMembers(id);
     }
     
     /**

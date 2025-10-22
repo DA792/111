@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import com.scenic.entity.appointment.TeamMember;
 
@@ -52,6 +53,14 @@ public interface TeamMemberMapper {
             "</foreach>" +
             "</script>")
     int insertBatch(@Param("list") List<TeamMember> teamMembers);
+    
+    /**
+     * 更新团队成员
+     * @param teamMember 团队成员信息
+     * @return 更新结果
+     */
+    @Update("UPDATE team_member SET name = #{name}, id_card = #{idCard}, phone = #{phone}, age = #{age}, gender = #{gender}, remark = #{remark}, update_time = #{updateTime} WHERE id = #{id}")
+    int updateById(TeamMember teamMember);
     
     /**
      * 根据ID删除团队成员

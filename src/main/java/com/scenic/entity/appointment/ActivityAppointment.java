@@ -1,5 +1,6 @@
 package com.scenic.entity.appointment;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 活动预约实体类
@@ -23,6 +24,7 @@ public class ActivityAppointment {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Long createBy;
+    private List<TeamMember> members; // 团队成员列表
 
     // 构造函数
     public ActivityAppointment() {}
@@ -164,6 +166,22 @@ public class ActivityAppointment {
         this.updateTime = updateTime;
     }
 
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public List<TeamMember> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<TeamMember> members) {
+        this.members = members;
+    }
+
     @Override
     public String toString() {
         return "ActivityAppointment{" +
@@ -185,14 +203,7 @@ public class ActivityAppointment {
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", createBy=" + createBy +
+                ", members=" + members +
                 '}';
-    }
-
-    public Long getCreateBy() {
-        return createBy;
-    }
-
-    public void setCreateBy(Long createBy) {
-        this.createBy = createBy;
     }
 }

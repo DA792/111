@@ -24,6 +24,40 @@
         <result column="create_by" property="createBy" jdbcType="BIGINT"/>
     </resultMap>
 
+    <!-- 活动预约结果映射（包含团队成员） -->
+    <resultMap id="ActivityAppointmentWithMembersResultMap" type="com.scenic.entity.appointment.ActivityAppointment">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="registration_no" property="registrationNo" jdbcType="VARCHAR"/>
+        <result column="activity_title" property="activityName" jdbcType="VARCHAR"/>
+        <result column="team_name" property="teamName" jdbcType="VARCHAR"/>
+        <result column="team_leader" property="contactPerson" jdbcType="VARCHAR"/>
+        <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
+        <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
+        <result column="activity_id" property="activityId" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="form_file_id" property="formFileId" jdbcType="BIGINT"/>
+        <result column="registration_time" property="activityDate" jdbcType="TIMESTAMP"/>
+        <result column="activity_time" property="activityTime" jdbcType="VARCHAR"/>
+        <result column="team_size" property="numberOfPeople" jdbcType="INTEGER"/>
+        <result column="remarks" property="remark" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="create_by" property="createBy" jdbcType="BIGINT"/>
+        <collection property="members" ofType="com.scenic.entity.appointment.TeamMember">
+            <id column="member_id" property="id" jdbcType="BIGINT"/>
+            <result column="team_appointment_id" property="teamAppointmentId" jdbcType="BIGINT"/>
+            <result column="name" property="name" jdbcType="VARCHAR"/>
+            <result column="id_card" property="idCard" jdbcType="VARCHAR"/>
+            <result column="phone" property="phone" jdbcType="VARCHAR"/>
+            <result column="age" property="age" jdbcType="INTEGER"/>
+            <result column="gender" property="gender" jdbcType="VARCHAR"/>
+            <result column="remark" property="remark" jdbcType="VARCHAR"/>
+            <result column="member_create_time" property="createTime" jdbcType="TIMESTAMP"/>
+            <result column="member_update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        </collection>
+    </resultMap>
+
     <!-- 查询字段 -->
     <sql id="ActivityAppointment_Column_List">
         id, registration_no, activity_title, team_name, team_leader, contact_phone, contact_email, activity_id, user_id, form_file_id,
@@ -164,4 +198,40 @@
     <delete id="deleteById" parameterType="java.lang.Long">
         DELETE FROM activity_registration WHERE id = #{id}
     </delete>
+    
+    <!-- 根据ID查询活动预约（包含团队成员信息） -->
+    <select id="selectByIdWithMembers" resultMap="ActivityAppointmentWithMembersResultMap">
+        SELECT 
+        ar.id,
+        ar.registration_no,
+        ar.activity_title,
+        ar.team_name,
+        ar.team_leader,
+        ar.contact_phone,
+        ar.contact_email,
+        ar.activity_id,
+        ar.user_id,
+        ar.form_file_id,
+        ar.registration_time,
+        ar.activity_time,
+        ar.team_size,
+        ar.remarks,
+        ar.status,
+        ar.create_time,
+        ar.update_time,
+        ar.create_by,
+        tm.id AS member_id,
+        tm.team_appointment_id,
+        tm.name,
+        tm.id_card,
+        tm.phone,
+        tm.age,
+        tm.gender,
+        tm.remark,
+        tm.create_time AS member_create_time,
+        tm.update_time AS member_update_time
+        FROM activity_registration ar
+        LEFT JOIN team_member tm ON ar.id = tm.team_appointment_id
+        WHERE ar.id = #{id}
+    </select>
 </mapper>

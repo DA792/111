@@ -24,6 +24,13 @@ public interface ActivityAppointmentMapper {
     ActivityAppointment selectById(Long id);
     
     /**
+     * 根据ID查询活动预约（包含团队成员信息）
+     * @param id 活动预约ID
+     * @return 活动预约信息（包含团队成员）
+     */
+    ActivityAppointment selectByIdWithMembers(Long id);
+    
+    /**
      * 插入活动预约
      * @param activityAppointment 活动预约信息
      * @return 插入结果
