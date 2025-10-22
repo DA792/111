@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scenic.common.dto.Result;
 import com.scenic.entity.appointment.AppointmentSetting;
 import com.scenic.service.appointment.AppointmentSettingService;
@@ -170,12 +171,18 @@ public class AppointmentSettingController {
     
     /**
      * 管理后台端 - 保存预约规则配置
-     * @param configJson 配置JSON
+     * @param configMap 配置映射
      * @return 保存结果
      */
     @PutMapping(ADMIN_PREFIX + "/appointment-settings/rule-config")
-    public Result<String> saveAppointmentRuleConfig(@RequestBody String configJson) {
-        // 默认用户ID为1，实际应用中应该从JWT token中获取
-        return mainConfigService.saveAppointmentRuleConfig(configJson, 1L);
+    public Result<String> saveAppointmentRuleConfig(@RequestBody Map<String, Object> configMap) {
+        try {
+            // 默认用户ID为1，实际应用中应该从JWT token中获取
+            ObjectMapper objectMapper = new ObjectMapper();
+            String configJson = objectMapper.writeValueAsString(configMap);
+            return mainConfigService.saveAppointmentRuleConfig(configJson, 1L);
+        } catch (Exception e) {
+            return Result.error("保存预约规则配置失败：" + e.getMessage());
+        }
     }
 }

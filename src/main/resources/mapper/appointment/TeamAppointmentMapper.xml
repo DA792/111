@@ -34,6 +34,20 @@
         admin_remarks, check_in_time, create_time, update_time, create_by, update_by
     </sql>
 
+    <!-- 查询团队预约列表 -->
+    <select id="selectList" resultMap="TeamAppointmentResultMap">
+        SELECT 
+        <include refid="TeamAppointment_Column_List"/>
+        FROM team_appointment
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 查询团队预约总数 -->
+    <select id="selectCount" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM team_appointment
+    </select>
+
     <!-- 管理员查询团队预约列表 -->
     <select id="selectForAdmin" resultMap="TeamAppointmentResultMap">
         SELECT 
@@ -100,6 +114,15 @@
             #{numberOfPeople}, #{scenicSpotId}, #{scenicSpotName}, #{appointmentDate}, #{appointmentTime}, 
             #{remark}, #{status}, #{formFileId}, #{adminRemarks}, #{checkInTime}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}
         )
+    </insert>
+    
+    <!-- 批量插入团队成员 -->
+    <insert id="insertTeamMembers">
+        INSERT INTO team_member(team_appointment_id, name, id_card, phone, age, gender, remark, create_time, update_time)
+        VALUES
+        <foreach collection="members" item="member" separator=",">
+            (#{member.teamAppointmentId}, #{member.name}, #{member.idCard}, #{member.phone}, #{member.age}, #{member.gender}, #{member.remark}, #{member.createTime}, #{member.updateTime})
+        </foreach>
     </insert>
     
     <!-- 更新团队预约 -->

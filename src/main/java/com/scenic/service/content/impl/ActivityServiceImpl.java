@@ -103,11 +103,11 @@ public class ActivityServiceImpl implements ActivityService {
         try {
             Activity activity = activityMapper.selectById(id);
             
-            if (activity != null && activity.getStatus() == 0) {
+            if (activity != null) {
                 ActivityDTO activityDTO = convertToDTO(activity);
                 return Result.success("查询成功", activityDTO);
             } else {
-                return Result.error("活动不存在或已结束");
+                return Result.error("活动不存在");
             }
         } catch (Exception e) {
             return Result.error("查询失败：" + e.getMessage());
@@ -124,7 +124,7 @@ public class ActivityServiceImpl implements ActivityService {
     public Result<String> updateActivity(Long id, ActivityDTO activityDTO) {
         try {
             Activity existingActivity = activityMapper.selectById(id);
-            if (existingActivity != null && existingActivity.getStatus() == 0) {
+            if (existingActivity != null) {
                 // 只更新非空字段，避免未传输字段被置空
                 if (activityDTO.getTitle() != null) {
                     existingActivity.setTitle(activityDTO.getTitle());
@@ -188,7 +188,7 @@ public class ActivityServiceImpl implements ActivityService {
                 
                 return Result.success("操作成功", "活动更新成功");
             }
-            return Result.error("活动不存在或已结束");
+            return Result.error("活动不存在");
         } catch (Exception e) {
             return Result.error("操作失败：" + e.getMessage());
         }
@@ -362,6 +362,41 @@ public class ActivityServiceImpl implements ActivityService {
             
             // 查询总数
             int total = activityMapper.selectCountByEnabledStatus(title, enabled);
+            
+            // 转换为DTO
+            List<ActivityDTO> activityDTOs = activities.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+            
+            // 构造返回结果
+            Map<String, Object> result = new HashMap<>();
+            result.put("total", total);
+            result.put("list", activityDTOs);
+            result.put("pageNum", pageNum);
+            result.put("pageSize", pageSize);
+            
+            return Result.success("查询成功", result);
+        } catch (Exception e) {
+            return Result.error("查询失败：" + e.getMessage());
+        }
+    }
+    
+    /**
+     * 小程序端 - 分页获取活动列表
+     * @param pageNum 页码
+     * @param pageSize 每页大小
+     * @return 分页活动列表
+     */
+    @Override
+    public Result<Map<String, Object>> getActivityPageForMiniapp(int pageNum, int pageSize) {
+        try {
+            int offset = (pageNum - 1) * pageSize;
+            
+            // 查询活动列表（只查询未结束的活动）
+            List<Activity> activities = activityMapper.selectList(offset, pageSize);
+            
+            // 查询总数
+            int total = activityMapper.selectCount();
             
             // 转换为DTO
             List<ActivityDTO> activityDTOs = activities.stream()

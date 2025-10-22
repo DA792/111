@@ -1,7 +1,6 @@
 
 server:
-
-  port: 10032
+  port: 10033
 
 
 spring:

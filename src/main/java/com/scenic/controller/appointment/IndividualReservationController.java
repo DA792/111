@@ -65,6 +65,19 @@ public class IndividualReservationController {
     }
     
     /**
+     * 小程序端 - 获取个人预约列表
+     * @param page 页码
+     * @param size 每页大小
+     * @return 个人预约列表
+     */
+    @GetMapping("/miniapp")
+    public Result<PageResult<IndividualReservation>> getIndividualReservations(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return individualReservationService.getReservationsByUserId(1L, page, size); // 这里应该从token中获取用户ID
+    }
+    
+    /**
      * 更新个人预约信息
      * @param id 预约ID
      * @param reservation 个人预约信息
