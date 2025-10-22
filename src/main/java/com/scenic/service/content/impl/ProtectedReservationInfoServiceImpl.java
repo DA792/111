@@ -11,6 +11,7 @@ import com.scenic.dto.content.ProtectedReservationInfoDTO;
 import com.scenic.dto.content.ProtectedReservationInfoEnhancedDTO;
 import com.scenic.common.dto.PageResult;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 import com.scenic.utils.FileUploadUtil;
 import com.scenic.mapper.ResourceFileMapper;
 import com.scenic.entity.ResourceFile;
+import com.scenic.service.MinioService;
 
 /**
  * 保护区介绍服务实现类
@@ -43,6 +45,9 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
     
     @Resource
     private ResourceFileMapper resourceFileMapper;
+    
+    @Autowired
+    private MinioService minioService;
     
     
     /**
@@ -737,7 +742,7 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
                 if (videoFile != null && !videoFile.isEmpty()) {
                     try {
                         // 根据文件类型选择正确的桶名称
-                        String bucketName = "content-management"; // 视频文件存储在content-management桶中
+                        String bucketName = minioService.getContentManagementVideoBucket(); // 视频文件存储在content-management桶中
                         
                         String fileKey = java.util.UUID.randomUUID().toString() + "_" + videoFile.getOriginalFilename();
                         fileUploadUtil.putObject(bucketName, fileKey, videoFile.getInputStream(), videoFile.getSize(), videoFile.getContentType());
@@ -802,7 +807,7 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
                 if (audioFile != null && !audioFile.isEmpty()) {
                     try {
                         // 根据文件类型选择正确的桶名称
-                        String bucketName = "content-management-audio"; // 音频文件存储在content-management-audio桶中
+                        String bucketName = minioService.getContentManagementAudioBucket(); // 音频文件存储在content-management-audio桶中
                         
                         String fileKey = java.util.UUID.randomUUID().toString() + "_" + audioFile.getOriginalFilename();
                         fileUploadUtil.putObject(bucketName, fileKey, audioFile.getInputStream(), audioFile.getSize(), audioFile.getContentType());
@@ -970,7 +975,7 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
                 if (photoFile != null && !photoFile.isEmpty()) {
                     try {
                         // 根据文件类型选择正确的桶名称
-                        String bucketName = "content-management-photo"; // 照片文件存储在content-management-photo桶中
+                        String bucketName = minioService.getContentManagementPhotoBucket(); // 照片文件存储在content-management-photo桶中
                         
                         String fileKey = java.util.UUID.randomUUID().toString() + "_" + photoFile.getOriginalFilename();
                         fileUploadUtil.putObject(bucketName, fileKey, photoFile.getInputStream(), photoFile.getSize(), photoFile.getContentType());
