@@ -41,6 +41,7 @@ import com.scenic.mapper.user.UserPhotoMapper;
 import com.scenic.service.user.UserService;
 import com.scenic.utils.JwtUtil;
 import com.scenic.utils.PasswordUtil;
+import com.scenic.utils.RedisSessionUtil;
 
 /**
  * 用户服务实现类
@@ -83,9 +84,15 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
     
+    @Autowired
+    private RedisSessionUtil redisSessionUtil;
+    
     // Redis中存储微信会话信息的key前缀
     private static final String WECHAT_SESSION_KEY_PREFIX = "wechat:session:";
     private static final String WECHAT_TOKEN_KEY_PREFIX = "wechat:token:";
+    
+    // Redis操作超时时间（毫秒）
+    private static final long REDIS_OPERATION_TIMEOUT = 5000;
     
     @Override
     public Result<Object> loginWithUsernameAndPassword(String username, String password) {
@@ -381,21 +388,8 @@ public class UserServiceImpl implements UserService {
      * @param openid 微信openid
      * @return 会话信息Map，不存在则返回null
      */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> getUserSessionFromRedis(String openid) {
-        try {
-            String sessionKey = WECHAT_SESSION_KEY_PREFIX + openid;
-            Object sessionObj = redisTemplate.opsForValue().get(sessionKey);
-            
-            if (sessionObj != null) {
-                return (Map<String, Object>) sessionObj;
-            }
-            
-            return null;
-        } catch (Exception e) {
-            logger.error("从Redis获取用户会话信息失败", e);
-            return null;
-        }
+        return redisSessionUtil.getUserSessionFromRedis(openid);
     }
     
     /**
@@ -405,25 +399,7 @@ public class UserServiceImpl implements UserService {
      * @param openid 微信openid
      */
     private void clearUserSessionFromRedis(Long userId, String openid) {
-        try {
-            // 获取旧的会话信息，以便清除旧的token
-            Map<String, Object> oldSessionInfo = getUserSessionFromRedis(openid);
-            if (oldSessionInfo != null && oldSessionInfo.containsKey("token")) {
-                String oldToken = (String) oldSessionInfo.get("token");
-                String oldTokenKey = WECHAT_TOKEN_KEY_PREFIX + oldToken;
-                redisTemplate.delete(oldTokenKey);
-            }
-            
-            // 清除会话信息
-            String sessionKey1 = WECHAT_SESSION_KEY_PREFIX + userId;
-            String sessionKey2 = WECHAT_SESSION_KEY_PREFIX + openid;
-            redisTemplate.delete(sessionKey1);
-            redisTemplate.delete(sessionKey2);
-            
-            logger.info("用户 {} 的微信会话信息已从Redis中清除", userId);
-        } catch (Exception e) {
-            logger.error("清除Redis中的用户会话信息失败", e);
-        }
+        redisSessionUtil.clearUserSessionFromRedis(userId, openid);
     }
     
     /**
@@ -435,34 +411,7 @@ public class UserServiceImpl implements UserService {
      * @param token JWT令牌
      */
     private void saveSessionToRedis(Long userId, String openid, String sessionKey, String token) {
-        try {
-            // 先清除旧的会话信息
-            clearUserSessionFromRedis(userId, openid);
-            
-            // 存储会话信息
-            String sessionKey1 = WECHAT_SESSION_KEY_PREFIX + userId;
-            String sessionKey2 = WECHAT_SESSION_KEY_PREFIX + openid;
-            
-            // 创建会话信息Map
-            Map<String, Object> sessionInfo = new HashMap<>();
-            sessionInfo.put("userId", userId);
-            sessionInfo.put("openid", openid);
-            sessionInfo.put("sessionKey", sessionKey);
-            sessionInfo.put("token", token);
-            sessionInfo.put("loginTime", System.currentTimeMillis());
-            
-            // 存储会话信息，有效期24小时
-            redisTemplate.opsForValue().set(sessionKey1, sessionInfo, 24, TimeUnit.HOURS);
-            redisTemplate.opsForValue().set(sessionKey2, sessionInfo, 24, TimeUnit.HOURS);
-            
-            // 存储token，有效期24小时
-            String tokenKey = WECHAT_TOKEN_KEY_PREFIX + token;
-            redisTemplate.opsForValue().set(tokenKey, userId, 24, TimeUnit.HOURS);
-            
-            logger.info("用户 {} 的微信会话信息已存储到Redis", userId);
-        } catch (Exception e) {
-            logger.error("存储微信会话信息到Redis失败", e);
-        }
+        redisSessionUtil.saveSessionToRedis(userId, openid, sessionKey, token);
     }
     
     @Override
