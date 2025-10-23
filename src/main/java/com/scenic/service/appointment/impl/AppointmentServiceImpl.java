@@ -1214,6 +1214,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      * @return 更新结果
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Result<String> updateActivityAppointment(Long activityAppointmentId, ActivityAppointmentDTO appointmentDTO) {
         try {
             // 校验联系人电话合法性（简化处理）
@@ -1247,6 +1248,34 @@ public class AppointmentServiceImpl implements AppointmentService {
             
             // 保存活动预约主表记录
             activityAppointmentMapper.updateById(existingActivityAppointment);
+            
+            // 更新团队成员信息
+            if (appointmentDTO.getMembers() != null) {
+                // 先删除原有的团队成员信息
+                teamMemberMapper.deleteByTeamAppointmentId(activityAppointmentId);
+                
+                // 批量插入新的团队成员信息
+                if (!appointmentDTO.getMembers().isEmpty()) {
+                    List<TeamMember> members = appointmentDTO.getMembers().stream()
+                        .map(dto -> {
+                            TeamMember member = new TeamMember();
+                            member.setTeamAppointmentId(activityAppointmentId);
+                            member.setName(dto.getName());
+                            member.setIdCard(dto.getIdCard());
+                            member.setPhone(dto.getPhone());
+                            member.setAge(dto.getAge());
+                            member.setGender(dto.getGender());
+                            member.setRemark(dto.getRemark());
+                            member.setCreateTime(LocalDateTime.now());
+                            member.setUpdateTime(LocalDateTime.now());
+                            return member;
+                        })
+                        .collect(Collectors.toList());
+                    
+                    // 批量插入团队成员信息
+                    teamMemberMapper.insertBatch(members);
+                }
+            }
             
             return Result.success("更新成功", "ACT" + existingActivityAppointment.getId());
         } catch (Exception e) {
