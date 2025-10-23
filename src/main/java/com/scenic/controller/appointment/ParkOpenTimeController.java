@@ -89,4 +89,19 @@ public class ParkOpenTimeController {
             return Result.error("日期格式错误，应为 yyyy-MM-dd 格式");
         }
     }
+    
+    /**
+     * 管理后台端 - 修正数据库中所有记录的day_type字段
+     * @return 修正结果
+     */
+    @PostMapping(ADMIN_PREFIX + "/park-open-time/fix-day-type")
+    public Result<String> fixDayTypeData() {
+        // 这里需要类型转换，因为parkOpenTimeService是接口类型
+        if (parkOpenTimeService instanceof com.scenic.service.appointment.impl.ParkOpenTimeServiceImpl) {
+            com.scenic.service.appointment.impl.ParkOpenTimeServiceImpl impl = 
+                (com.scenic.service.appointment.impl.ParkOpenTimeServiceImpl) parkOpenTimeService;
+            return impl.fixDayTypeData();
+        }
+        return Result.error("服务实例类型不正确");
+    }
 }
