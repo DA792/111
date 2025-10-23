@@ -1,6 +1,9 @@
 package com.scenic.dto.appointment;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
+import com.scenic.entity.appointment.TeamMember;
 
 /**
  * 活动预约DTO类
@@ -21,6 +24,8 @@ public class ActivityAppointmentDTO {
     private String remark;            // 对应 remarks
     private Integer status;           // 状态
     private Long createBy;            // 创建者ID
+    private String registrationNo;    // 预约编号
+    private List<TeamMember> members; // 团队成员列表
 
     // 构造函数
     public ActivityAppointmentDTO() {}
@@ -130,6 +135,30 @@ public class ActivityAppointmentDTO {
         this.status = status;
     }
 
+    public Long getCreateBy() {
+        return createBy;
+    }
+
+    public void setCreateBy(Long createBy) {
+        this.createBy = createBy;
+    }
+
+    public List<TeamMember> getMembers() {
+        return members;
+    }
+
+    public void setMembers(List<TeamMember> members) {
+        this.members = members;
+    }
+
+    public String getRegistrationNo() {
+        return registrationNo;
+    }
+
+    public void setRegistrationNo(String registrationNo) {
+        this.registrationNo = registrationNo;
+    }
+
     @Override
     public String toString() {
         return "ActivityAppointmentDTO{" +
@@ -147,14 +176,8 @@ public class ActivityAppointmentDTO {
                 ", remark='" + remark + '\'' +
                 ", status=" + status +
                 ", createBy=" + createBy +
+                ", registrationNo='" + registrationNo + '\'' +
+                ", members=" + members +
                 '}';
-    }
-
-    public Long getCreateBy() {
-        return createBy;
-    }
-
-    public void setCreateBy(Long createBy) {
-        this.createBy = createBy;
     }
 }

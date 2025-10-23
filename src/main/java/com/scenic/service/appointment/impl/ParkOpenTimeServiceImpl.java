@@ -181,4 +181,37 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
         // 周一到周五为工作日(1)，周六周日为周末(2)
         return (dayOfWeek >= 1 && dayOfWeek <= 5) ? 1 : 2;
     }
+    
+    /**
+     * 修正数据库中所有记录的day_type字段
+     * @return 修正结果
+     */
+    @Override
+    public Result<String> fixDayTypeData() {
+        try {
+            // 查询所有记录
+            List<ParkOpenTime> allRecords = parkOpenTimeMapper.selectAll();
+            
+            int updateCount = 0;
+            for (ParkOpenTime record : allRecords) {
+                LocalDate configDate = record.getConfigDate();
+                if (configDate != null) {
+                    // 根据日期重新计算day_type
+                    int correctDayType = getDayType(configDate);
+                    
+                    // 如果当前day_type不正确，则更新
+                    if (record.getDayType() == null || record.getDayType() != correctDayType) {
+                        record.setDayType(correctDayType);
+                        record.setUpdateTime(java.time.LocalDateTime.now());
+                        parkOpenTimeMapper.updateById(record);
+                        updateCount++;
+                    }
+                }
+            }
+            
+            return Result.success("成功修正" + updateCount + "条记录的day_type字段");
+        } catch (Exception e) {
+            return Result.error("修正day_type字段失败：" + e.getMessage());
+        }
+    }
 }
