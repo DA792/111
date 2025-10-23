@@ -24,6 +24,7 @@ public class ActivityAppointmentDTO {
     private String remark;            // 对应 remarks
     private Integer status;           // 状态
     private Long createBy;            // 创建者ID
+    private String registrationNo;    // 预约编号
     private List<TeamMember> members; // 团队成员列表
 
     // 构造函数
@@ -150,6 +151,14 @@ public class ActivityAppointmentDTO {
         this.members = members;
     }
 
+    public String getRegistrationNo() {
+        return registrationNo;
+    }
+
+    public void setRegistrationNo(String registrationNo) {
+        this.registrationNo = registrationNo;
+    }
+
     @Override
     public String toString() {
         return "ActivityAppointmentDTO{" +
@@ -167,6 +176,7 @@ public class ActivityAppointmentDTO {
                 ", remark='" + remark + '\'' +
                 ", status=" + status +
                 ", createBy=" + createBy +
+                ", registrationNo='" + registrationNo + '\'' +
                 ", members=" + members +
                 '}';
     }

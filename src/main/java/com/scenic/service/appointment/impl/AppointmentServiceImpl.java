@@ -1089,6 +1089,8 @@ public class AppointmentServiceImpl implements AppointmentService {
             activityAppointmentDTO.setStatus(activityAppointment.getStatus());
             activityAppointmentDTO.setCreateBy(activityAppointment.getCreateBy());
             activityAppointmentDTO.setMembers(activityAppointment.getMembers());
+            // 添加预约编号字段
+            activityAppointmentDTO.setRegistrationNo(activityAppointment.getRegistrationNo());
             
             return Result.success("查询成功", activityAppointmentDTO);
         } catch (Exception e) {
