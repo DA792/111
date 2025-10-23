@@ -87,6 +87,9 @@
             <if test="activityName != null and activityName != ''">
                 activity_title LIKE CONCAT('%', #{activityName}, '%')
             </if>
+            <if test="teamName != null and teamName != ''">
+                AND team_name LIKE CONCAT('%', #{teamName}, '%')
+            </if>
             <if test="contactPerson != null and contactPerson != ''">
                 AND team_leader LIKE CONCAT('%', #{contactPerson}, '%')
             </if>
@@ -114,6 +117,9 @@
         <where>
             <if test="activityName != null and activityName != ''">
                 activity_title LIKE CONCAT('%', #{activityName}, '%')
+            </if>
+            <if test="teamName != null and teamName != ''">
+                AND team_name LIKE CONCAT('%', #{teamName}, '%')
             </if>
             <if test="contactPerson != null and contactPerson != ''">
                 AND team_leader LIKE CONCAT('%', #{contactPerson}, '%')

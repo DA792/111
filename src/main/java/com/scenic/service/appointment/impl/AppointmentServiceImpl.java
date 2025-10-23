@@ -1348,6 +1348,7 @@ public class AppointmentServiceImpl implements AppointmentService {
      * @param page 页码
      * @param size 每页大小
      * @param activityName 活动名称（可选）
+     * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
      * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
@@ -1357,13 +1358,13 @@ public class AppointmentServiceImpl implements AppointmentService {
      */
     @Override
     public Result<PageResult<ActivityAppointment>> getAdminActivityAppointments(
-            int page, int size, String activityName, String contactPerson, String contactPhone, String status, String startTime, String endTime) {
+            int page, int size, String activityName, String teamName, String contactPerson, String contactPhone, String status, String startTime, String endTime) {
         try {
             // 分页获取活动预约记录
-            List<ActivityAppointment> filteredActivityAppointments = activityAppointmentMapper.selectForAdmin(activityName, contactPerson, contactPhone, status, startTime, endTime, (page - 1) * size, size);
+            List<ActivityAppointment> filteredActivityAppointments = activityAppointmentMapper.selectForAdmin(activityName, teamName, contactPerson, contactPhone, status, startTime, endTime, (page - 1) * size, size);
             
             // 获取总数
-            int total = activityAppointmentMapper.selectCountForAdmin(activityName, contactPerson, contactPhone, status, startTime, endTime);
+            int total = activityAppointmentMapper.selectCountForAdmin(activityName, teamName, contactPerson, contactPhone, status, startTime, endTime);
             
             PageResult<ActivityAppointment> pageResult = PageResult.of(total, size, page, filteredActivityAppointments);
             return Result.success("查询成功", pageResult);
