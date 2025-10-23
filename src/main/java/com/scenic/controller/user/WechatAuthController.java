@@ -33,21 +33,31 @@ public class WechatAuthController {
     @PostMapping("/wechat/login")
     public Result<WechatLoginResponseDTO> login(@RequestBody WechatLoginRequestDTO loginRequest) {
         try {
-            logger.info("微信小程序登录请求: {}", loginRequest.getCode());
+            logger.info("微信小程序登录请求开始，code: {}", loginRequest.getCode());
             
             if (loginRequest.getCode() == null || loginRequest.getCode().isEmpty()) {
+                logger.warn("登录失败: code不能为空");
                 return Result.error("登录失败: code不能为空");
             }
             
+            long startTime = System.currentTimeMillis();
             WechatLoginResponseDTO loginResponse = userService.loginWithWeChat(loginRequest);
+            long endTime = System.currentTimeMillis();
+            
+            logger.info("微信小程序登录处理完成，耗时: {}ms", (endTime - startTime));
             
             if (loginResponse == null) {
+                logger.error("登录失败: 获取微信用户信息失败");
                 return Result.error("登录失败: 获取微信用户信息失败");
             }
             
             if (loginResponse.getToken() == null) {
+                logger.error("登录失败: 生成令牌失败");
                 return Result.error("登录失败: 生成令牌失败");
             }
+            
+            logger.info("微信小程序登录成功，用户ID: {}, 是否新用户: {}", 
+                       loginResponse.getUserId(), loginResponse.getIsNewUser());
             
             return Result.success(loginResponse);
         } catch (Exception e) {
