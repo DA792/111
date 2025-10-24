@@ -4,73 +4,91 @@
 
     <!-- 获取入园预约数据（个人 + 团队预约聚合） -->
     <select id="getEnterReservationData" resultType="java.util.Map">
-        <!-- 当预约功能都关闭时，返回空结果集 -->
+        <!-- 当预约功能都关闭时，返回当月所有日期的默认数据 -->
         <if test="individualReserveStatus != 1 and teamReserveStatus != 1">
             SELECT 
-                DATE(NOW()) AS reserve_date,
-                '预约功能已关闭' AS reserve_status,
+                dates.date AS reserve_date,
+                '不开放' AS reserve_status,
                 0 AS booked_count,
-                0 AS total_limit,
-                FALSE AS is_open
-            WHERE 1 = 0  -- 返回空结果集
-        </if>
-        
-        <!-- 步骤1：聚合个人预约数据 -->
-        <if test="individualReserveStatus == 1">
-            SELECT
-                DATE(r.visit_date) AS reserve_date,  -- 预约日期
-                CASE 
-                    WHEN p.is_closed = 1 THEN '不开放'  -- 优先判断日期是否闭园
-                    WHEN SUM(r.total_count) >= #{dailyLimit} THEN '已满'  -- 对比单日上限
-                    ELSE CONCAT('已预约', SUM(r.total_count), '/', #{dailyLimit}) 
-                END AS reserve_status,
-                SUM(r.total_count) AS booked_count,
                 #{dailyLimit} AS total_limit,
-                (p.is_closed = 0 AND p.day_type = 0) AS is_open  -- 只有在开放且为工作日时才开放预约
-            FROM
-                individual_reservation r
-            LEFT JOIN park_open_time_config p ON DATE(r.visit_date) = p.config_date
-            WHERE
-                r.deleted = 0  -- 排除逻辑删除记录
-                AND r.status NOT IN (1, 11)  -- 排除已取消、已过期记录
-                -- 筛选指定年月的数据
-                AND YEAR(r.visit_date) = #{year}
-                AND MONTH(r.visit_date) = #{month}
-            GROUP BY
-                DATE(r.visit_date), p.is_closed, p.day_type
-        </if>
-            
-        <if test="individualReserveStatus == 1 and teamReserveStatus == 1">
-            UNION ALL
+                FALSE AS is_open
+            FROM (
+                SELECT DATE_ADD(#{yearMonth}, INTERVAL (a.a + (10 * b.a)) DAY) AS date
+                FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 
+                      UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 
+                      UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+                CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 
+                            UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 
+                            UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+                WHERE DATE_ADD(#{yearMonth}, INTERVAL (a.a + (10 * b.a)) DAY) >= #{yearMonth}
+                AND DATE_ADD(#{yearMonth}, INTERVAL (a.a + (10 * b.a)) DAY) &lt; DATE_ADD(#{yearMonth}, INTERVAL 1 MONTH)
+            ) AS dates
+            LEFT JOIN park_open_time_config p ON dates.date = p.config_date
+            ORDER BY dates.date
         </if>
         
-        <!-- 步骤2：聚合团队预约数据（与个人预约逻辑一致） -->
-        <if test="teamReserveStatus == 1">
-            SELECT
-                DATE(t.appointment_date) AS reserve_date,
+        <!-- 当预约功能开启时，返回当月所有日期的数据（包括有预约和无预约的日期） -->
+        <if test="individualReserveStatus == 1 or teamReserveStatus == 1">
+            SELECT 
+                dates.date AS reserve_date,
                 CASE 
                     WHEN p.is_closed = 1 THEN '不开放'
-                    WHEN SUM(t.team_size) >= #{dailyLimit} THEN '已满'
-                    ELSE CONCAT('已预约', SUM(t.team_size), '/', #{dailyLimit})
+                    WHEN COALESCE(booking.booked_count, 0) >= #{dailyLimit} THEN '已满'
+                    ELSE CONCAT('已预约', COALESCE(booking.booked_count, 0), '/', #{dailyLimit})
                 END AS reserve_status,
-                SUM(t.team_size) AS booked_count,
+                COALESCE(booking.booked_count, 0) AS booked_count,
                 #{dailyLimit} AS total_limit,
-                (p.is_closed = 0 AND p.day_type = 0) AS is_open  -- 只有在开放且为工作日时才开放预约
-            FROM
-                team_appointment t
-            LEFT JOIN park_open_time_config p ON DATE(t.appointment_date) = p.config_date
-            WHERE
-                t.status != 0  -- 排除已取消记录
-                -- 筛选指定年月的数据
-                AND YEAR(t.appointment_date) = #{year}
-                AND MONTH(t.appointment_date) = #{month}
-            GROUP BY
-                DATE(t.appointment_date), p.is_closed, p.day_type
-        </if>
-            
-        <!-- 步骤3：合并后按日期排序，确保日历展示顺序正确 -->
-        <if test="individualReserveStatus == 1 or teamReserveStatus == 1">
-            ORDER BY reserve_date
+                (p.is_closed = 0 AND p.day_type = 0) AS is_open
+            FROM (
+                SELECT DATE_ADD(#{yearMonth}, INTERVAL (a.a + (10 * b.a)) DAY) AS date
+                FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 
+                      UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 
+                      UNION ALL SELECT 8 UNION ALL SELECT 9) AS a
+                CROSS JOIN (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 
+                            UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 
+                            UNION ALL SELECT 8 UNION ALL SELECT 9) AS b
+                WHERE DATE_ADD(#{yearMonth}, INTERVAL (a.a + (10 * b.a)) DAY) >= #{yearMonth}
+                AND DATE_ADD(#{yearMonth}, INTERVAL (a.a + (10 * b.a)) DAY) &lt; DATE_ADD(#{yearMonth}, INTERVAL 1 MONTH)
+            ) AS dates
+            LEFT JOIN park_open_time_config p ON dates.date = p.config_date
+            LEFT JOIN (
+                <!-- 聚合个人预约和团队预约数据 -->
+                <if test="individualReserveStatus == 1">
+                    SELECT
+                        DATE(r.visit_date) AS reserve_date,
+                        SUM(r.total_count) AS booked_count
+                    FROM
+                        individual_reservation r
+                    WHERE
+                        r.deleted = 0  -- 排除逻辑删除记录
+                        AND r.status NOT IN (1, 11)  -- 排除已取消、已过期记录
+                        -- 筛选指定年月的数据
+                        AND YEAR(r.visit_date) = #{year}
+                        AND MONTH(r.visit_date) = #{month}
+                    GROUP BY
+                        DATE(r.visit_date)
+                </if>
+                
+                <if test="individualReserveStatus == 1 and teamReserveStatus == 1">
+                    UNION ALL
+                </if>
+                
+                <if test="teamReserveStatus == 1">
+                    SELECT
+                        DATE(t.appointment_date) AS reserve_date,
+                        SUM(t.team_size) AS booked_count
+                    FROM
+                        team_appointment t
+                    WHERE
+                        t.status != 0  -- 排除已取消记录
+                        -- 筛选指定年月的数据
+                        AND YEAR(t.appointment_date) = #{year}
+                        AND MONTH(t.appointment_date) = #{month}
+                    GROUP BY
+                        DATE(t.appointment_date)
+                </if>
+            ) AS booking ON dates.date = booking.reserve_date
+            ORDER BY dates.date
         </if>
     </select>
     
