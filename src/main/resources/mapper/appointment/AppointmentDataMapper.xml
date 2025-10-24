@@ -38,7 +38,7 @@
                 END AS reserve_status,
                 COALESCE(booking.booked_count, 0) AS booked_count,
                 #{dailyLimit} AS total_limit,
-                (p.is_closed = 0 AND p.day_type = 0) AS is_open
+                (p.is_closed = 0) AS is_open
             FROM (
                 SELECT DATE_ADD(#{yearMonth}, INTERVAL (a.a + (10 * b.a)) DAY) AS date
                 FROM (SELECT 0 AS a UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 
