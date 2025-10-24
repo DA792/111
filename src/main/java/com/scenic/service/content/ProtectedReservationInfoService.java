@@ -15,20 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
  */
 public interface ProtectedReservationInfoService extends IService<ProtectedReservationInfo> {
     
-    /**
-     * 更新保护区介绍
-     * @param dto 保护区介绍DTO
-     * @return 是否更新成功
-     */
-    boolean updateProtectedReservationInfo(ProtectedReservationInfoDTO dto);
-    
-    /**
-     * 更新保护区介绍（支持视频文件上传）
-     * @param dto 保护区介绍DTO
-     * @param videoFiles 视频文件数组
-     * @return 是否更新成功
-     */
-    boolean updateProtectedReservationInfo(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles);
     
     /**
      * 根据ID删除保护区介绍

@@ -50,213 +50,6 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
     private MinioService minioService;
     
     
-    /**
-     * 更新保护区介绍
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateProtectedReservationInfo(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles) {
-        try {
-            // 获取当前登录用户ID
-            Long currentUserId = dto.getUpdateBy();
-            System.out.println("当前登录用户ID: " + currentUserId);
-            
-            // 确保用户ID不为null，如果为null则使用默认值1L
-            if (currentUserId == null) {
-                currentUserId = 1L;
-                System.out.println("用户ID为null，使用默认值: " + currentUserId);
-            }
-            
-            // 获取原有的保护区介绍信息
-            System.out.println("尝试获取ID为 " + dto.getId() + " 的保护区介绍");
-            ProtectedReservationInfo existingEntity = this.getById(dto.getId());
-            System.out.println("获取到的实体: " + existingEntity);
-            if (existingEntity == null) {
-                throw new RuntimeException("未找到ID为" + dto.getId() + "的保护区介绍");
-            }
-            
-            // 只有当有新文件上传时才删除原有文件
-            if (videoFiles != null && videoFiles.length > 0) {
-                // 删除原有的所有文件
-                System.out.println("检测到新视频文件上传，删除原有文件");
-                deleteProtectedReservationInfoFiles(dto.getId());
-                
-                // 处理上传的视频文件
-                System.out.println("开始处理上传的视频文件，数量: " + videoFiles.length);
-                List<Long> uploadedVideoFileIds = processVideoFiles(videoFiles, currentUserId);
-                System.out.println("处理完成，获取到上传视频文件ID: " + uploadedVideoFileIds);
-                
-                // 设置视频文件ID到DTO
-                dto.setVideoFileIds(uploadedVideoFileIds);
-                System.out.println("更新后的视频文件ID列表: " + dto.getVideoFileIds());
-            } else {
-                // 如果没有上传新视频，保持原有视频文件不变
-                dto.setVideoFileIds(existingEntity.getVideoFileIds());
-                System.out.println("没有上传新视频，保持原有视频文件不变: " + existingEntity.getVideoFileIds());
-            }
-            
-            // 保持其他类型文件不变
-            dto.setContentImageIds(existingEntity.getContentImageIds());
-            dto.setCarouselFileIds(existingEntity.getCarouselFileIds());
-            dto.setGalleryFileIds(existingEntity.getGalleryFileIds());
-            dto.setAudioFileIds(existingEntity.getAudioFileIds());
-            
-            // 更新保护区介绍信息
-            ProtectedReservationInfo entity = new ProtectedReservationInfo();
-            BeanUtils.copyProperties(dto, entity);
-            entity.setUpdateTime(LocalDateTime.now());
-            
-            // 确保所有文件ID被正确设置
-            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            
-            if (dto.getVideoFileIds() != null) {
-                System.out.println("设置视频文件ID到实体: " + dto.getVideoFileIds());
-                try {
-                    String videoFileIdsJson = objectMapper.writeValueAsString(dto.getVideoFileIds());
-                    System.out.println("转换后的JSON字符串: " + videoFileIdsJson);
-                    entity.setVideoFileIds(dto.getVideoFileIds());
-                } catch (Exception e) {
-                    System.err.println("转换视频文件ID为JSON字符串时发生异常: " + e.getMessage());
-                }
-            }
-            
-            if (dto.getContentImageIds() != null) {
-                entity.setContentImageIds(dto.getContentImageIds());
-            }
-            
-            if (dto.getCarouselFileIds() != null) {
-                entity.setCarouselFileIds(dto.getCarouselFileIds());
-            }
-            
-            if (dto.getGalleryFileIds() != null) {
-                entity.setGalleryFileIds(dto.getGalleryFileIds());
-            }
-            
-            if (dto.getAudioFileIds() != null) {
-                entity.setAudioFileIds(dto.getAudioFileIds());
-            }
-            
-            boolean updateResult = this.updateById(entity);
-            System.out.println("更新保护区介绍结果: " + updateResult + ", ID: " + entity.getId());
-            
-            return updateResult;
-        } catch (Exception e) {
-            System.err.println("更新保护区介绍时发生异常: " + e.getMessage());
-            e.printStackTrace();
-            throw new RuntimeException("更新保护区介绍失败: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * 更新保护区介绍（兼容旧版本）
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateProtectedReservationInfo(ProtectedReservationInfoDTO dto) {
-        return updateProtectedReservationInfo(dto, null);
-    }
-    
-    /**
-     * 删除保护区介绍关联的所有文件，但不删除保护区介绍记录本身
-     * @param id 保护区介绍ID
-     * @return 是否删除成功
-     */
-    public boolean deleteProtectedReservationInfoFiles(Long id) {
-        System.out.println("=== 开始删除保护区介绍关联的文件，ID: " + id + " ===");
-        
-        try {
-            // 查询原始数据，获取JSON字符串形式的文件ID
-            Map<String, Object> rawData = protectedReservationInfoMapper.selectRawById(id);
-            if (rawData != null) {
-                System.out.println("获取到原始数据: " + rawData);
-                
-                // 处理视频文件
-                Object videoFileIdsObj = rawData.get("video_file_ids");
-                if (videoFileIdsObj != null && !videoFileIdsObj.toString().isEmpty()) {
-                    System.out.println("原始视频文件ID JSON: " + videoFileIdsObj);
-                    try {
-                        // 直接使用字符串形式的ID列表
-                        List<String> videoFileIdStrings = extractIdsFromJson(videoFileIdsObj.toString());
-                        System.out.println("提取的视频文件ID: " + videoFileIdStrings);
-                        if (!videoFileIdStrings.isEmpty()) {
-                            deleteFilesByStringIds(videoFileIdStrings, "视频");
-                        }
-                    } catch (Exception e) {
-                        System.err.println("处理视频文件ID时发生异常: " + e.getMessage());
-                    }
-                }
-                
-                // 处理画廊图片
-                Object galleryFileIdsObj = rawData.get("gallery_file_ids");
-                if (galleryFileIdsObj != null && !galleryFileIdsObj.toString().isEmpty()) {
-                    System.out.println("原始画廊图片ID JSON: " + galleryFileIdsObj);
-                    try {
-                        List<String> galleryFileIdStrings = extractIdsFromJson(galleryFileIdsObj.toString());
-                        System.out.println("提取的画廊图片ID: " + galleryFileIdStrings);
-                        if (!galleryFileIdStrings.isEmpty()) {
-                            deleteFilesByStringIds(galleryFileIdStrings, "画廊图片");
-                        }
-                    } catch (Exception e) {
-                        System.err.println("处理画廊图片ID时发生异常: " + e.getMessage());
-                    }
-                }
-                
-                // 处理音频文件
-                Object audioFileIdsObj = rawData.get("audio_file_ids");
-                if (audioFileIdsObj != null && !audioFileIdsObj.toString().isEmpty()) {
-                    System.out.println("原始音频文件ID JSON: " + audioFileIdsObj);
-                    try {
-                        List<String> audioFileIdStrings = extractIdsFromJson(audioFileIdsObj.toString());
-                        System.out.println("提取的音频文件ID: " + audioFileIdStrings);
-                        if (!audioFileIdStrings.isEmpty()) {
-                            deleteFilesByStringIds(audioFileIdStrings, "音频");
-                        }
-                    } catch (Exception e) {
-                        System.err.println("处理音频文件ID时发生异常: " + e.getMessage());
-                    }
-                }
-                
-                // 处理轮播图
-                Object carouselFileIdsObj = rawData.get("carousel_file_ids");
-                if (carouselFileIdsObj != null && !carouselFileIdsObj.toString().isEmpty()) {
-                    System.out.println("原始轮播图ID JSON: " + carouselFileIdsObj);
-                    try {
-                        List<String> carouselFileIdStrings = extractIdsFromJson(carouselFileIdsObj.toString());
-                        System.out.println("提取的轮播图ID: " + carouselFileIdStrings);
-                        if (!carouselFileIdStrings.isEmpty()) {
-                            deleteFilesByStringIds(carouselFileIdStrings, "轮播图");
-                        }
-                    } catch (Exception e) {
-                        System.err.println("处理轮播图ID时发生异常: " + e.getMessage());
-                    }
-                }
-                
-                // 处理内容图片
-                Object contentImageIdsObj = rawData.get("content_image_ids");
-                if (contentImageIdsObj != null && !contentImageIdsObj.toString().isEmpty()) {
-                    System.out.println("原始内容图片ID JSON: " + contentImageIdsObj);
-                    try {
-                        List<String> contentImageIdStrings = extractIdsFromJson(contentImageIdsObj.toString());
-                        System.out.println("提取的内容图片ID: " + contentImageIdStrings);
-                        if (!contentImageIdStrings.isEmpty()) {
-                            deleteFilesByStringIds(contentImageIdStrings, "内容图片");
-                        }
-                    } catch (Exception e) {
-                        System.err.println("处理内容图片ID时发生异常: " + e.getMessage());
-                    }
-                }
-                
-                return true;
-            } else {
-                System.err.println("未找到ID为" + id + "的保护区介绍原始数据");
-                return false;
-            }
-        } catch (Exception e) {
-            System.err.println("删除保护区介绍关联文件时发生异常: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
     
     /**
      * 删除保护区介绍（物理删除）
@@ -282,10 +75,7 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
         System.out.println("轮播图ID: " + entity.getCarouselFileIds());
         System.out.println("内容图片ID: " + entity.getContentImageIds());
         
-        // 删除关联的所有文件
-        deleteProtectedReservationInfoFiles(id);
-        
-        // 物理删除记录
+        // 物理删除记录（不删除关联的文件）
         boolean result = this.removeById(id);
         System.out.println("删除保护区介绍记录结果: " + result);
         
@@ -379,81 +169,12 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
             // 判断是新增还是更新
             boolean isUpdate = dto.getId() != null;
             
-            // 如果是更新操作，删除原有的所有文件
             if (isUpdate) {
-                // 检查是否有任何新文件上传
-                boolean hasNewFiles = (videoFiles != null && videoFiles.length > 0) ||
-                                     (photoFiles != null && photoFiles.length > 0) ||
-                                     (carouselFiles != null && carouselFiles.length > 0) ||
-                                     (galleryFiles != null && galleryFiles.length > 0) ||
-                                     (audioFiles != null && audioFiles.length > 0);
-                
-                // 只有当有新文件上传时才删除原有文件
-                if (hasNewFiles) {
-                    System.out.println("检测到新文件上传，删除原有文件");
-                    deleteProtectedReservationInfoFiles(dto.getId());
-                } else {
-                    System.out.println("没有检测到新文件上传，保持原有文件不变");
-                    // 获取原有的保护区介绍信息
-                    ProtectedReservationInfo existingEntity = this.getById(dto.getId());
-                    if (existingEntity == null) {
-                        throw new RuntimeException("未找到ID为" + dto.getId() + "的保护区介绍");
-                    }
-                    
-                    // 保持原有文件不变
-                    dto.setVideoFileIds(existingEntity.getVideoFileIds());
-                    dto.setContentImageIds(existingEntity.getContentImageIds());
-                    dto.setCarouselFileIds(existingEntity.getCarouselFileIds());
-                    dto.setGalleryFileIds(existingEntity.getGalleryFileIds());
-                    dto.setAudioFileIds(existingEntity.getAudioFileIds());
-                }
-            }
-            
-            // 处理文章内容图片
-            if (photoFiles != null && photoFiles.length > 0) {
-                System.out.println("开始处理文章内容图片，数量: " + photoFiles.length);
-                List<Long> photoFileIds = processPhotoFiles(photoFiles, currentUserId);
-                System.out.println("处理完成，获取到文章内容图片ID: " + photoFileIds);
-                dto.setContentImageIds(photoFileIds);
-            }
-            
-            // 处理轮播图
-            if (carouselFiles != null && carouselFiles.length > 0) {
-                System.out.println("开始处理轮播图，数量: " + carouselFiles.length);
-                List<Long> carouselFileIds = processPhotoFiles(carouselFiles, currentUserId);
-                System.out.println("处理完成，获取到轮播图ID: " + carouselFileIds);
-                dto.setCarouselFileIds(carouselFileIds);
-            }
-            
-            // 处理画廊图片
-            if (galleryFiles != null && galleryFiles.length > 0) {
-                System.out.println("开始处理画廊图片，数量: " + galleryFiles.length);
-                List<Long> galleryFileIds = processPhotoFiles(galleryFiles, currentUserId);
-                System.out.println("处理完成，获取到画廊图片ID: " + galleryFileIds);
-                dto.setGalleryFileIds(galleryFileIds);
-            }
-            
-            // 处理音频文件
-            if (audioFiles != null && audioFiles.length > 0) {
-                System.out.println("开始处理音频文件，数量: " + audioFiles.length);
-                List<Long> audioFileIds = processAudioFiles(audioFiles, currentUserId);
-                System.out.println("处理完成，获取到音频文件ID: " + audioFileIds);
-                dto.setAudioFileIds(audioFileIds);
-            }
-            
-            // 处理视频文件上传
-            if (videoFiles != null && videoFiles.length > 0) {
-                System.out.println("开始处理视频文件，数量: " + videoFiles.length);
-                List<Long> videoFileIds = processVideoFiles(videoFiles, currentUserId);
-                System.out.println("处理完成，获取到视频文件ID: " + videoFileIds);
-
-                // 设置视频文件ID到DTO
-                dto.setVideoFileIds(videoFileIds);
-                System.out.println("更新后的视频文件ID列表: " + dto.getVideoFileIds());
-            } else if (!isUpdate) {
-                // 如果是新增操作且没有上传视频，则设置为空列表
-                dto.setVideoFileIds(new java.util.ArrayList<>());
-                System.out.println("没有上传视频，设置为空列表");
+                // 更新操作 - 处理文件的精确删除和新增
+                handleUpdateFiles(dto, videoFiles, photoFiles, carouselFiles, galleryFiles, audioFiles, currentUserId);
+            } else {
+                // 新增操作 - 处理文件上传
+                handleCreateFiles(dto, videoFiles, photoFiles, carouselFiles, galleryFiles, audioFiles, currentUserId);
             }
             
             // 创建新的实体对象，并从DTO复制属性
@@ -1024,6 +745,304 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
         }
         
         return photoFileIds;
+    }
+    
+    /**
+     * 处理更新操作的文件 - 根据内容类型处理不同逻辑
+     */
+    private void handleUpdateFiles(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles, MultipartFile[] photoFiles, MultipartFile[] carouselFiles, MultipartFile[] galleryFiles, MultipartFile[] audioFiles, Long currentUserId) throws Exception {
+        System.out.println("=== 开始处理更新操作的文件 ===");
+        System.out.println("接收到的DTO: " + dto);
+        System.out.println("内容类型: " + dto.getContentType());
+        System.out.println("DTO中的删除文件映射: " + dto.getDeletedFileIds());
+        
+        // 根据内容类型处理不同的文件更新逻辑
+        if (dto.getContentType() != null && dto.getContentType() == 2) {
+            // 视频类型：直接删除原有文件，新增上传的文件
+            System.out.println("处理视频类型内容更新");
+            handleVideoUpdateFiles(dto, videoFiles, currentUserId);
+        } else {
+            // 文章类型：保持原有的精确删除和新增逻辑
+            System.out.println("处理文章类型内容更新");
+            handleArticleUpdateFiles(dto, photoFiles, carouselFiles, galleryFiles, audioFiles, currentUserId);
+        }
+        
+        System.out.println("=== 完成处理更新操作的文件 ===");
+    }
+    
+    /**
+     * 处理视频类型更新操作的文件
+     */
+    private void handleVideoUpdateFiles(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles, Long currentUserId) throws Exception {
+        System.out.println("=== 开始处理视频类型更新操作的文件 ===");
+        
+        // 删除原有的视频文件
+        if (dto.getVideoFileIds() != null && !dto.getVideoFileIds().isEmpty()) {
+            System.out.println("删除原有的视频文件: " + dto.getVideoFileIds());
+            deleteSpecificFilesByIds(dto.getVideoFileIds(), "视频");
+        }
+        
+        // 处理新上传的视频文件
+        List<Long> newVideoFileIds = new java.util.ArrayList<>();
+        if (videoFiles != null && videoFiles.length > 0) {
+            System.out.println("处理新上传的视频文件，数量: " + videoFiles.length);
+            newVideoFileIds = processVideoFiles(videoFiles, currentUserId);
+            System.out.println("新上传的视频文件ID: " + newVideoFileIds);
+        }
+        
+        // 设置视频文件ID
+        dto.setVideoFileIds(newVideoFileIds);
+        System.out.println("最终的视频文件ID: " + newVideoFileIds);
+        
+        System.out.println("=== 完成处理视频类型更新操作的文件 ===");
+    }
+    
+    /**
+     * 处理文章类型更新操作的文件 - 精确删除和新增
+     */
+    private void handleArticleUpdateFiles(ProtectedReservationInfoDTO dto, MultipartFile[] photoFiles, MultipartFile[] carouselFiles, MultipartFile[] galleryFiles, MultipartFile[] audioFiles, Long currentUserId) throws Exception {
+        System.out.println("=== 开始处理文章类型更新操作的文件 ===");
+        System.out.println("DTO中的删除文件映射: " + dto.getDeletedFileIds());
+        
+        // 处理删除指定的文件
+        if (dto.getDeletedFileIds() != null && !dto.getDeletedFileIds().isEmpty()) {
+            System.out.println("处理删除指定的文件: " + dto.getDeletedFileIds());
+            
+            // 删除轮播图文件
+            List<Long> deletedCarouselIds = dto.getDeletedFileIds().get("carousel");
+            if (deletedCarouselIds != null && !deletedCarouselIds.isEmpty()) {
+                System.out.println("删除轮播图文件: " + deletedCarouselIds);
+                deleteSpecificFilesByIds(deletedCarouselIds, "轮播图");
+            }
+            
+            // 删除画廊文件
+            List<Long> deletedGalleryIds = dto.getDeletedFileIds().get("gallery");
+            if (deletedGalleryIds != null && !deletedGalleryIds.isEmpty()) {
+                System.out.println("删除画廊文件: " + deletedGalleryIds);
+                deleteSpecificFilesByIds(deletedGalleryIds, "画廊图片");
+            }
+            
+            // 删除音频文件
+            List<Long> deletedAudioIds = dto.getDeletedFileIds().get("audio");
+            if (deletedAudioIds != null && !deletedAudioIds.isEmpty()) {
+                System.out.println("删除音频文件: " + deletedAudioIds);
+                deleteSpecificFilesByIds(deletedAudioIds, "音频");
+            }
+            
+            // 删除内容图片文件
+            List<Long> deletedContentImageIds = dto.getDeletedFileIds().get("contentImage");
+            if (deletedContentImageIds != null && !deletedContentImageIds.isEmpty()) {
+                System.out.println("删除内容图片文件: " + deletedContentImageIds);
+                deleteSpecificFilesByIds(deletedContentImageIds, "内容图片");
+            }
+        }
+        
+        // 处理新增的文件
+        List<Long> newContentImageIds = new java.util.ArrayList<>();
+        List<Long> newCarouselFileIds = new java.util.ArrayList<>();
+        List<Long> newGalleryFileIds = new java.util.ArrayList<>();
+        List<Long> newAudioFileIds = new java.util.ArrayList<>();
+        
+        // 处理新增的内容图片
+        if (photoFiles != null && photoFiles.length > 0) {
+            System.out.println("处理新增的内容图片，数量: " + photoFiles.length);
+            newContentImageIds = processPhotoFiles(photoFiles, currentUserId);
+            System.out.println("新增内容图片ID: " + newContentImageIds);
+        }
+        
+        // 处理新增的轮播图
+        if (carouselFiles != null && carouselFiles.length > 0) {
+            System.out.println("处理新增的轮播图，数量: " + carouselFiles.length);
+            newCarouselFileIds = processPhotoFiles(carouselFiles, currentUserId);
+            System.out.println("新增轮播图ID: " + newCarouselFileIds);
+        }
+        
+        // 处理新增的画廊图片
+        if (galleryFiles != null && galleryFiles.length > 0) {
+            System.out.println("处理新增的画廊图片，数量: " + galleryFiles.length);
+            newGalleryFileIds = processPhotoFiles(galleryFiles, currentUserId);
+            System.out.println("新增画廊图片ID: " + newGalleryFileIds);
+        }
+        
+        // 处理新增的音频文件
+        if (audioFiles != null && audioFiles.length > 0) {
+            System.out.println("处理新增的音频文件，数量: " + audioFiles.length);
+            newAudioFileIds = processAudioFiles(audioFiles, currentUserId);
+            System.out.println("新增音频文件ID: " + newAudioFileIds);
+        }
+        
+        // 合并文件ID列表：先从原有列表中移除被删除的文件，然后添加新上传的文件
+        // 内容图片
+        List<Long> finalContentImageIds = new java.util.ArrayList<>();
+        if (dto.getContentImageIds() != null) {
+            finalContentImageIds.addAll(dto.getContentImageIds());
+        }
+        // 移除被删除的内容图片
+        List<Long> deletedContentImageIds = dto.getDeletedFileIds() != null ? dto.getDeletedFileIds().get("contentImage") : null;
+        if (deletedContentImageIds != null && !deletedContentImageIds.isEmpty()) {
+            finalContentImageIds.removeAll(deletedContentImageIds);
+        }
+        // 添加新上传的内容图片
+        finalContentImageIds.addAll(newContentImageIds);
+        dto.setContentImageIds(finalContentImageIds);
+        System.out.println("最终的内容图片ID: " + finalContentImageIds);
+        
+        // 轮播图
+        List<Long> finalCarouselFileIds = new java.util.ArrayList<>();
+        if (dto.getCarouselFileIds() != null) {
+            finalCarouselFileIds.addAll(dto.getCarouselFileIds());
+        }
+        // 移除被删除的轮播图
+        List<Long> deletedCarouselIds = dto.getDeletedFileIds() != null ? dto.getDeletedFileIds().get("carousel") : null;
+        if (deletedCarouselIds != null && !deletedCarouselIds.isEmpty()) {
+            finalCarouselFileIds.removeAll(deletedCarouselIds);
+        }
+        // 添加新上传的轮播图
+        finalCarouselFileIds.addAll(newCarouselFileIds);
+        dto.setCarouselFileIds(finalCarouselFileIds);
+        System.out.println("最终的轮播图ID: " + finalCarouselFileIds);
+        
+        // 画廊图片
+        List<Long> finalGalleryFileIds = new java.util.ArrayList<>();
+        if (dto.getGalleryFileIds() != null) {
+            finalGalleryFileIds.addAll(dto.getGalleryFileIds());
+        }
+        // 移除被删除的画廊图片
+        List<Long> deletedGalleryIds = dto.getDeletedFileIds() != null ? dto.getDeletedFileIds().get("gallery") : null;
+        if (deletedGalleryIds != null && !deletedGalleryIds.isEmpty()) {
+            finalGalleryFileIds.removeAll(deletedGalleryIds);
+        }
+        // 添加新上传的画廊图片
+        finalGalleryFileIds.addAll(newGalleryFileIds);
+        dto.setGalleryFileIds(finalGalleryFileIds);
+        System.out.println("最终的画廊图片ID: " + finalGalleryFileIds);
+        
+        // 音频文件
+        List<Long> finalAudioFileIds = new java.util.ArrayList<>();
+        if (dto.getAudioFileIds() != null) {
+            finalAudioFileIds.addAll(dto.getAudioFileIds());
+        }
+        // 移除被删除的音频文件
+        List<Long> deletedAudioIds = dto.getDeletedFileIds() != null ? dto.getDeletedFileIds().get("audio") : null;
+        if (deletedAudioIds != null && !deletedAudioIds.isEmpty()) {
+            finalAudioFileIds.removeAll(deletedAudioIds);
+        }
+        // 添加新上传的音频文件
+        finalAudioFileIds.addAll(newAudioFileIds);
+        dto.setAudioFileIds(finalAudioFileIds);
+        System.out.println("最终的音频文件ID: " + finalAudioFileIds);
+        
+        System.out.println("=== 完成处理文章类型更新操作的文件 ===");
+    }
+    
+    /**
+     * 处理新增操作的文件
+     */
+    private void handleCreateFiles(ProtectedReservationInfoDTO dto, MultipartFile[] videoFiles, MultipartFile[] photoFiles, MultipartFile[] carouselFiles, MultipartFile[] galleryFiles, MultipartFile[] audioFiles, Long currentUserId) throws Exception {
+        System.out.println("=== 开始处理新增操作的文件 ===");
+        
+        // 处理文章内容图片
+        if (photoFiles != null && photoFiles.length > 0) {
+            System.out.println("处理文章内容图片，数量: " + photoFiles.length);
+            List<Long> photoFileIds = processPhotoFiles(photoFiles, currentUserId);
+            System.out.println("处理完成，获取到文章内容图片ID: " + photoFileIds);
+            dto.setContentImageIds(photoFileIds);
+        }
+        
+        // 处理轮播图
+        if (carouselFiles != null && carouselFiles.length > 0) {
+            System.out.println("处理轮播图，数量: " + carouselFiles.length);
+            List<Long> carouselFileIds = processPhotoFiles(carouselFiles, currentUserId);
+            System.out.println("处理完成，获取到轮播图ID: " + carouselFileIds);
+            dto.setCarouselFileIds(carouselFileIds);
+        }
+        
+        // 处理画廊图片
+        if (galleryFiles != null && galleryFiles.length > 0) {
+            System.out.println("处理画廊图片，数量: " + galleryFiles.length);
+            List<Long> galleryFileIds = processPhotoFiles(galleryFiles, currentUserId);
+            System.out.println("处理完成，获取到画廊图片ID: " + galleryFileIds);
+            dto.setGalleryFileIds(galleryFileIds);
+        }
+        
+        // 处理音频文件
+        if (audioFiles != null && audioFiles.length > 0) {
+            System.out.println("处理音频文件，数量: " + audioFiles.length);
+            List<Long> audioFileIds = processAudioFiles(audioFiles, currentUserId);
+            System.out.println("处理完成，获取到音频文件ID: " + audioFileIds);
+            dto.setAudioFileIds(audioFileIds);
+        }
+        
+        // 处理视频文件上传
+        if (videoFiles != null && videoFiles.length > 0) {
+            System.out.println("处理视频文件，数量: " + videoFiles.length);
+            List<Long> videoFileIds = processVideoFiles(videoFiles, currentUserId);
+            System.out.println("处理完成，获取到视频文件ID: " + videoFileIds);
+            dto.setVideoFileIds(videoFileIds);
+            System.out.println("更新后的视频文件ID列表: " + dto.getVideoFileIds());
+        } else {
+            // 如果没有上传视频，则设置为空列表
+            dto.setVideoFileIds(new java.util.ArrayList<>());
+            System.out.println("没有上传视频，设置为空列表");
+        }
+        
+        System.out.println("=== 完成处理新增操作的文件 ===");
+    }
+    
+    /**
+     * 根据文件ID列表删除指定的文件
+     * @param fileIds 要删除的文件ID列表
+     * @param fileType 文件类型描述（用于日志）
+     */
+    private void deleteSpecificFilesByIds(List<Long> fileIds, String fileType) {
+        try {
+            if (fileIds == null || fileIds.isEmpty()) {
+                System.out.println("没有" + fileType + "文件需要删除");
+                return;
+            }
+            
+            System.out.println("=== 开始删除指定的" + fileType + "文件 ===");
+            System.out.println("要删除的文件ID列表: " + fileIds);
+            
+            for (Long fileId : fileIds) {
+                try {
+                    if (fileId == null) {
+                        System.out.println("文件ID为null，跳过删除");
+                        continue;
+                    }
+                    
+                    System.out.println("尝试删除" + fileType + "文件，ID: " + fileId);
+                    
+                    // 查询文件记录
+                    ResourceFile resourceFile = resourceFileMapper.selectById(fileId);
+                    if (resourceFile != null) {
+                        System.out.println("找到文件记录: " + resourceFile.getFileName() + ", Bucket: " + resourceFile.getBucketName() + ", Key: " + resourceFile.getFileKey());
+                        
+                        // 从MinIO删除文件
+                        try {
+                            minioService.removeObject(resourceFile.getBucketName(), resourceFile.getFileKey());
+                            System.out.println("从MinIO删除文件成功: " + resourceFile.getBucketName() + "/" + resourceFile.getFileKey());
+                        } catch (Exception e) {
+                            System.err.println("从MinIO删除文件失败: " + e.getMessage());
+                        }
+                        
+                        // 从数据库删除记录
+                        int result = resourceFileMapper.deleteById(fileId);
+                        System.out.println("从数据库删除文件记录结果: " + (result > 0 ? "成功" : "失败"));
+                    } else {
+                        System.err.println("未找到ID为" + fileId + "的文件记录");
+                    }
+                } catch (Exception e) {
+                    System.err.println("删除文件时发生异常: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            
+            System.out.println("删除指定的" + fileType + "文件完成");
+        } catch (Exception e) {
+            System.err.println("删除指定的" + fileType + "文件时发生异常: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
 }

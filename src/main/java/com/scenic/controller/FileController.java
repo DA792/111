@@ -319,69 +319,33 @@ public class FileController {
     @GetMapping("/avatar/{userId}")
     public Result<String> getUserAvatarUrl(@PathVariable Long userId, HttpServletRequest request) {
         try {
-            // 注意：JwtInterceptor已经放行了GET请求，所以这里不需要再验证JWT
-            // 但我们仍然保留验证代码，以防配置变更
-            String authHeader = request.getHeader("Authorization");
-            boolean hasValidToken = false;
-            
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                
-                // 验证token有效性
-                // 先尝试验证管理员令牌
-                boolean isValidToken = jwtUtil.validateAdminToken(token);
-                
-                // 如果管理员令牌验证失败，再尝试验证小程序用户令牌
-                if (!isValidToken) {
-                    isValidToken = jwtUtil.validateMiniappToken(token);
-                }
-                
-                hasValidToken = isValidToken;
-            }
-            
-            // 即使没有有效的token，也允许访问头像（因为JwtInterceptor已经放行了GET请求）
-            
             // 根据用户ID获取用户头像文件信息
             ResourceFile avatarFile = resourceFileMapper.selectUserAvatar(userId);
             
-            // 如果用户不存在或没有设置头像，尝试使用测试用户ID
+            // 如果用户头像不存在，返回默认头像
             if (avatarFile == null) {
-                // 尝试使用测试用户ID
-                Long testUserId = 1741502342987124736L;
-                avatarFile = resourceFileMapper.selectUserAvatar(testUserId);
+                // 使用硬编码的默认头像
+                String bucketName = "user-avatars";
+                String objectName = "user-image1.jpeg";
                 
-                // 如果测试用户也没有头像，则使用默认头像
-                if (avatarFile == null) {
-                    // 查询默认头像
-                    ResourceFile defaultAvatar = resourceFileMapper.selectDefaultAvatar();
-                    
-                    // 如果默认头像不存在，则使用硬编码的默认头像
-                    if (defaultAvatar == null) {
-                        // 使用硬编码的默认头像
-                        String bucketName = "user-avatars";
-                        String objectName = "user-image1.jpeg";
-                        
-                        // 使用Presigned URL技术获取临时访问URL
-                        String avatarUrl = fileUploadUtil.getPresignedUrl(bucketName, objectName, 3600);
-                        
-                        return Result.success(avatarUrl);
-                    }
-                    
-                    // 使用Presigned URL技术获取临时访问URL
-                    String avatarUrl = fileUploadUtil.getPresignedUrl(defaultAvatar.getBucketName(), defaultAvatar.getFileKey(), 3600);
-                    
-                    return Result.success(avatarUrl);
-                }
+                // 使用Presigned URL技术获取临时访问URL
+                String avatarUrl = fileUploadUtil.getPresignedUrl(bucketName, objectName, 3600);
+                
+                return Result.success(avatarUrl);
             }
             
             // 使用Presigned URL技术获取临时访问URL
             String avatarUrl = fileUploadUtil.getPresignedUrl(avatarFile.getBucketName(), avatarFile.getFileKey(), 3600);
             
-            // 不添加版本参数，保持URL简洁
-            
             return Result.success(avatarUrl);
         } catch (Exception e) {
-            return Result.error("获取用户头像URL失败: " + e.getMessage());
+            // 发生异常时返回默认头像
+            try {
+                String defaultAvatarUrl = fileUploadUtil.getPresignedUrl("user-avatars", "default-avatar.png", 3600);
+                return Result.success(defaultAvatarUrl);
+            } catch (Exception ex) {
+                return Result.error("获取用户头像URL失败: " + e.getMessage());
+            }
         }
     }
     
@@ -439,16 +403,8 @@ public class FileController {
             }
             
             // 使用固定文件名格式，不包含时间戳，确保URL不变
-            // 注意：这里使用当前用户ID，而不是固定ID
             String fileKey = "avatar_" + userId + extension;
             String bucketName = "user-avatars";
-            
-            // 检查是否已存在相同文件名的记录
-            ResourceFile existingFile = resourceFileMapper.selectByBucketAndKey(bucketName, fileKey);
-            if (existingFile != null) {
-                // 如果存在，先删除旧记录
-                resourceFileMapper.deleteById(existingFile.getId());
-            }
             
             // 上传到MinIO
             try (InputStream inputStream = file.getInputStream()) {
@@ -473,63 +429,30 @@ public class FileController {
             resourceFileMapper.insert(resourceFile);
             Long fileId = resourceFile.getId();
             
-            // 更新用户头像ID
+            // 更新用户头像ID（删除原来的头像信息）
             User user = userMapper.selectById(userId);
             if (user != null) {
                 // 获取用户当前的头像ID
                 Long oldAvatarFileId = user.getAvatarFileId();
                 
-                // 如果用户已经有头像，则删除旧头像
+                // 如果用户已经有头像，则删除旧头像记录和文件
                 if (oldAvatarFileId != null) {
                     ResourceFile oldAvatarFile = resourceFileMapper.selectById(oldAvatarFileId);
                     if (oldAvatarFile != null) {
                         // 删除MinIO中的旧头像文件
                         fileUploadUtil.removeObject(oldAvatarFile.getBucketName(), oldAvatarFile.getFileKey());
-                        // 删除resource_file表中的旧头像记录
-                        resourceFileMapper.deleteById(oldAvatarFileId);
                     }
+                    // 删除resource_file表中的旧头像记录
+                    resourceFileMapper.deleteById(oldAvatarFileId);
                 }
                 
                 // 更新用户头像ID为新头像
                 user.setAvatarFileId(fileId);
                 userMapper.updateById(user);
-            } else {
-                // 如果用户不存在，尝试使用固定的测试用户ID
-                Long testUserId = 1741502342987124736L;
-                user = userMapper.selectById(testUserId);
-                if (user != null) {
-                    // 获取用户当前的头像ID
-                    Long oldAvatarFileId = user.getAvatarFileId();
-                    
-                    // 如果用户已经有头像，则删除旧头像
-                    if (oldAvatarFileId != null) {
-                        ResourceFile oldAvatarFile = resourceFileMapper.selectById(oldAvatarFileId);
-                        if (oldAvatarFile != null) {
-                            // 删除MinIO中的旧头像文件
-                            fileUploadUtil.removeObject(oldAvatarFile.getBucketName(), oldAvatarFile.getFileKey());
-                            // 删除resource_file表中的旧头像记录
-                            resourceFileMapper.deleteById(oldAvatarFileId);
-                        }
-                    }
-                    
-                    // 更新用户头像ID为新头像
-                    user.setAvatarFileId(fileId);
-                    userMapper.updateById(user);
-                    // 返回成功，但使用了测试用户ID
-                    String avatarUrl = fileUploadUtil.getPresignedUrl(bucketName, fileKey, 3600);
-                    
-                    // 不添加版本参数，保持URL简洁
-                    
-                    return Result.success(avatarUrl);
-                } else {
-                    return Result.error("用户不存在，无法更新头像");
-                }
             }
             
             // 返回头像URL
             String avatarUrl = fileUploadUtil.getPresignedUrl(bucketName, fileKey, 3600);
-            
-            // 不添加版本参数，保持URL简洁
             
             return Result.success(avatarUrl);
         } catch (Exception e) {
