@@ -170,6 +170,18 @@
         </where>
     </select>
 
+    <!-- 插入个人预约 -->
+    <insert id="insert" parameterType="com.scenic.entity.appointment.IndividualReservation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO individual_reservation(reservation_no, user_id, scenic_id, visit_date, time_slot, 
+            adult_count, child_count, total_count, status, verification_time, operator_id, 
+            verification_location, device_info, verification_remark, cancel_time, cancel_reason, 
+            version, deleted, create_time, update_time, create_by, update_by)
+        VALUES(#{reservationNo}, #{userId}, #{scenicId}, #{visitDate}, #{timeSlot}, 
+               #{adultCount}, #{childCount}, #{totalCount}, #{status}, #{verificationTime}, #{operatorId}, 
+               #{verificationLocation}, #{deviceInfo}, #{verificationRemark}, #{cancelTime}, #{cancelReason}, 
+               #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})
+    </insert>
+
     <!-- 更新个人预约信息（动态更新） -->
     <update id="updateById" parameterType="com.scenic.entity.appointment.IndividualReservation">
         UPDATE individual_reservation
