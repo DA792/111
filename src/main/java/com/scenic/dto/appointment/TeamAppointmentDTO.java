@@ -16,6 +16,8 @@ import com.scenic.entity.appointment.TeamMember;
  * 团队预约DTO类
  */
 public class TeamAppointmentDTO {
+    private Long id; // 主键ID
+    
     @Size(max = 50, message = "预约编号长度不超过50字符")
     private String appointmentNo;
     
@@ -70,6 +72,14 @@ public class TeamAppointmentDTO {
     public TeamAppointmentDTO() {}
 
     // Getter 和 Setter 方法
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getAppointmentNo() {
         return appointmentNo;
     }
@@ -233,7 +243,8 @@ public class TeamAppointmentDTO {
     @Override
     public String toString() {
         return "TeamAppointmentDTO{" +
-                "appointmentNo='" + appointmentNo + '\'' +
+                "id=" + id +
+                ", appointmentNo='" + appointmentNo + '\'' +
                 ", userId=" + userId +
                 ", teamName='" + teamName + '\'' +
                 ", contactPerson='" + contactPerson + '\'' +

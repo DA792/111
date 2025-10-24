@@ -102,6 +102,7 @@ public class ActivityAppointmentController {
      * @param page 页码
      * @param size 每页大小
      * @param activityName 活动名称（可选）
+     * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
      * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
@@ -114,12 +115,13 @@ public class ActivityAppointmentController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String activityName,
+            @RequestParam(required = false) String teamName,
             @RequestParam(required = false) String contactPerson,
             @RequestParam(required = false) String contactPhone,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
-        return appointmentService.getAdminActivityAppointments(page, size, activityName, contactPerson, contactPhone, status, startTime, endTime);
+        return appointmentService.getAdminActivityAppointments(page, size, activityName, teamName, contactPerson, contactPhone, status, startTime, endTime);
     }
     
     /**
@@ -128,8 +130,8 @@ public class ActivityAppointmentController {
      * @return 活动预约详情
      */
     @GetMapping(ADMIN_PREFIX + "/activity-appointments/{id}")
-    public Result<ActivityAppointment> getActivityAppointmentDetailForAdmin(@PathVariable Long id) {
-        return appointmentService.getActivityAppointmentDetail(id);
+    public Result<ActivityAppointmentDTO> getActivityAppointmentDetailForAdmin(@PathVariable Long id) {
+        return appointmentService.getActivityAppointmentDetailWithMembers(id);
     }
     
     /**

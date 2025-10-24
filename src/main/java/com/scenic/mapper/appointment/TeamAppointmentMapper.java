@@ -25,6 +25,13 @@ public interface TeamAppointmentMapper {
     TeamAppointment selectById(Long id);
     
     /**
+     * 根据ID查询团队预约（包含团队成员信息）
+     * @param id 团队预约ID
+     * @return 团队预约信息（包含团队成员）
+     */
+    TeamAppointment selectByIdWithMembers(Long id);
+    
+    /**
      * 插入团队预约
      * @param teamAppointment 团队预约信息
      * @return 插入结果
