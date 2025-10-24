@@ -26,7 +26,7 @@
                 END AS reserve_status,
                 SUM(r.total_count) AS booked_count,
                 #{dailyLimit} AS total_limit,
-                (p.is_closed = 0) AS is_open
+                (p.is_closed = 0 AND p.day_type = 0) AS is_open  -- 只有在开放且为工作日时才开放预约
             FROM
                 individual_reservation r
             LEFT JOIN park_open_time_config p ON DATE(r.visit_date) = p.config_date
@@ -37,7 +37,7 @@
                 AND YEAR(r.visit_date) = #{year}
                 AND MONTH(r.visit_date) = #{month}
             GROUP BY
-                DATE(r.visit_date), p.is_closed
+                DATE(r.visit_date), p.is_closed, p.day_type
         </if>
             
         <if test="individualReserveStatus == 1 and teamReserveStatus == 1">
@@ -55,7 +55,7 @@
                 END AS reserve_status,
                 SUM(t.team_size) AS booked_count,
                 #{dailyLimit} AS total_limit,
-                (p.is_closed = 0) AS is_open
+                (p.is_closed = 0 AND p.day_type = 0) AS is_open  -- 只有在开放且为工作日时才开放预约
             FROM
                 team_appointment t
             LEFT JOIN park_open_time_config p ON DATE(t.appointment_date) = p.config_date
@@ -65,7 +65,7 @@
                 AND YEAR(t.appointment_date) = #{year}
                 AND MONTH(t.appointment_date) = #{month}
             GROUP BY
-                DATE(t.appointment_date), p.is_closed
+                DATE(t.appointment_date), p.is_closed, p.day_type
         </if>
             
         <!-- 步骤3：合并后按日期排序，确保日历展示顺序正确 -->
@@ -88,7 +88,7 @@
                 WHEN COUNT(a.id) >= (SELECT CAST(team_limit AS UNSIGNED) FROM activity WHERE id = a.activity_id) THEN '已满'  -- 对比活动上限
                 ELSE CONCAT('已预约', COUNT(a.id), '/', (SELECT team_limit FROM activity WHERE id = a.activity_id))
             END AS reserve_status,
-            (p.is_closed = 0) AS is_open
+            (p.is_closed = 0 AND p.day_type = 0) AS is_open  -- 只有在开放且为工作日时才开放预约
         FROM
             activity_registration a
         LEFT JOIN park_open_time_config p ON DATE(a.registration_time) = p.config_date
@@ -99,7 +99,7 @@
             AND YEAR(a.registration_time) = #{year}
             AND MONTH(a.registration_time) = #{month}
         GROUP BY
-            DATE(a.registration_time), a.activity_title, p.is_closed, a.activity_id
+            DATE(a.registration_time), a.activity_title, p.is_closed, p.day_type, a.activity_id
         ORDER BY
             reserve_date, activity_name;
     </select>
