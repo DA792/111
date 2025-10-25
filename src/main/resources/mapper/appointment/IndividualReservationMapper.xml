@@ -170,6 +170,32 @@
         </where>
     </select>
 
+    <!-- 根据ID查询个人预约 -->
+    <select id="selectById" parameterType="java.lang.Long" resultMap="IndividualReservationResultMap">
+        SELECT 
+        ir.id, ir.reservation_no, ir.user_id, ir.scenic_id, ir.visit_date, ir.time_slot, 
+        ir.adult_count, ir.child_count, ir.total_count, ir.status, ir.verification_time, 
+        ir.operator_id, ir.verification_location, ir.device_info, ir.verification_remark, 
+        ir.cancel_time, ir.cancel_reason, ir.version, ir.deleted, ir.create_time, ir.update_time, 
+        ir.create_by, ir.update_by,
+        irp.name as contact_name, irp.id_type as contact_id_type, irp.id_number as contact_id_number, irp.phone as contact_phone
+        FROM individual_reservation ir
+        LEFT JOIN individual_reservation_person irp ON ir.id = irp.reservation_id AND irp.is_contact = 1 AND irp.deleted = 0
+        WHERE ir.id = #{id} AND ir.deleted = 0
+    </select>
+
+    <!-- 插入个人预约 -->
+    <insert id="insert" parameterType="com.scenic.entity.appointment.IndividualReservation" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO individual_reservation(reservation_no, user_id, scenic_id, visit_date, time_slot, 
+            adult_count, child_count, total_count, status, verification_time, operator_id, 
+            verification_location, device_info, verification_remark, cancel_time, cancel_reason, 
+            version, deleted, create_time, update_time, create_by, update_by)
+        VALUES(#{reservationNo}, #{userId}, #{scenicId}, #{visitDate}, #{timeSlot}, 
+               #{adultCount}, #{childCount}, #{totalCount}, #{status}, #{verificationTime}, #{operatorId}, 
+               #{verificationLocation}, #{deviceInfo}, #{verificationRemark}, #{cancelTime}, #{cancelReason}, 
+               #{version}, #{deleted}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy})
+    </insert>
+
     <!-- 更新个人预约信息（动态更新） -->
     <update id="updateById" parameterType="com.scenic.entity.appointment.IndividualReservation">
         UPDATE individual_reservation
