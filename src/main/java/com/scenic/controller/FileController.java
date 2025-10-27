@@ -156,7 +156,6 @@ public class FileController {
             resourceFile.setMimeType(file.getContentType());
             resourceFile.setFileType(type); // 文件类型：0-其他，1-图片，2-视频，3-音频
             resourceFile.setUploadUserId(currentUserId); // 设置上传用户ID
-            resourceFile.setIsTemp(0);
             resourceFile.setCreateTime(LocalDateTime.now());
             resourceFile.setUpdateTime(LocalDateTime.now());
             resourceFile.setCreateBy(currentUserId); // 设置创建者ID
@@ -420,7 +419,6 @@ public class FileController {
             resourceFile.setMimeType(file.getContentType());
             resourceFile.setFileType(1); // 1-图片
             resourceFile.setUploadUserId(userId);
-            resourceFile.setIsTemp(0);
             resourceFile.setCreateTime(LocalDateTime.now());
             resourceFile.setUpdateTime(LocalDateTime.now());
             resourceFile.setCreateBy(userId);

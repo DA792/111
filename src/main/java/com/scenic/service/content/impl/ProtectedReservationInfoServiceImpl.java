@@ -489,7 +489,6 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
                         
                         System.out.println("设置到ResourceFile的用户ID: " + userId); // 添加日志
                         resourceFile.setUploadUserId(userId); // 使用传入的用户ID
-                        resourceFile.setIsTemp(0); // 非临时文件
                         resourceFile.setCreateBy(userId); // 使用传入的用户ID
                         resourceFile.setUpdateBy(userId); // 使用传入的用户ID
                         
@@ -554,7 +553,6 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
                         
                         System.out.println("设置到ResourceFile的用户ID: " + userId); // 添加日志
                         resourceFile.setUploadUserId(userId);
-                        resourceFile.setIsTemp(0);
                         resourceFile.setCreateBy(userId);
                         resourceFile.setUpdateBy(userId);
                         
@@ -722,7 +720,6 @@ public class ProtectedReservationInfoServiceImpl extends ServiceImpl<ProtectedRe
                         
                         System.out.println("设置到ResourceFile的用户ID: " + userId); // 添加日志
                         resourceFile.setUploadUserId(userId);
-                        resourceFile.setIsTemp(0);
                         resourceFile.setCreateBy(userId);
                         resourceFile.setUpdateBy(userId);
                         
