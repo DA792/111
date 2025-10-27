@@ -809,12 +809,13 @@ public class PhotoCheckInServiceImpl implements PhotoCheckInService {
     /**
      * 批量将PhotoCheckIn实体列表转换为PhotoCheckInVO列表，并包含用户互动状态
      * @param photos PhotoCheckIn实体列表
-     * @param userId 用户ID
+     * @param userId 用户ID（可以为null，表示未登录用户）
      * @return PhotoCheckInVO列表
      */
     private List<PhotoCheckInVO> convertToVOsWithUserInteraction(List<PhotoCheckIn> photos, Long userId) {
-        if (userId == null) {
-            return photos.stream().map(this::convertToVO).collect(Collectors.toList());
+        // 如果 userId 为 null 或照片列表为空，直接返回不包含用户互动状态的 VO 列表
+        if (userId == null || photos == null || photos.isEmpty()) {
+            return photos == null ? new ArrayList<>() : photos.stream().map(this::convertToVO).collect(Collectors.toList());
         }
         
         // 提取照片ID列表

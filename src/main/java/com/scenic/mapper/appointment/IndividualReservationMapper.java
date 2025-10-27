@@ -53,6 +53,13 @@ public interface IndividualReservationMapper {
     List<IndividualReservation> selectByStatus(@Param("status") Integer status, @Param("offset") int offset, @Param("limit") int limit);
     
     /**
+     * 根据状态查询个人预约（无分页）
+     * @param status 状态
+     * @return 个人预约列表
+     */
+    List<IndividualReservation> selectByStatus(@Param("status") Integer status);
+    
+    /**
      * 查询个人预约列表
      * @param offset 偏移量
      * @param limit 限制数量
