@@ -66,6 +66,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
                     return Result.error("配置日期不能为空");
                 }
                 
+                // 自动修正dayType字段
+                openTime.setDayType(getDayType(openTime.getConfigDate()));
+                
                 // 设置创建时间和更新时间
                 openTime.setCreateTime(java.time.LocalDateTime.now());
                 openTime.setUpdateTime(java.time.LocalDateTime.now());
@@ -95,6 +98,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
             if (openTime.getConfigDate() == null) {
                 return Result.error("配置日期不能为空");
             }
+            
+            // 自动修正dayType字段
+            openTime.setDayType(getDayType(openTime.getConfigDate()));
             
             // 设置更新时间
             openTime.setUpdateTime(java.time.LocalDateTime.now());
@@ -128,6 +134,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
                 if (openTime.getConfigDate() == null) {
                     return Result.error("配置日期不能为空");
                 }
+                
+                // 自动修正dayType字段
+                openTime.setDayType(getDayType(openTime.getConfigDate()));
                 
                 // 设置更新时间
                 openTime.setUpdateTime(java.time.LocalDateTime.now());
@@ -163,6 +172,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
                 openTime.setDayType(getDayType(configDate));
                 openTime.setCreateTime(java.time.LocalDateTime.now());
                 openTime.setUpdateTime(java.time.LocalDateTime.now());
+            } else {
+                // 如果数据库中有配置，自动修正dayType字段
+                openTime.setDayType(getDayType(configDate));
             }
             
             return Result.success(openTime);
@@ -172,13 +184,46 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
     }
     
     /**
-     * 根据日期获取日类型（1-工作日，2-周末，3-节假日）
+     * 根据日期获取日类型（0-工作日，1-节假日）
      * @param date 日期
-     * @return 日类型
+     * @return 日类型 (0-工作日, 1-节假日)
      */
     private int getDayType(LocalDate date) {
         int dayOfWeek = date.getDayOfWeek().getValue();
-        // 周一到周五为工作日(1)，周六周日为周末(2)
-        return (dayOfWeek >= 1 && dayOfWeek <= 5) ? 1 : 2;
+        // 周一到周五为工作日(0)，周六周日为节假日(1)
+        return (dayOfWeek >= 1 && dayOfWeek <= 5) ? 0 : 1;
+    }
+    
+    /**
+     * 修正数据库中所有记录的day_type字段
+     * @return 修正结果
+     */
+    @Override
+    public Result<String> fixDayTypeData() {
+        try {
+            // 查询所有记录
+            List<ParkOpenTime> allRecords = parkOpenTimeMapper.selectAll();
+            
+            int updateCount = 0;
+            for (ParkOpenTime record : allRecords) {
+                LocalDate configDate = record.getConfigDate();
+                if (configDate != null) {
+                    // 根据日期重新计算day_type
+                    int correctDayType = getDayType(configDate);
+                    
+                    // 如果当前day_type不正确，则更新
+                    if (record.getDayType() == null || record.getDayType() != correctDayType) {
+                        record.setDayType(correctDayType);
+                        record.setUpdateTime(java.time.LocalDateTime.now());
+                        parkOpenTimeMapper.updateById(record);
+                        updateCount++;
+                    }
+                }
+            }
+            
+            return Result.success("成功修正" + updateCount + "条记录的day_type字段");
+        } catch (Exception e) {
+            return Result.error("修正day_type字段失败：" + e.getMessage());
+        }
     }
 }

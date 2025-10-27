@@ -45,4 +45,10 @@ public interface ParkOpenTimeService {
      * @return 日期开放时间配置
      */
     Result<ParkOpenTime> getOpenTimeByDate(String date);
+    
+    /**
+     * 修正数据库中所有记录的day_type字段
+     * @return 修正结果
+     */
+    Result<String> fixDayTypeData();
 }

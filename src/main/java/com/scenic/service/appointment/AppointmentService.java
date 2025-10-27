@@ -166,6 +166,13 @@ public interface AppointmentService {
     Result<ActivityAppointment> getActivityAppointmentDetail(Long activityAppointmentId);
     
     /**
+     * 获取活动预约详情（包含团队成员信息）
+     * @param activityAppointmentId 活动预约ID
+     * @return 活动预约详情（包含团队成员信息）
+     */
+    Result<ActivityAppointmentDTO> getActivityAppointmentDetailWithMembers(Long activityAppointmentId);
+    
+    /**
      * 管理员审核预约
      * @param appointmentId 预约ID
      * @param status 审核状态
@@ -230,6 +237,7 @@ public interface AppointmentService {
      * @param page 页码
      * @param size 每页大小
      * @param activityName 活动名称（可选）
+     * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
      * @param contactPhone 联系电话（可选）
      * @param status 预约状态（可选）
@@ -238,7 +246,7 @@ public interface AppointmentService {
      * @return 活动预约列表
      */
     Result<PageResult<ActivityAppointment>> getAdminActivityAppointments(
-            int page, int size, String activityName, String contactPerson, String contactPhone, String status, String startTime, String endTime);
+            int page, int size, String activityName, String teamName, String contactPerson, String contactPhone, String status, String startTime, String endTime);
     
     /**
      * 管理员删除预约

@@ -24,6 +24,13 @@ public interface ActivityAppointmentMapper {
     ActivityAppointment selectById(Long id);
     
     /**
+     * 根据ID查询活动预约（包含团队成员信息）
+     * @param id 活动预约ID
+     * @return 活动预约信息（包含团队成员）
+     */
+    ActivityAppointment selectByIdWithMembers(Long id);
+    
+    /**
      * 插入活动预约
      * @param activityAppointment 活动预约信息
      * @return 插入结果
@@ -64,6 +71,7 @@ public interface ActivityAppointmentMapper {
     /**
      * 管理员查询活动预约列表
      * @param activityName 活动名称（可选）
+     * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
      * @param contactPhone 联系电话（可选）
      * @param status 活动预约状态（可选）
@@ -73,7 +81,7 @@ public interface ActivityAppointmentMapper {
      * @param limit 限制数量
      * @return 活动预约列表
      */
-    List<ActivityAppointment> selectForAdmin(@Param("activityName") String activityName, @Param("contactPerson") String contactPerson, 
+    List<ActivityAppointment> selectForAdmin(@Param("activityName") String activityName, @Param("teamName") String teamName, @Param("contactPerson") String contactPerson, 
                                              @Param("contactPhone") String contactPhone, @Param("status") String status,
                                              @Param("startTime") String startTime, @Param("endTime") String endTime,
                                              @Param("offset") int offset, @Param("limit") int limit);
@@ -81,6 +89,7 @@ public interface ActivityAppointmentMapper {
     /**
      * 管理员查询活动预约总数
      * @param activityName 活动名称（可选）
+     * @param teamName 团队名称（可选）
      * @param contactPerson 联系人（可选）
      * @param contactPhone 联系电话（可选）
      * @param status 活动预约状态（可选）
@@ -88,7 +97,7 @@ public interface ActivityAppointmentMapper {
      * @param endTime 结束时间（可选）
      * @return 活动预约总数
      */
-    int selectCountForAdmin(@Param("activityName") String activityName, @Param("contactPerson") String contactPerson, 
+    int selectCountForAdmin(@Param("activityName") String activityName, @Param("teamName") String teamName, @Param("contactPerson") String contactPerson, 
                             @Param("contactPhone") String contactPhone, @Param("status") String status,
                             @Param("startTime") String startTime, @Param("endTime") String endTime);
 }
