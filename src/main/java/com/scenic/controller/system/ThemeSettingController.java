@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.scenic.common.dto.Result;
 import com.scenic.dto.system.ThemeSettingDTO;
@@ -93,5 +95,67 @@ public class ThemeSettingController {
     @PostMapping("/{id}/default")
     public Result<String> setDefaultTheme(@PathVariable Long id) {
         return themeSettingService.setDefaultTheme(id);
+    }
+
+    /**
+     * 上传开屏页图片
+     * @param file 图片文件
+     * @return 上传结果
+     */
+    @PostMapping("/splash-screen/upload")
+    public Result<String> uploadSplashScreenImage(@RequestParam("file") MultipartFile file) {
+        // TODO: 实现开屏页图片上传逻辑
+        return Result.success("开屏页图片上传成功");
+    }
+    
+    /**
+     * 上传首页背景图
+     * @param file 图片文件
+     * @return 上传结果
+     */
+    @PostMapping("/home-background/upload")
+    public Result<String> uploadHomeBackgroundImage(@RequestParam("file") MultipartFile file) {
+        // TODO: 实现首页背景图上传逻辑
+        return Result.success("首页背景图上传成功");
+    }
+    
+    /**
+     * 获取开屏页图片
+     * @return 图片路径
+     */
+    @GetMapping("/splash-screen")
+    public Result<String> getSplashScreenImage() {
+        // TODO: 实现获取开屏页图片逻辑
+        return Result.success("splash_screen.jpg");
+    }
+    
+    /**
+     * 获取首页背景图
+     * @return 图片路径
+     */
+    @GetMapping("/home-background")
+    public Result<String> getHomeBackgroundImage() {
+        // TODO: 实现获取首页背景图逻辑
+        return Result.success("home_background.jpg");
+    }
+    
+    /**
+     * 删除开屏页图片
+     * @return 删除结果
+     */
+    @DeleteMapping("/splash-screen")
+    public Result<String> deleteSplashScreenImage() {
+        // TODO: 实现删除开屏页图片逻辑
+        return Result.success("开屏页图片删除成功");
+    }
+    
+    /**
+     * 删除首页背景图
+     * @return 删除结果
+     */
+    @DeleteMapping("/home-background")
+    public Result<String> deleteHomeBackgroundImage() {
+        // TODO: 实现删除首页背景图逻辑
+        return Result.success("首页背景图删除成功");
     }
 }

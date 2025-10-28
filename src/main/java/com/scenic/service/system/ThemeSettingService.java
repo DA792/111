@@ -3,6 +3,7 @@ package com.scenic.service.system;
 import com.scenic.common.dto.Result;
 import com.scenic.dto.system.ThemeSettingDTO;
 import com.scenic.entity.system.ThemeSetting;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -65,4 +66,42 @@ public interface ThemeSettingService {
      * @return 主题设置
      */
     ThemeSetting getThemeSettingByName(String themeName);
+    
+    /**
+     * 上传开屏页图片
+     * @param file 图片文件
+     * @return 上传结果
+     */
+    Result<String> uploadSplashScreenImage(MultipartFile file);
+    
+    /**
+     * 上传首页背景图
+     * @param file 图片文件
+     * @return 上传结果
+     */
+    Result<String> uploadHomeBackgroundImage(MultipartFile file);
+    
+    /**
+     * 获取开屏页图片
+     * @return 图片路径
+     */
+    Result<String> getSplashScreenImage();
+    
+    /**
+     * 获取首页背景图
+     * @return 图片路径
+     */
+    Result<String> getHomeBackgroundImage();
+    
+    /**
+     * 删除开屏页图片
+     * @return 删除结果
+     */
+    Result<String> deleteSplashScreenImage();
+    
+    /**
+     * 删除首页背景图
+     * @return 删除结果
+     */
+    Result<String> deleteHomeBackgroundImage();
 }

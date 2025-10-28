@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.scenic.mapper.system.NotificationConfigMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="NotificationConfigResultMap" type="com.scenic.entity.system.NotificationConfig">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="enabled" property="enabled" jdbcType="TINYINT"/>
+        <result column="config_data" property="configData" jdbcType="LONGVARCHAR"/>
+        <result column="last_update" property="lastUpdate" jdbcType="TIMESTAMP"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 查询字段 -->
+    <sql id="NotificationConfig_Column_List">
+        id, type, name, enabled, config_data, last_update, create_time
+    </sql>
+
+    <!-- 查询所有通知配置 -->
+    <select id="selectAll" resultMap="NotificationConfigResultMap">
+        SELECT 
+        <include refid="NotificationConfig_Column_List"/>
+        FROM notification_config
+        ORDER BY create_time DESC
+    </select>
+
+    <!-- 根据ID查询通知配置 -->
+    <select id="selectById" resultMap="NotificationConfigResultMap">
+        SELECT 
+        <include refid="NotificationConfig_Column_List"/>
+        FROM notification_config
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据类型查询通知配置 -->
+    <select id="selectByType" resultMap="NotificationConfigResultMap">
+        SELECT 
+        <include refid="NotificationConfig_Column_List"/>
+        FROM notification_config
+        WHERE type = #{type}
+    </select>
+
+    <!-- 插入通知配置 -->
+    <insert id="insert" parameterType="com.scenic.entity.system.NotificationConfig">
+        INSERT INTO notification_config(type, name, enabled, config_data, last_update, create_time)
+        VALUES(#{type}, #{name}, #{enabled}, #{configData}, #{lastUpdate}, #{createTime})
+    </insert>
+
+    <!-- 更新通知配置 -->
+    <update id="update" parameterType="com.scenic.entity.system.NotificationConfig">
+        UPDATE notification_config
+        <set>
+            <if test="type != null and type != ''">
+                type = #{type},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="enabled != null">
+                enabled = #{enabled},
+            </if>
+            <if test="configData != null">
+                config_data = #{configData},
+            </if>
+            last_update = #{lastUpdate}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除通知配置 -->
+    <delete id="deleteById">
+        DELETE FROM notification_config WHERE id = #{id}
+    </delete>
+</mapper>

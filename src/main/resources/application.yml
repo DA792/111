@@ -91,6 +91,13 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+# 文件上传配置
+file:
+  upload:
+    max-file-size: 10MB
+    max-request-size: 10MB
+    path: ./uploads/
+
 # MinIO配置
 minio:
   endpoint: http://106.14.46.254:10029
