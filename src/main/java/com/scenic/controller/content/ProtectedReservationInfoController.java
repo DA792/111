@@ -274,6 +274,26 @@ public class ProtectedReservationInfoController {
             System.out.println("接收到的DTO ID: " + dto.getId());
             System.out.println("DTO类型: " + dto.getClass().getName());
             
+            // 调试：打印接收到的文件ID列表
+            if (dto.getCarouselFileIds() != null) {
+                System.out.println("接收到的轮播图文件ID: " + dto.getCarouselFileIds());
+            }
+            if (dto.getGalleryFileIds() != null) {
+                System.out.println("接收到的精彩图库文件ID: " + dto.getGalleryFileIds());
+            }
+            if (dto.getAudioFileIds() != null) {
+                System.out.println("接收到的音频文件ID: " + dto.getAudioFileIds());
+            }
+            if (dto.getContentImageIds() != null) {
+                System.out.println("接收到的内容图片文件ID: " + dto.getContentImageIds());
+            }
+            if (dto.getVideoFileIds() != null) {
+                System.out.println("接收到的视频文件ID: " + dto.getVideoFileIds());
+            }
+            if (dto.getDeletedFileIds() != null) {
+                System.out.println("接收到的删除文件ID映射: " + dto.getDeletedFileIds());
+            }
+            
             // 设置更新者ID和创建者ID
             if (currentUserId != null) {
                 dto.setUpdateBy(currentUserId);
@@ -334,6 +354,7 @@ public class ProtectedReservationInfoController {
                 }
             }
             
+            // 直接调用saveProtectedReservationInfoWithFiles方法处理更新
             boolean result = protectedReservationInfoService.saveProtectedReservationInfoWithFiles(dto, videoFiles, photoFiles, carouselFiles, galleryFiles, audioFiles);
             return Result.success(result);
         } catch (Exception e) {

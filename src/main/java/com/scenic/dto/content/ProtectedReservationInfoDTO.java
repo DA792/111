@@ -20,6 +20,7 @@ public class ProtectedReservationInfoDTO {
     private List<Long> galleryFileIds; // 画廊文件ID列表
     private List<Long> audioFileIds; // 音频文件ID列表
     private List<Long> videoFileIds; // 视频文件ID列表
+    private java.util.Map<String, List<Long>> deletedFileIds; // 要删除的文件ID映射表，key为文件类型(carousel, gallery, audio, video, contentImage)
     private Byte deleted; // 删除标记
     private LocalDateTime createTime; // 创建时间
     private LocalDateTime updateTime; // 更新时间
@@ -118,6 +119,14 @@ public class ProtectedReservationInfoDTO {
         this.videoFileIds = videoFileIds;
     }
 
+    public java.util.Map<String, List<Long>> getDeletedFileIds() {
+        return deletedFileIds;
+    }
+
+    public void setDeletedFileIds(java.util.Map<String, List<Long>> deletedFileIds) {
+        this.deletedFileIds = deletedFileIds;
+    }
+
     public Byte getDeleted() {
         return deleted;
     }
@@ -173,6 +182,8 @@ public class ProtectedReservationInfoDTO {
                 ", carouselFileIds=" + carouselFileIds +
                 ", galleryFileIds=" + galleryFileIds +
                 ", audioFileIds=" + audioFileIds +
+                ", videoFileIds=" + videoFileIds +
+                ", deletedFileIds=" + deletedFileIds +
                 ", deleted=" + deleted +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +

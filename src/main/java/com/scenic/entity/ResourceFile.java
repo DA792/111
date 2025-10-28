@@ -21,7 +21,6 @@ public class ResourceFile {
     private Integer duration;
     private String sha256;
     private Long uploadUserId;
-    private Integer isTemp;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
     private Long createBy;
@@ -127,14 +126,6 @@ public class ResourceFile {
         this.uploadUserId = uploadUserId;
     }
 
-    public Integer getIsTemp() {
-        return isTemp;
-    }
-
-    public void setIsTemp(Integer isTemp) {
-        this.isTemp = isTemp;
-    }
-
     public LocalDateTime getCreateTime() {
         return createTime;
     }
@@ -181,7 +172,6 @@ public class ResourceFile {
                 ", height=" + height +
                 ", duration=" + duration +
                 ", uploadUserId=" + uploadUserId +
-                ", isTemp=" + isTemp +
                 ", createTime=" + createTime +
                 ", updateTime=" + updateTime +
                 ", createBy=" + createBy +

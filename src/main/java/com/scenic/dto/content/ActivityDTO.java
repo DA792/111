@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 活动DTO
@@ -21,6 +22,7 @@ public class ActivityDTO {
     private List<Long> contentImageIds; // 详情内容中的图片ID数组
     private Long coverImageId; // 封面图片ID
     private Byte status; // 活动状态：0-未结束，1-已结束
+    private Map<String, List<Long>> deletedFileIds; // 要删除的文件ID映射
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createTime; // 创建时间
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -137,6 +139,14 @@ public class ActivityDTO {
 
     public void setStatus(Byte status) {
         this.status = status;
+    }
+
+    public Map<String, List<Long>> getDeletedFileIds() {
+        return deletedFileIds;
+    }
+
+    public void setDeletedFileIds(Map<String, List<Long>> deletedFileIds) {
+        this.deletedFileIds = deletedFileIds;
     }
 
     public LocalDateTime getCreateTime() {

@@ -106,7 +106,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String token = authHeader.substring(7);
         
         // 验证管理后台JWT令牌
-        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/") || requestURI.equals("/api/upload")) {
+        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/") || requestURI.equals("/api/upload") || requestURI.matches("/api/avatar/\\d+/upload")) {
             if (!jwtUtil.validateAdminToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"timestamp\":\"" + java.time.Instant.now() + "\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"未授权：管理后台认证令牌无效或已过期\",\"path\":\"" + requestURI + "\"}");
