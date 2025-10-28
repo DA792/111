@@ -456,6 +456,9 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             if (existingReservation.getStatus() != null && existingReservation.getStatus() == 1) {
                 return Result.error("预约已取消");
             }
+            if (existingReservation.getStatus() != null && existingReservation.getStatus() == 11) {
+                return Result.error("预约已过期");
+            }
             
             // 更新预约状态为取消
             existingReservation.setStatus(1); // 1-已取消
@@ -504,6 +507,9 @@ public class IndividualReservationServiceImpl implements IndividualReservationSe
             }
             if (existingReservation.getStatus() != null && existingReservation.getStatus() == 10) {
                 return Result.error("预约已核销");
+            }
+            if (existingReservation.getStatus() != null && existingReservation.getStatus() == 11) {
+                return Result.error("预约已过期");
             }
             
             // 更新预约状态为已核销

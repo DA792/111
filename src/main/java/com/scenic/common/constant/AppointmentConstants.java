@@ -13,6 +13,7 @@ public class AppointmentConstants {
     public static final int STATUS_CANCELLED = 3;  // 已取消
     public static final int STATUS_COMPLETED = 4;  // 已完成
     public static final int STATUS_REJECTED = 0;  // 已拒绝
+    public static final int STATUS_EXPIRED = 11;   // 已过期
     
     /**
      * 预约类型常量

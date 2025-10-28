@@ -28,8 +28,8 @@ public interface ActivityMapper {
      * @param activity 活动信息
      * @return 插入结果
      */
-    @Insert("INSERT INTO activity(title, start_time, end_time, suitable_crowd, location, price, team_limit, content, cover_image_id, status, create_time, update_time, create_by, update_by, reservation_priority, deleted) " +
-            "VALUES(#{title}, #{startTime}, #{endTime}, #{suitableCrowd}, #{location}, #{price}, #{teamLimit}, #{content}, #{coverImageId}, #{status}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}, #{reservationPriority}, 0)")
+    @Insert("INSERT INTO activity(title, start_time, end_time, suitable_crowd, location, price, team_limit, content, content_image_ids, cover_image_id, status, create_time, update_time, create_by, update_by, reservation_priority, deleted) " +
+            "VALUES(#{title}, #{startTime}, #{endTime}, #{suitableCrowd}, #{location}, #{price}, #{teamLimit}, #{content}, #{contentImageIds,typeHandler=com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler}, #{coverImageId}, #{status}, #{createTime}, #{updateTime}, #{createBy}, #{updateBy}, #{reservationPriority}, 0)")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(Activity activity);
     
@@ -39,7 +39,7 @@ public interface ActivityMapper {
      * @return 更新结果
      */
     @Update("UPDATE activity SET title = #{title}, start_time = #{startTime}, end_time = #{endTime}, suitable_crowd = #{suitableCrowd}, " +
-            "location = #{location}, price = #{price}, team_limit = #{teamLimit}, content = #{content}, cover_image_id = #{coverImageId}, " +
+            "location = #{location}, price = #{price}, team_limit = #{teamLimit}, content = #{content}, content_image_ids = #{contentImageIds,typeHandler=com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler}, cover_image_id = #{coverImageId}, " +
             "status = #{status}, update_time = #{updateTime}, update_by = #{updateBy}, reservation_priority = #{reservationPriority} WHERE id = #{id}")
     int updateById(Activity activity);
     

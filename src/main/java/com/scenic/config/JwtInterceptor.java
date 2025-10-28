@@ -64,16 +64,24 @@ public class JwtInterceptor implements HandlerInterceptor {
         if (requestURI.startsWith(miniappPrefix)) {
             System.out.println("放行小程序接口: " + requestURI);
             // 从小程序请求参数中获取userId并设置到用户上下文
+            // 支持两种格式：userId 和 params[userId]
             String userIdParam = request.getParameter("userId");
-            if (userIdParam != null) {
+            if (userIdParam == null || userIdParam.isEmpty()) {
+                userIdParam = request.getParameter("params[userId]");
+            }
+            
+            if (userIdParam != null && !userIdParam.isEmpty() && !"undefined".equals(userIdParam)) {
                 try {
                     Long userId = Long.parseLong(userIdParam);
                     User user = new User();
                     user.setId(userId);
                     userContextUtil.setCurrentUser(user);
+                    System.out.println("设置小程序用户上下文，userId: " + userId);
                 } catch (NumberFormatException e) {
                     System.out.println("无效的userId参数: " + userIdParam);
                 }
+            } else {
+                System.out.println("小程序请求未携带userId参数，允许匿名访问");
             }
             return true;
         }
@@ -98,7 +106,7 @@ public class JwtInterceptor implements HandlerInterceptor {
         String token = authHeader.substring(7);
         
         // 验证管理后台JWT令牌
-        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/") || requestURI.equals("/api/upload")) {
+        if (requestURI.startsWith(adminPrefix) || requestURI.startsWith("/api/content/") || requestURI.equals("/api/upload") || requestURI.matches("/api/avatar/\\d+/upload")) {
             if (!jwtUtil.validateAdminToken(token)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("{\"timestamp\":\"" + java.time.Instant.now() + "\",\"status\":401,\"error\":\"Unauthorized\",\"message\":\"未授权：管理后台认证令牌无效或已过期\",\"path\":\"" + requestURI + "\"}");

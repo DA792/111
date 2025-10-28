@@ -92,12 +92,32 @@ public class PhotoCheckInController {
             @RequestParam(value = "params[pageNum]", defaultValue = "1") Integer pageNum,
             @RequestParam(value = "params[pageSize]", defaultValue = "10") Integer pageSize,
             @RequestParam(value = "params[title]", required = false) String title,
-            @RequestParam(value = "params[categoryId]", required = false) Long categoryId,
-            @RequestParam(value = "params[userId]", required = false) Long userId) {
+            @RequestParam(value = "params[categoryId]", required = false) String categoryIdStr,
+            @RequestParam(value = "params[userId]", required = false) String userIdStr) {
         
         // 处理title参数，如果是"undefined"字符串则转为null
         if (title != null && "undefined".equals(title)) {
             title = null;
+        }
+        
+        // 处理categoryId参数，将字符串转换为Long，处理null和"null"字符串
+        Long categoryId = null;
+        if (categoryIdStr != null && !categoryIdStr.isEmpty() && !"null".equals(categoryIdStr) && !"undefined".equals(categoryIdStr)) {
+            try {
+                categoryId = Long.parseLong(categoryIdStr);
+            } catch (NumberFormatException e) {
+                // 忽略无效的categoryId
+            }
+        }
+        
+        // 处理userId参数，将字符串转换为Long，处理null和"null"字符串
+        Long userId = null;
+        if (userIdStr != null && !userIdStr.isEmpty() && !"null".equals(userIdStr) && !"undefined".equals(userIdStr)) {
+            try {
+                userId = Long.parseLong(userIdStr);
+            } catch (NumberFormatException e) {
+                // 忽略无效的userId
+            }
         }
         
         PhotoCheckInQueryDTO queryDTO = new PhotoCheckInQueryDTO();

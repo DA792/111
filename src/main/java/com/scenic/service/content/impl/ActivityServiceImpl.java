@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import com.scenic.utils.FileUploadUtil;
 import com.scenic.mapper.ResourceFileMapper;
 import com.scenic.entity.ResourceFile;
+import java.util.ArrayList;
 
 /**
  * 活动服务实现类
@@ -151,28 +152,43 @@ public class ActivityServiceImpl implements ActivityService {
                     existingActivity.setContent(activityDTO.getContent());
                 }
                 
-                // 处理详情内容图片
-                if (activityDTO.getContentImageIds() != null) {
-                    // 删除原有内容图片
-                    if (existingActivity.getContentImageIds() != null && !existingActivity.getContentImageIds().isEmpty()) {
-                        deleteFilesByType(existingActivity.getContentImageIds(), "详情内容图片");
-                    }
-                    // 设置新的内容图片
-                    existingActivity.setContentImageIds(activityDTO.getContentImageIds());
-                }
+        // 处理详情内容图片 - 使用精确删除+增量更新的方式
+        List<Long> finalContentImageIds = new ArrayList<>();
+        
+        // 如果传入了contentImageIds，则作为基础列表
+        if (activityDTO.getContentImageIds() != null) {
+            finalContentImageIds.addAll(activityDTO.getContentImageIds());
+        } else if (existingActivity.getContentImageIds() != null) {
+            // 如果没有传入新的contentImageIds，则保留原有的
+            finalContentImageIds.addAll(existingActivity.getContentImageIds());
+        }
+        
+        // 处理删除指定的文件
+        if (activityDTO.getDeletedFileIds() != null && !activityDTO.getDeletedFileIds().isEmpty()) {
+            List<Long> deletedContentImageIds = activityDTO.getDeletedFileIds().get("contentImage");
+            if (deletedContentImageIds != null && !deletedContentImageIds.isEmpty()) {
+                // 删除指定的内容图片文件
+                deleteSpecificFilesByIds(deletedContentImageIds, "详情内容图片");
+                // 从最终列表中移除被删除的文件ID
+                finalContentImageIds.removeAll(deletedContentImageIds);
+            }
+        }
+        
+        // 设置最终的内容图片ID列表
+        existingActivity.setContentImageIds(finalContentImageIds);
                 
                 // 处理封面图片
                 if (activityDTO.getCoverImageId() != null) {
-                    // 删除原有封面图片
+                    // 只有在传入新的封面图片ID时才删除原有的封面图片
                     if (existingActivity.getCoverImageId() != null) {
                         deleteFilesByType(java.util.Arrays.asList(existingActivity.getCoverImageId()), "封面图片");
                     }
                     // 设置新的封面图片
                     existingActivity.setCoverImageId(activityDTO.getCoverImageId());
-                } else if (activityDTO.getCoverImageId() == null && existingActivity.getCoverImageId() != null) {
-                    // 如果传入null且原有封面不为null，删除原有封面
-                    deleteFilesByType(java.util.Arrays.asList(existingActivity.getCoverImageId()), "封面图片");
-                    existingActivity.setCoverImageId(null);
+                } else if (activityDTO.getCoverImageId() == null) {
+                    // 如果传入null，保持原有封面不变
+                    // 不删除原有封面，也不修改封面ID
+                    System.out.println("传入的封面图片ID为null，保持原有封面不变");
                 }
                 
                 if (activityDTO.getUpdateBy() != null) {
@@ -450,5 +466,61 @@ public class ActivityServiceImpl implements ActivityService {
         }
         
         return dto;
+    }
+
+    /**
+     * 根据文件ID列表删除指定的文件
+     * @param fileIds 要删除的文件ID列表
+     * @param fileType 文件类型描述（用于日志）
+     */
+    private void deleteSpecificFilesByIds(List<Long> fileIds, String fileType) {
+        try {
+            if (fileIds == null || fileIds.isEmpty()) {
+                System.out.println("没有" + fileType + "文件需要删除");
+                return;
+            }
+            
+            System.out.println("=== 开始删除指定的" + fileType + "文件 ===");
+            System.out.println("要删除的文件ID列表: " + fileIds);
+            
+            for (Long fileId : fileIds) {
+                try {
+                    if (fileId == null) {
+                        System.out.println("文件ID为null，跳过删除");
+                        continue;
+                    }
+                    
+                    System.out.println("尝试删除" + fileType + "文件，ID: " + fileId);
+                    
+                    // 查询文件记录
+                    ResourceFile resourceFile = resourceFileMapper.selectById(fileId);
+                    if (resourceFile != null) {
+                        System.out.println("找到文件记录: " + resourceFile.getFileName() + ", Bucket: " + resourceFile.getBucketName() + ", Key: " + resourceFile.getFileKey());
+                        
+                        // 从MinIO删除文件
+                        try {
+                            fileUploadUtil.removeObject(resourceFile.getBucketName(), resourceFile.getFileKey());
+                            System.out.println("从MinIO删除文件成功: " + resourceFile.getBucketName() + "/" + resourceFile.getFileKey());
+                        } catch (Exception e) {
+                            System.err.println("从MinIO删除文件失败: " + e.getMessage());
+                        }
+                        
+                        // 从数据库删除记录
+                        int result = resourceFileMapper.deleteById(fileId);
+                        System.out.println("从数据库删除文件记录结果: " + (result > 0 ? "成功" : "失败"));
+                    } else {
+                        System.err.println("未找到ID为" + fileId + "的文件记录");
+                    }
+                } catch (Exception e) {
+                    System.err.println("删除文件时发生异常: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            
+            System.out.println("删除指定的" + fileType + "文件完成");
+        } catch (Exception e) {
+            System.err.println("删除指定的" + fileType + "文件时发生异常: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
