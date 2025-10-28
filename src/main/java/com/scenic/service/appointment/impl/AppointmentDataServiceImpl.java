@@ -59,15 +59,36 @@ public class AppointmentDataServiceImpl implements AppointmentDataService {
             Integer individualReserveStatus = Integer.parseInt(projectConfigMap.get("individual_reserve_status").toString());
             Integer teamReserveStatus = Integer.parseInt(projectConfigMap.get("team_reserve_status").toString());
             
+            // 构造年月字符串
+            String yearMonth = String.format("%04d-%02d-01", year, month);
+            
             // 查询预约数据 - 使用配置中的预约项目状态
             List<Map<String, Object>> dataList = appointmentDataMapper.getEnterReservationData(
-                    year, month, dailyLimit, individualReserveStatus, teamReserveStatus);
+                    year, month, yearMonth, dailyLimit, individualReserveStatus, teamReserveStatus);
             
             // 转换为DTO对象
             List<AppointmentDataDTO> resultList = new ArrayList<>();
             for (Map<String, Object> data : dataList) {
                 AppointmentDataDTO dto = new AppointmentDataDTO();
-                dto.setReserveDate((java.util.Date) data.get("reserve_date"));
+                
+                // 修复reserveDate类型转换问题
+                Object reserveDateObj = data.get("reserve_date");
+                if (reserveDateObj instanceof java.util.Date) {
+                    dto.setReserveDate((java.util.Date) reserveDateObj);
+                } else if (reserveDateObj instanceof String) {
+                    // 如果是字符串，尝试解析为Date
+                    try {
+                        // 假设日期格式为 "yyyy-MM-dd"
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                        dto.setReserveDate(sdf.parse((String) reserveDateObj));
+                    } catch (Exception e) {
+                        // 如果解析失败，设置为null
+                        dto.setReserveDate(null);
+                    }
+                } else {
+                    dto.setReserveDate(null);
+                }
+                
                 dto.setReserveStatus((String) data.get("reserve_status"));
                 
                 // 安全处理booked_count字段
@@ -130,7 +151,25 @@ public class AppointmentDataServiceImpl implements AppointmentDataService {
             List<AppointmentDataDTO> resultList = new ArrayList<>();
             for (Map<String, Object> data : dataList) {
                 AppointmentDataDTO dto = new AppointmentDataDTO();
-                dto.setReserveDate((java.util.Date) data.get("reserve_date"));
+                
+                // 修复reserveDate类型转换问题
+                Object reserveDateObj = data.get("reserve_date");
+                if (reserveDateObj instanceof java.util.Date) {
+                    dto.setReserveDate((java.util.Date) reserveDateObj);
+                } else if (reserveDateObj instanceof String) {
+                    // 如果是字符串，尝试解析为Date
+                    try {
+                        // 假设日期格式为 "yyyy-MM-dd"
+                        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                        dto.setReserveDate(sdf.parse((String) reserveDateObj));
+                    } catch (Exception e) {
+                        // 如果解析失败，设置为null
+                        dto.setReserveDate(null);
+                    }
+                } else {
+                    dto.setReserveDate(null);
+                }
+                
                 dto.setReserveStatus((String) data.get("reserve_status"));
                 dto.setActivityName((String) data.get("activity_name"));
                 

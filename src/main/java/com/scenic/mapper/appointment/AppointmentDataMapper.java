@@ -25,6 +25,7 @@ public interface AppointmentDataMapper {
     List<Map<String, Object>> getEnterReservationData(
             @Param("year") Integer year, 
             @Param("month") Integer month,
+            @Param("yearMonth") String yearMonth,
             @Param("dailyLimit") Integer dailyLimit,
             @Param("individualReserveStatus") Integer individualReserveStatus,
             @Param("teamReserveStatus") Integer teamReserveStatus);

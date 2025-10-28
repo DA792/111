@@ -136,8 +136,8 @@ public class RedisUtil {
      */
     public boolean setIfAbsent(String key, Object value, long timeout) {
         try {
-            redisTemplate.opsForValue().setIfAbsent(key, value, timeout, TimeUnit.SECONDS);
-            Boolean result = (Boolean) redisTemplate.exec().get(0);
+            // 使用RedisTemplate的setIfAbsent方法直接设置键值和过期时间
+            Boolean result = redisTemplate.opsForValue().setIfAbsent(key, value, timeout, TimeUnit.SECONDS);
             redisAvailable = true;
             return result != null && result;
         } catch (RedisConnectionFailureException e) {

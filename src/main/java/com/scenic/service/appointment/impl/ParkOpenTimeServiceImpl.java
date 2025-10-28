@@ -66,6 +66,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
                     return Result.error("配置日期不能为空");
                 }
                 
+                // 自动修正dayType字段
+                openTime.setDayType(getDayType(openTime.getConfigDate()));
+                
                 // 设置创建时间和更新时间
                 openTime.setCreateTime(java.time.LocalDateTime.now());
                 openTime.setUpdateTime(java.time.LocalDateTime.now());
@@ -95,6 +98,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
             if (openTime.getConfigDate() == null) {
                 return Result.error("配置日期不能为空");
             }
+            
+            // 自动修正dayType字段
+            openTime.setDayType(getDayType(openTime.getConfigDate()));
             
             // 设置更新时间
             openTime.setUpdateTime(java.time.LocalDateTime.now());
@@ -128,6 +134,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
                 if (openTime.getConfigDate() == null) {
                     return Result.error("配置日期不能为空");
                 }
+                
+                // 自动修正dayType字段
+                openTime.setDayType(getDayType(openTime.getConfigDate()));
                 
                 // 设置更新时间
                 openTime.setUpdateTime(java.time.LocalDateTime.now());
@@ -163,6 +172,9 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
                 openTime.setDayType(getDayType(configDate));
                 openTime.setCreateTime(java.time.LocalDateTime.now());
                 openTime.setUpdateTime(java.time.LocalDateTime.now());
+            } else {
+                // 如果数据库中有配置，自动修正dayType字段
+                openTime.setDayType(getDayType(configDate));
             }
             
             return Result.success(openTime);
@@ -172,14 +184,14 @@ public class ParkOpenTimeServiceImpl implements ParkOpenTimeService {
     }
     
     /**
-     * 根据日期获取日类型（1-工作日，2-周末，3-节假日）
+     * 根据日期获取日类型（0-工作日，1-节假日）
      * @param date 日期
-     * @return 日类型
+     * @return 日类型 (0-工作日, 1-节假日)
      */
     private int getDayType(LocalDate date) {
         int dayOfWeek = date.getDayOfWeek().getValue();
-        // 周一到周五为工作日(1)，周六周日为周末(2)
-        return (dayOfWeek >= 1 && dayOfWeek <= 5) ? 1 : 2;
+        // 周一到周五为工作日(0)，周六周日为节假日(1)
+        return (dayOfWeek >= 1 && dayOfWeek <= 5) ? 0 : 1;
     }
     
     /**
