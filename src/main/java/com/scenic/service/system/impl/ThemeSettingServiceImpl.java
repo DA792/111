@@ -219,4 +219,133 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
         BeanUtils.copyProperties(themeSettingDTO, themeSetting);
         return themeSetting;
     }
+    
+    // 以下为新增的图片处理方法
+    
+    @Value("${file.upload.path}")
+    private String uploadPath;
+    
+    @Override
+    public Result<String> uploadSplashScreenImage(MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
+        }
+        
+        try {
+            // 创建上传目录
+            File uploadDir = new File(uploadPath + "/theme");
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+            
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String newFilename = "splash_screen_" + UUID.randomUUID().toString() + fileExtension;
+            
+            // 保存文件
+            File dest = new File(uploadDir.getAbsolutePath() + "/" + newFilename);
+            file.transferTo(dest);
+            
+            // 删除旧的开屏页图片（如果存在）
+            File oldSplashScreen = new File(uploadDir.getAbsolutePath() + "/splash_screen.jpg");
+            if (oldSplashScreen.exists()) {
+                oldSplashScreen.delete();
+            }
+            
+            // 重命名新文件为固定名称
+            File newFile = new File(uploadDir.getAbsolutePath() + "/splash_screen.jpg");
+            dest.renameTo(newFile);
+            
+            return Result.success("开屏页图片上传成功");
+        } catch (IOException e) {
+            return Result.error("开屏页图片上传失败: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public Result<String> uploadHomeBackgroundImage(MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
+        }
+        
+        try {
+            // 创建上传目录
+            File uploadDir = new File(uploadPath + "/theme");
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+            
+            // 生成唯一文件名
+            String originalFilename = file.getOriginalFilename();
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String newFilename = "home_background_" + UUID.randomUUID().toString() + fileExtension;
+            
+            // 保存文件
+            File dest = new File(uploadDir.getAbsolutePath() + "/" + newFilename);
+            file.transferTo(dest);
+            
+            // 删除旧的首页背景图（如果存在）
+            File oldHomeBackground = new File(uploadDir.getAbsolutePath() + "/home_background.jpg");
+            if (oldHomeBackground.exists()) {
+                oldHomeBackground.delete();
+            }
+            
+            // 重命名新文件为固定名称
+            File newFile = new File(uploadDir.getAbsolutePath() + "/home_background.jpg");
+            dest.renameTo(newFile);
+            
+            return Result.success("首页背景图上传成功");
+        } catch (IOException e) {
+            return Result.error("首页背景图上传失败: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public Result<String> getSplashScreenImage() {
+        File splashScreen = new File(uploadPath + "/theme/splash_screen.jpg");
+        if (splashScreen.exists()) {
+            return Result.success("/theme/splash_screen.jpg");
+        } else {
+            return Result.success(""); // 返回空字符串表示没有设置开屏页图片
+        }
+    }
+    
+    @Override
+    public Result<String> getHomeBackgroundImage() {
+        File homeBackground = new File(uploadPath + "/theme/home_background.jpg");
+        if (homeBackground.exists()) {
+            return Result.success("/theme/home_background.jpg");
+        } else {
+            return Result.success(""); // 返回空字符串表示没有设置首页背景图
+        }
+    }
+    
+    @Override
+    public Result<String> deleteSplashScreenImage() {
+        File splashScreen = new File(uploadPath + "/theme/splash_screen.jpg");
+        if (splashScreen.exists()) {
+            if (splashScreen.delete()) {
+                return Result.success("开屏页图片删除成功");
+            } else {
+                return Result.error("开屏页图片删除失败");
+            }
+        } else {
+            return Result.success("开屏页图片不存在");
+        }
+    }
+    
+    @Override
+    public Result<String> deleteHomeBackgroundImage() {
+        File homeBackground = new File(uploadPath + "/theme/home_background.jpg");
+        if (homeBackground.exists()) {
+            if (homeBackground.delete()) {
+                return Result.success("首页背景图删除成功");
+            } else {
+                return Result.error("首页背景图删除失败");
+            }
+        } else {
+            return Result.success("首页背景图不存在");
+        }
+    }
 }
