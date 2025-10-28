@@ -1,6 +1,6 @@
 
 server:
-  port: 10033
+  port: 10032
 
 
 spring:
@@ -104,6 +104,6 @@ minio:
 # 微信小程序配置
 wechat:
   miniapp:
-    appId: wx78d1148e7f4afff9  # 实际的小程序AppID
-    appSecret: 426d87b3961af6093b8d1beb66d2c141  # 实际的小程序AppSecret
+    appId: wx36fbd5bfa9a3de0c  # 实际的小程序AppID
+    appSecret: c19d4aa0b9e8397354df287d0628d711  # 实际的小程序AppSecret
     code2SessionUrl: https://api.weixin.qq.com/sns/jscode2session

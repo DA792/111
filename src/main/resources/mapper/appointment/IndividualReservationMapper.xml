@@ -319,4 +319,13 @@
         WHERE id = #{id}
     </update>
     
+    <!-- 根据状态查询个人预约（无分页） -->
+    <select id="selectByStatus" resultMap="IndividualReservationResultMap">
+        SELECT 
+        <include refid="IndividualReservation_Column_List"/>
+        FROM individual_reservation
+        WHERE deleted = 0 AND status = #{status}
+        ORDER BY create_time DESC
+    </select>
+    
 </mapper>
