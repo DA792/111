@@ -88,6 +88,7 @@ file:
   upload:
     max-file-size: 10MB
     max-request-size: 10MB
+    path: ./uploads/
 
 # MinIO配置
 minio:
