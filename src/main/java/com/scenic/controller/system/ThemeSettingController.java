@@ -67,6 +67,17 @@ public class ThemeSettingController {
     }
     
     /**
+     * 更新主题设置（不带ID）
+     * @param themeSettingDTO 主题设置信息
+     * @return 更新结果
+     */
+    @PutMapping
+    public Result<String> updateThemeSettingWithoutId(@RequestBody ThemeSettingDTO themeSettingDTO) {
+        // 对于主题设置，使用固定的ID 1，因为我们只有一个主题配置
+        return themeSettingService.updateThemeSetting(1L, themeSettingDTO);
+    }
+    
+    /**
      * 更新主题设置
      * @param id 主题设置ID
      * @param themeSettingDTO 主题设置信息

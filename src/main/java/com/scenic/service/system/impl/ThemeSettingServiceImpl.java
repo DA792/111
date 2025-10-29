@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,23 +45,44 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
         try {
             // 从配置文件读取主题设置
             ObjectNode config = readConfigFromFile();
-            ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
             
-            // 创建主题设置DTO
-            ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
-            themeSettingDTO.setId(1L); // 固定ID
-            themeSettingDTO.setThemeName("default");
-            themeSettingDTO.setIsDefault(1);
-            
-            // 将主题设置转换为JSON字符串存储在colorConfig字段中
-            String colorConfig = objectMapper.writeValueAsString(themeSettings);
-            themeSettingDTO.setColorConfig(colorConfig);
-            
-            themeSettingDTO.setCreateTime(LocalDateTime.now());
-            themeSettingDTO.setUpdateTime(LocalDateTime.parse(config.get("lastUpdated").asText()));
-            
-            // 包装成列表返回
-            return Result.success(List.of(themeSettingDTO));
+            // 获取themes数组
+            JsonNode themesNode = config.get("themes");
+            if (themesNode != null && themesNode.isArray()) {
+                List<ThemeSettingDTO> themeList = new ArrayList<>();
+                for (JsonNode themeNode : themesNode) {
+                    ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
+                    themeSettingDTO.setId(themeNode.get("themeName").asText().hashCode() & 0xFFFFL); // 基于主题名称生成ID
+                    themeSettingDTO.setThemeName(themeNode.get("themeName").asText());
+                    themeSettingDTO.setIsDefault(1); // 默认所有主题都是可用的
+                    
+                    // 将主题信息转换为JSON字符串存储在colorConfig字段中
+                    String colorConfig = objectMapper.writeValueAsString(themeNode);
+                    themeSettingDTO.setColorConfig(colorConfig);
+                    
+                    themeSettingDTO.setCreateTime(LocalDateTime.now());
+                    themeSettingDTO.setUpdateTime(LocalDateTime.now());
+                    themeList.add(themeSettingDTO);
+                }
+                return Result.success(themeList);
+            } else {
+                // 兼容旧格式
+                ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
+                ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
+                themeSettingDTO.setId(1L); // 固定ID
+                themeSettingDTO.setThemeName("default");
+                themeSettingDTO.setIsDefault(1);
+                
+                // 将主题设置转换为JSON字符串存储在colorConfig字段中
+                String colorConfig = objectMapper.writeValueAsString(themeSettings);
+                themeSettingDTO.setColorConfig(colorConfig);
+                
+                themeSettingDTO.setCreateTime(LocalDateTime.now());
+                themeSettingDTO.setUpdateTime(LocalDateTime.parse(config.get("lastUpdated").asText()));
+                
+                // 包装成列表返回
+                return Result.success(List.of(themeSettingDTO));
+            }
         } catch (Exception e) {
             return Result.error("查询主题设置列表失败: " + e.getMessage());
         }
@@ -89,8 +111,25 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
         try {
             // 从配置文件读取主题设置
             ObjectNode config = readConfigFromFile();
-            ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
-            ObjectNode imageSettings = (ObjectNode) config.get("imageSettings");
+            
+            // 检查是否是新的themes数组格式
+            JsonNode themesNode = config.get("themes");
+            String colorConfig;
+            if (themesNode != null && themesNode.isArray()) {
+                // 使用新的themes数组格式
+                colorConfig = objectMapper.writeValueAsString(config);
+            } else {
+                // 兼容旧格式
+                ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
+                ObjectNode imageSettings = (ObjectNode) config.get("imageSettings");
+                
+                // 创建包含旧格式的完整配置
+                ObjectNode fullConfig = objectMapper.createObjectNode();
+                fullConfig.set("themeSettings", themeSettings);
+                fullConfig.set("imageSettings", imageSettings);
+                fullConfig.set("lastUpdated", config.get("lastUpdated"));
+                colorConfig = objectMapper.writeValueAsString(fullConfig);
+            }
             
             // 创建主题设置DTO
             ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
@@ -98,8 +137,7 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             themeSettingDTO.setThemeName("default");
             themeSettingDTO.setIsDefault(1);
             
-            // 将主题设置转换为JSON字符串存储在colorConfig字段中
-            String colorConfig = objectMapper.writeValueAsString(themeSettings);
+            // 将完整的配置转换为JSON字符串存储在colorConfig字段中
             themeSettingDTO.setColorConfig(colorConfig);
             
             themeSettingDTO.setCreateTime(LocalDateTime.now());
@@ -140,14 +178,20 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             
             // 解析colorConfig中的主题设置
             JsonNode colorConfigNode = objectMapper.readTree(themeSettingDTO.getColorConfig());
-            ObjectNode themeSettings = objectMapper.createObjectNode();
             
-            if (colorConfigNode.isObject()) {
-                ObjectNode colorConfigObject = (ObjectNode) colorConfigNode;
-                themeSettings.setAll(colorConfigObject);
+            // 检查是否是新的themes数组格式
+            if (colorConfigNode.has("themes") && colorConfigNode.get("themes").isArray()) {
+                // 使用新的themes数组格式
+                config.set("themes", colorConfigNode.get("themes"));
+            } else {
+                // 兼容旧格式，解析单个主题设置
+                ObjectNode themeSettings = objectMapper.createObjectNode();
+                if (colorConfigNode.isObject()) {
+                    ObjectNode colorConfigObject = (ObjectNode) colorConfigNode;
+                    themeSettings.setAll(colorConfigObject);
+                }
+                config.set("themeSettings", themeSettings);
             }
-            
-            config.set("themeSettings", themeSettings);
             
             // 更新图片设置
             ObjectNode imageSettings = (ObjectNode) config.get("imageSettings");
@@ -414,22 +458,34 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
     }
     
     @Override
-    public Result<String> getSplashScreenImage() {
-        File splashScreen = new File(uploadPath + "/theme/splash_screen.jpg");
-        if (splashScreen.exists()) {
-            return Result.success("/theme/splash_screen.jpg");
-        } else {
-            return Result.success(""); // 返回空字符串表示没有设置开屏页图片
-        }
-    }
-    
-    @Override
-    public Result<String> getHomeBackgroundImage() {
-        File homeBackground = new File(uploadPath + "/theme/home_background.jpg");
-        if (homeBackground.exists()) {
-            return Result.success("/theme/home_background.jpg");
-        } else {
-            return Result.success(""); // 返回空字符串表示没有设置首页背景图
+    public void saveThemeSettings(String colorConfig) {
+        try {
+            // 解析传入的主题配置JSON
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode themeConfig = objectMapper.readTree(colorConfig);
+            
+            // 创建新的配置对象，只保留themes数组
+            ObjectNode newConfig = objectMapper.createObjectNode();
+            
+            // 如果传入的配置包含themes数组，则直接使用
+            if (themeConfig.has("themes")) {
+                newConfig.set("themes", themeConfig.get("themes"));
+            } else {
+                // 如果没有themes数组，保持原有逻辑或创建默认配置
+                File configFile = new File(CONFIG_FILE_PATH);
+                if (configFile.exists()) {
+                    JsonNode existingConfig = objectMapper.readTree(configFile);
+                    if (existingConfig.has("themes")) {
+                        newConfig.set("themes", existingConfig.get("themes"));
+                    }
+                }
+            }
+            
+            // 写回配置文件
+            writeConfigToFile(newConfig);
+                       
+        } catch (IOException e) {
+            throw new RuntimeException("保存主题配置失败: " + e.getMessage(), e);
         }
     }
     
@@ -446,6 +502,26 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             }
         } else {
             return Result.success("开屏页图片不存在");
+        }
+    }
+    
+    @Override
+    public Result<String> getSplashScreenImage() {
+        File splashScreen = new File(uploadPath + "/theme/splash_screen.jpg");
+        if (splashScreen.exists()) {
+            return Result.success("/theme/splash_screen.jpg");
+        } else {
+            return Result.success(""); // 返回空字符串表示没有设置开屏页图片
+        }
+    }
+    
+    @Override
+    public Result<String> getHomeBackgroundImage() {
+        File homeBackground = new File(uploadPath + "/theme/home_background.jpg");
+        if (homeBackground.exists()) {
+            return Result.success("/theme/home_background.jpg");
+        } else {
+            return Result.success(""); // 返回空字符串表示没有设置首页背景图
         }
     }
     

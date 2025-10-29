@@ -68,6 +68,12 @@ public interface ThemeSettingService {
     ThemeSetting getThemeSettingByName(String themeName);
     
     /**
+     * 保存主题设置
+     * @param colorConfig 主题配置JSON字符串
+     */
+    void saveThemeSettings(String colorConfig);
+    
+    /**
      * 上传开屏页图片
      * @param file 图片文件
      * @return 上传结果
