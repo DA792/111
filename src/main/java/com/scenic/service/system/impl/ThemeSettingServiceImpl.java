@@ -384,26 +384,41 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
     // 图片处理方法保持不变
     
     @Override
-    public Result<String> uploadSplashScreenImage(MultipartFile file) {
-        if (file.isEmpty()) {
-            return Result.error("上传文件不能为空");
+    public String updateSplashScreenImage(MultipartFile splashScreenImage) {
+        if (splashScreenImage == null || splashScreenImage.isEmpty()) {
+            throw new IllegalArgumentException("开屏页图片不能为空");
         }
         
         try {
+            // 检查上传路径配置
+            if (uploadPath == null || uploadPath.trim().isEmpty()) {
+                throw new RuntimeException("文件上传路径未配置");
+            }
+            
             // 创建上传目录
             File uploadDir = new File(uploadPath + "/theme");
             if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+                if (!uploadDir.mkdirs()) {
+                    throw new RuntimeException("无法创建上传目录: " + uploadDir.getAbsolutePath());
+                }
+            }
+            
+            // 检查目录是否可写
+            if (!uploadDir.canWrite()) {
+                throw new RuntimeException("上传目录不可写: " + uploadDir.getAbsolutePath());
             }
             
             // 生成唯一文件名
-            String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String originalFilename = splashScreenImage.getOriginalFilename();
+            String fileExtension = ".jpg"; // 默认扩展名
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
             String newFilename = "splash_screen_" + UUID.randomUUID().toString() + fileExtension;
             
             // 保存文件
             File dest = new File(uploadDir.getAbsolutePath() + "/" + newFilename);
-            file.transferTo(dest);
+            splashScreenImage.transferTo(dest);
             
             // 删除旧的开屏页图片（如果存在）
             File oldSplashScreen = new File(uploadDir.getAbsolutePath() + "/splash_screen.jpg");
@@ -413,33 +428,65 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             
             // 重命名新文件为固定名称
             File newFile = new File(uploadDir.getAbsolutePath() + "/splash_screen.jpg");
-            dest.renameTo(newFile);
+            if (!dest.renameTo(newFile)) {
+                // 如果renameTo失败，尝试复制文件
+                Files.copy(dest.toPath(), newFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                dest.delete(); // 删除临时文件
+            }
             
             // 更新配置文件中的图片路径
             updateImageSetting("splashImagePath", "/theme/splash_screen.jpg");
             
-            return Result.success("开屏页图片上传成功");
-        } catch (IOException e) {
+            return "/theme/splash_screen.jpg";
+        } catch (Exception e) {
+            throw new RuntimeException("开屏页图片上传失败: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public Result<String> uploadSplashScreenImage(MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
+        }
+        try {
+            String imagePath = updateSplashScreenImage(file); // 调用已有的updateSplashScreenImage方法
+            return Result.success(imagePath);
+        } catch (Exception e) {
             return Result.error("开屏页图片上传失败: " + e.getMessage());
         }
     }
     
     @Override
     public Result<String> uploadHomeBackgroundImage(MultipartFile file) {
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             return Result.error("上传文件不能为空");
         }
         
         try {
+            // 检查上传路径配置
+            if (uploadPath == null || uploadPath.trim().isEmpty()) {
+                return Result.error("文件上传路径未配置");
+            }
+            
             // 创建上传目录
             File uploadDir = new File(uploadPath + "/theme");
             if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+                if (!uploadDir.mkdirs()) {
+                    return Result.error("无法创建上传目录: " + uploadDir.getAbsolutePath());
+                }
+            }
+            
+            // 检查目录是否可写
+            if (!uploadDir.canWrite()) {
+                return Result.error("上传目录不可写: " + uploadDir.getAbsolutePath());
             }
             
             // 生成唯一文件名
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String fileExtension = ".jpg"; // 默认扩展名
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
             String newFilename = "home_background_" + UUID.randomUUID().toString() + fileExtension;
             
             // 保存文件
@@ -454,13 +501,17 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             
             // 重命名新文件为固定名称
             File newFile = new File(uploadDir.getAbsolutePath() + "/home_background.jpg");
-            dest.renameTo(newFile);
+            if (!dest.renameTo(newFile)) {
+                // 如果renameTo失败，尝试复制文件
+                Files.copy(dest.toPath(), newFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                dest.delete(); // 删除临时文件
+            }
             
             // 更新配置文件中的图片路径
             updateImageSetting("backgroundImagePath", "/theme/home_background.jpg");
             
-            return Result.success("首页背景图上传成功");
-        } catch (IOException e) {
+            return Result.success("/theme/home_background.jpg");
+        } catch (Exception e) {
             return Result.error("首页背景图上传失败: " + e.getMessage());
         }
     }

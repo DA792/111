@@ -110,13 +110,20 @@ public class ThemeSettingController {
 
     /**
      * 上传开屏页图片
-     * @param file 图片文件
+     * @param splashScreenImage 图片文件
      * @return 上传结果
      */
     @PostMapping("/splash-screen/upload")
-    public Result<String> uploadSplashScreenImage(@RequestParam("file") MultipartFile file) {
-        // TODO: 实现开屏页图片上传逻辑
-        return Result.success("开屏页图片上传成功");
+    public Result<String> uploadSplashScreenImage(@RequestParam("splashScreenImage") MultipartFile splashScreenImage) {
+        if (splashScreenImage == null || splashScreenImage.isEmpty()) {
+            return Result.error("开屏页图片不能为空");
+        }
+        try {
+            String imageUrl = themeSettingService.updateSplashScreenImage(splashScreenImage);
+            return Result.success(imageUrl);
+        } catch (Exception e) {
+            return Result.error("上传失败: " + e.getMessage());
+        }
     }
     
     /**

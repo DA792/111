@@ -88,6 +88,13 @@ public interface ThemeSettingService {
     Result<String> uploadHomeBackgroundImage(MultipartFile file);
     
     /**
+     * 更新开屏页图片
+     * @param splashScreenImage 图片文件
+     * @return 图片路径
+     */
+    String updateSplashScreenImage(MultipartFile splashScreenImage);
+    
+    /**
      * 获取开屏页图片
      * @return 图片路径
      */
