@@ -111,38 +111,40 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
         try {
             // 从配置文件读取主题设置
             ObjectNode config = readConfigFromFile();
-            
-            // 检查是否是新的themes数组格式
-            JsonNode themesNode = config.get("themes");
-            String colorConfig;
-            if (themesNode != null && themesNode.isArray()) {
-                // 使用新的themes数组格式
-                colorConfig = objectMapper.writeValueAsString(config);
-            } else {
-                // 兼容旧格式
-                ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
-                ObjectNode imageSettings = (ObjectNode) config.get("imageSettings");
-                
-                // 创建包含旧格式的完整配置
-                ObjectNode fullConfig = objectMapper.createObjectNode();
-                fullConfig.set("themeSettings", themeSettings);
-                fullConfig.set("imageSettings", imageSettings);
-                fullConfig.set("lastUpdated", config.get("lastUpdated"));
-                colorConfig = objectMapper.writeValueAsString(fullConfig);
-            }
-            
+
             // 创建主题设置DTO
             ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
             themeSettingDTO.setId(1L); // 固定ID
             themeSettingDTO.setThemeName("default");
             themeSettingDTO.setIsDefault(1);
-            
-            // 将完整的配置转换为JSON字符串存储在colorConfig字段中
-            themeSettingDTO.setColorConfig(colorConfig);
-            
+
+            // 直接设置themes和images
+            JsonNode themesNode = config.get("themes");
+            if (themesNode != null && themesNode.isArray()) {
+                themeSettingDTO.setThemes(objectMapper.writeValueAsString(themesNode));
+            } else {
+                // 兼容旧格式，如果只有themeSettings，则将其转换为themes数组
+                JsonNode themeSettingsNode = config.get("themeSettings");
+                if (themeSettingsNode != null && themeSettingsNode.isObject()) {
+                    List<ObjectNode> oldThemes = new ArrayList<>();
+                    ObjectNode defaultTheme = objectMapper.createObjectNode();
+                    defaultTheme.put("themeName", "default");
+                    defaultTheme.put("colorName", "默认主题");
+                    defaultTheme.put("colorCode", themeSettingsNode.get("primaryColor").asText());
+                    defaultTheme.put("colorConfigEnabled", true);
+                    oldThemes.add(defaultTheme);
+                    themeSettingDTO.setThemes(objectMapper.writeValueAsString(oldThemes));
+                }
+            }
+
+            JsonNode imageSettingsNode = config.get("imageSettings");
+            if (imageSettingsNode != null && imageSettingsNode.isObject()) {
+                themeSettingDTO.setImages(objectMapper.writeValueAsString(imageSettingsNode));
+            }
+
             themeSettingDTO.setCreateTime(LocalDateTime.now());
-            themeSettingDTO.setUpdateTime(LocalDateTime.parse(config.get("lastUpdated").asText()));
-            
+            themeSettingDTO.setUpdateTime(LocalDateTime.now());
+
             return Result.success(themeSettingDTO);
         } catch (Exception e) {
             return Result.error("查询默认主题设置失败: " + e.getMessage());
@@ -176,30 +178,36 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             // 读取现有配置
             ObjectNode config = readConfigFromFile();
             
-            // 解析colorConfig中的主题设置
-            JsonNode colorConfigNode = objectMapper.readTree(themeSettingDTO.getColorConfig());
-            
-            // 检查是否是新的themes数组格式
-            if (colorConfigNode.has("themes") && colorConfigNode.get("themes").isArray()) {
-                // 使用新的themes数组格式
-                config.set("themes", colorConfigNode.get("themes"));
-            } else {
-                // 兼容旧格式，解析单个主题设置
-                ObjectNode themeSettings = objectMapper.createObjectNode();
-                if (colorConfigNode.isObject()) {
-                    ObjectNode colorConfigObject = (ObjectNode) colorConfigNode;
-                    themeSettings.setAll(colorConfigObject);
+            // 处理themes配置
+            if (themeSettingDTO.getThemes() != null && !themeSettingDTO.getThemes().isEmpty()) {
+                // 解析themes JSON字符串并更新配置
+                JsonNode themesNode = objectMapper.readTree(themeSettingDTO.getThemes());
+                config.set("themes", themesNode);
+            } else if (themeSettingDTO.getColorConfig() != null && !themeSettingDTO.getColorConfig().isEmpty()) {
+                // 兼容旧格式，解析colorConfig中的主题设置
+                JsonNode colorConfigNode = objectMapper.readTree(themeSettingDTO.getColorConfig());
+                
+                // 检查是否是新的themes数组格式
+                if (colorConfigNode.has("themes") && colorConfigNode.get("themes").isArray()) {
+                    // 使用新的themes数组格式
+                    config.set("themes", colorConfigNode.get("themes"));
+                } else {
+                    // 兼容旧格式，解析单个主题设置
+                    ObjectNode themeSettings = objectMapper.createObjectNode();
+                    if (colorConfigNode.isObject()) {
+                        ObjectNode colorConfigObject = (ObjectNode) colorConfigNode;
+                        themeSettings.setAll(colorConfigObject);
+                    }
+                    config.set("themeSettings", themeSettings);
                 }
-                config.set("themeSettings", themeSettings);
             }
             
-            // 更新图片设置
-            ObjectNode imageSettings = (ObjectNode) config.get("imageSettings");
-            if (imageSettings == null) {
-                imageSettings = objectMapper.createObjectNode();
+            // 处理images配置
+            if (themeSettingDTO.getImages() != null && !themeSettingDTO.getImages().isEmpty()) {
+                // 解析images JSON字符串并更新配置
+                JsonNode imagesNode = objectMapper.readTree(themeSettingDTO.getImages());
+                config.set("imageSettings", imagesNode);
             }
-            
-            config.set("imageSettings", imageSettings);
             
             // 更新时间戳
             config.put("lastUpdated", LocalDateTime.now().toString());

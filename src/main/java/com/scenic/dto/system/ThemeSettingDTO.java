@@ -36,6 +36,16 @@ public class ThemeSettingDTO {
      */
     private LocalDateTime updateTime;
     
+    /**
+     * 主题数组配置
+     */
+    private String themes;
+    
+    /**
+     * 图片配置
+     */
+    private String images;
+    
     // getter和setter方法
     public Long getId() {
         return id;
@@ -83,5 +93,21 @@ public class ThemeSettingDTO {
     
     public void setUpdateTime(LocalDateTime updateTime) {
         this.updateTime = updateTime;
+    }
+    
+    public String getThemes() {
+        return themes;
+    }
+    
+    public void setThemes(String themes) {
+        this.themes = themes;
+    }
+    
+    public String getImages() {
+        return images;
+    }
+    
+    public void setImages(String images) {
+        this.images = images;
     }
 }
