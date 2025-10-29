@@ -1,16 +1,30 @@
 {
-  "themeSettings": {
-    "primaryColor": "#409eff",
-    "secondaryColor": "#67c23a",
-    "backgroundColor": "#f5f5f5",
-    "textColor": "#333333",
-    "headerColor": "#ffffff",
-    "sidebarColor": "#2d3a4b"
-  },
-  "imageSettings": {
-    "logoPath": "",
-    "faviconPath": "",
-    "backgroundImagePath": ""
-  },
-  "lastUpdated": "2025-10-28T15:36:52"
+  "themes" : [ {
+    "themeName" : "theme1",
+    "colorName" : "默认主题",
+    "colorCode" : "#926C35",
+    "colorConfigEnabled" : true
+  }, {
+    "themeName" : "theme2",
+    "colorName" : "深色主题",
+    "colorCode" : "#409EFF",
+    "colorConfigEnabled" : true
+  }, {
+    "themeName" : "theme3",
+    "colorName" : "主题3",
+    "colorCode" : "#926C35",
+    "colorConfigEnabled" : true
+  }, {
+    "themeName" : "theme4",
+    "colorName" : "主题4",
+    "colorCode" : "#926C35",
+    "colorConfigEnabled" : true
+  }, {
+    "themeName" : "theme5",
+    "colorName" : "主题5",
+    "colorCode" : "#926C35",
+    "colorConfigEnabled" : false
+  } ],
+  "imageSettings" : { },
+  "lastUpdated" : "2025-10-29T17:21:45.486569082"
 }

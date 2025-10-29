@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,23 +45,44 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
         try {
             // 从配置文件读取主题设置
             ObjectNode config = readConfigFromFile();
-            ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
             
-            // 创建主题设置DTO
-            ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
-            themeSettingDTO.setId(1L); // 固定ID
-            themeSettingDTO.setThemeName("default");
-            themeSettingDTO.setIsDefault(1);
-            
-            // 将主题设置转换为JSON字符串存储在colorConfig字段中
-            String colorConfig = objectMapper.writeValueAsString(themeSettings);
-            themeSettingDTO.setColorConfig(colorConfig);
-            
-            themeSettingDTO.setCreateTime(LocalDateTime.now());
-            themeSettingDTO.setUpdateTime(LocalDateTime.parse(config.get("lastUpdated").asText()));
-            
-            // 包装成列表返回
-            return Result.success(List.of(themeSettingDTO));
+            // 获取themes数组
+            JsonNode themesNode = config.get("themes");
+            if (themesNode != null && themesNode.isArray()) {
+                List<ThemeSettingDTO> themeList = new ArrayList<>();
+                for (JsonNode themeNode : themesNode) {
+                    ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
+                    themeSettingDTO.setId(themeNode.get("themeName").asText().hashCode() & 0xFFFFL); // 基于主题名称生成ID
+                    themeSettingDTO.setThemeName(themeNode.get("themeName").asText());
+                    themeSettingDTO.setIsDefault(1); // 默认所有主题都是可用的
+                    
+                    // 将主题信息转换为JSON字符串存储在colorConfig字段中
+                    String colorConfig = objectMapper.writeValueAsString(themeNode);
+                    themeSettingDTO.setColorConfig(colorConfig);
+                    
+                    themeSettingDTO.setCreateTime(LocalDateTime.now());
+                    themeSettingDTO.setUpdateTime(LocalDateTime.now());
+                    themeList.add(themeSettingDTO);
+                }
+                return Result.success(themeList);
+            } else {
+                // 兼容旧格式
+                ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
+                ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
+                themeSettingDTO.setId(1L); // 固定ID
+                themeSettingDTO.setThemeName("default");
+                themeSettingDTO.setIsDefault(1);
+                
+                // 将主题设置转换为JSON字符串存储在colorConfig字段中
+                String colorConfig = objectMapper.writeValueAsString(themeSettings);
+                themeSettingDTO.setColorConfig(colorConfig);
+                
+                themeSettingDTO.setCreateTime(LocalDateTime.now());
+                themeSettingDTO.setUpdateTime(LocalDateTime.parse(config.get("lastUpdated").asText()));
+                
+                // 包装成列表返回
+                return Result.success(List.of(themeSettingDTO));
+            }
         } catch (Exception e) {
             return Result.error("查询主题设置列表失败: " + e.getMessage());
         }
@@ -89,22 +111,40 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
         try {
             // 从配置文件读取主题设置
             ObjectNode config = readConfigFromFile();
-            ObjectNode themeSettings = (ObjectNode) config.get("themeSettings");
-            ObjectNode imageSettings = (ObjectNode) config.get("imageSettings");
-            
+
             // 创建主题设置DTO
             ThemeSettingDTO themeSettingDTO = new ThemeSettingDTO();
             themeSettingDTO.setId(1L); // 固定ID
             themeSettingDTO.setThemeName("default");
             themeSettingDTO.setIsDefault(1);
-            
-            // 将主题设置转换为JSON字符串存储在colorConfig字段中
-            String colorConfig = objectMapper.writeValueAsString(themeSettings);
-            themeSettingDTO.setColorConfig(colorConfig);
-            
+
+            // 直接设置themes和images
+            JsonNode themesNode = config.get("themes");
+            if (themesNode != null && themesNode.isArray()) {
+                themeSettingDTO.setThemes(objectMapper.writeValueAsString(themesNode));
+            } else {
+                // 兼容旧格式，如果只有themeSettings，则将其转换为themes数组
+                JsonNode themeSettingsNode = config.get("themeSettings");
+                if (themeSettingsNode != null && themeSettingsNode.isObject()) {
+                    List<ObjectNode> oldThemes = new ArrayList<>();
+                    ObjectNode defaultTheme = objectMapper.createObjectNode();
+                    defaultTheme.put("themeName", "default");
+                    defaultTheme.put("colorName", "默认主题");
+                    defaultTheme.put("colorCode", themeSettingsNode.get("primaryColor").asText());
+                    defaultTheme.put("colorConfigEnabled", true);
+                    oldThemes.add(defaultTheme);
+                    themeSettingDTO.setThemes(objectMapper.writeValueAsString(oldThemes));
+                }
+            }
+
+            JsonNode imageSettingsNode = config.get("imageSettings");
+            if (imageSettingsNode != null && imageSettingsNode.isObject()) {
+                themeSettingDTO.setImages(objectMapper.writeValueAsString(imageSettingsNode));
+            }
+
             themeSettingDTO.setCreateTime(LocalDateTime.now());
-            themeSettingDTO.setUpdateTime(LocalDateTime.parse(config.get("lastUpdated").asText()));
-            
+            themeSettingDTO.setUpdateTime(LocalDateTime.now());
+
             return Result.success(themeSettingDTO);
         } catch (Exception e) {
             return Result.error("查询默认主题设置失败: " + e.getMessage());
@@ -138,24 +178,36 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             // 读取现有配置
             ObjectNode config = readConfigFromFile();
             
-            // 解析colorConfig中的主题设置
-            JsonNode colorConfigNode = objectMapper.readTree(themeSettingDTO.getColorConfig());
-            ObjectNode themeSettings = objectMapper.createObjectNode();
-            
-            if (colorConfigNode.isObject()) {
-                ObjectNode colorConfigObject = (ObjectNode) colorConfigNode;
-                themeSettings.setAll(colorConfigObject);
+            // 处理themes配置
+            if (themeSettingDTO.getThemes() != null && !themeSettingDTO.getThemes().isEmpty()) {
+                // 解析themes JSON字符串并更新配置
+                JsonNode themesNode = objectMapper.readTree(themeSettingDTO.getThemes());
+                config.set("themes", themesNode);
+            } else if (themeSettingDTO.getColorConfig() != null && !themeSettingDTO.getColorConfig().isEmpty()) {
+                // 兼容旧格式，解析colorConfig中的主题设置
+                JsonNode colorConfigNode = objectMapper.readTree(themeSettingDTO.getColorConfig());
+                
+                // 检查是否是新的themes数组格式
+                if (colorConfigNode.has("themes") && colorConfigNode.get("themes").isArray()) {
+                    // 使用新的themes数组格式
+                    config.set("themes", colorConfigNode.get("themes"));
+                } else {
+                    // 兼容旧格式，解析单个主题设置
+                    ObjectNode themeSettings = objectMapper.createObjectNode();
+                    if (colorConfigNode.isObject()) {
+                        ObjectNode colorConfigObject = (ObjectNode) colorConfigNode;
+                        themeSettings.setAll(colorConfigObject);
+                    }
+                    config.set("themeSettings", themeSettings);
+                }
             }
             
-            config.set("themeSettings", themeSettings);
-            
-            // 更新图片设置
-            ObjectNode imageSettings = (ObjectNode) config.get("imageSettings");
-            if (imageSettings == null) {
-                imageSettings = objectMapper.createObjectNode();
+            // 处理images配置
+            if (themeSettingDTO.getImages() != null && !themeSettingDTO.getImages().isEmpty()) {
+                // 解析images JSON字符串并更新配置
+                JsonNode imagesNode = objectMapper.readTree(themeSettingDTO.getImages());
+                config.set("imageSettings", imagesNode);
             }
-            
-            config.set("imageSettings", imageSettings);
             
             // 更新时间戳
             config.put("lastUpdated", LocalDateTime.now().toString());
@@ -332,26 +384,41 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
     // 图片处理方法保持不变
     
     @Override
-    public Result<String> uploadSplashScreenImage(MultipartFile file) {
-        if (file.isEmpty()) {
-            return Result.error("上传文件不能为空");
+    public String updateSplashScreenImage(MultipartFile splashScreenImage) {
+        if (splashScreenImage == null || splashScreenImage.isEmpty()) {
+            throw new IllegalArgumentException("开屏页图片不能为空");
         }
         
         try {
+            // 检查上传路径配置
+            if (uploadPath == null || uploadPath.trim().isEmpty()) {
+                throw new RuntimeException("文件上传路径未配置");
+            }
+            
             // 创建上传目录
             File uploadDir = new File(uploadPath + "/theme");
             if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+                if (!uploadDir.mkdirs()) {
+                    throw new RuntimeException("无法创建上传目录: " + uploadDir.getAbsolutePath());
+                }
+            }
+            
+            // 检查目录是否可写
+            if (!uploadDir.canWrite()) {
+                throw new RuntimeException("上传目录不可写: " + uploadDir.getAbsolutePath());
             }
             
             // 生成唯一文件名
-            String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String originalFilename = splashScreenImage.getOriginalFilename();
+            String fileExtension = ".jpg"; // 默认扩展名
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
             String newFilename = "splash_screen_" + UUID.randomUUID().toString() + fileExtension;
             
             // 保存文件
             File dest = new File(uploadDir.getAbsolutePath() + "/" + newFilename);
-            file.transferTo(dest);
+            splashScreenImage.transferTo(dest);
             
             // 删除旧的开屏页图片（如果存在）
             File oldSplashScreen = new File(uploadDir.getAbsolutePath() + "/splash_screen.jpg");
@@ -361,33 +428,65 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             
             // 重命名新文件为固定名称
             File newFile = new File(uploadDir.getAbsolutePath() + "/splash_screen.jpg");
-            dest.renameTo(newFile);
+            if (!dest.renameTo(newFile)) {
+                // 如果renameTo失败，尝试复制文件
+                Files.copy(dest.toPath(), newFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                dest.delete(); // 删除临时文件
+            }
             
             // 更新配置文件中的图片路径
             updateImageSetting("splashImagePath", "/theme/splash_screen.jpg");
             
-            return Result.success("开屏页图片上传成功");
-        } catch (IOException e) {
+            return "/theme/splash_screen.jpg";
+        } catch (Exception e) {
+            throw new RuntimeException("开屏页图片上传失败: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public Result<String> uploadSplashScreenImage(MultipartFile file) {
+        if (file.isEmpty()) {
+            return Result.error("上传文件不能为空");
+        }
+        try {
+            String imagePath = updateSplashScreenImage(file); // 调用已有的updateSplashScreenImage方法
+            return Result.success(imagePath);
+        } catch (Exception e) {
             return Result.error("开屏页图片上传失败: " + e.getMessage());
         }
     }
     
     @Override
     public Result<String> uploadHomeBackgroundImage(MultipartFile file) {
-        if (file.isEmpty()) {
+        if (file == null || file.isEmpty()) {
             return Result.error("上传文件不能为空");
         }
         
         try {
+            // 检查上传路径配置
+            if (uploadPath == null || uploadPath.trim().isEmpty()) {
+                return Result.error("文件上传路径未配置");
+            }
+            
             // 创建上传目录
             File uploadDir = new File(uploadPath + "/theme");
             if (!uploadDir.exists()) {
-                uploadDir.mkdirs();
+                if (!uploadDir.mkdirs()) {
+                    return Result.error("无法创建上传目录: " + uploadDir.getAbsolutePath());
+                }
+            }
+            
+            // 检查目录是否可写
+            if (!uploadDir.canWrite()) {
+                return Result.error("上传目录不可写: " + uploadDir.getAbsolutePath());
             }
             
             // 生成唯一文件名
             String originalFilename = file.getOriginalFilename();
-            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String fileExtension = ".jpg"; // 默认扩展名
+            if (originalFilename != null && originalFilename.contains(".")) {
+                fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
             String newFilename = "home_background_" + UUID.randomUUID().toString() + fileExtension;
             
             // 保存文件
@@ -402,14 +501,66 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             
             // 重命名新文件为固定名称
             File newFile = new File(uploadDir.getAbsolutePath() + "/home_background.jpg");
-            dest.renameTo(newFile);
+            if (!dest.renameTo(newFile)) {
+                // 如果renameTo失败，尝试复制文件
+                Files.copy(dest.toPath(), newFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                dest.delete(); // 删除临时文件
+            }
             
             // 更新配置文件中的图片路径
             updateImageSetting("backgroundImagePath", "/theme/home_background.jpg");
             
-            return Result.success("首页背景图上传成功");
-        } catch (IOException e) {
+            return Result.success("/theme/home_background.jpg");
+        } catch (Exception e) {
             return Result.error("首页背景图上传失败: " + e.getMessage());
+        }
+    }
+    
+    @Override
+    public void saveThemeSettings(String colorConfig) {
+        try {
+            // 解析传入的主题配置JSON
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode themeConfig = objectMapper.readTree(colorConfig);
+            
+            // 创建新的配置对象，只保留themes数组
+            ObjectNode newConfig = objectMapper.createObjectNode();
+            
+            // 如果传入的配置包含themes数组，则直接使用
+            if (themeConfig.has("themes")) {
+                newConfig.set("themes", themeConfig.get("themes"));
+            } else {
+                // 如果没有themes数组，保持原有逻辑或创建默认配置
+                File configFile = new File(CONFIG_FILE_PATH);
+                if (configFile.exists()) {
+                    JsonNode existingConfig = objectMapper.readTree(configFile);
+                    if (existingConfig.has("themes")) {
+                        newConfig.set("themes", existingConfig.get("themes"));
+                    }
+                }
+            }
+            
+            // 写回配置文件
+            writeConfigToFile(newConfig);
+                       
+        } catch (IOException e) {
+            throw new RuntimeException("保存主题配置失败: " + e.getMessage(), e);
+        }
+    }
+    
+    @Override
+    public Result<String> deleteSplashScreenImage() {
+        File splashScreen = new File(uploadPath + "/theme/splash_screen.jpg");
+        if (splashScreen.exists()) {
+            if (splashScreen.delete()) {
+                // 更新配置文件中的图片路径
+                updateImageSetting("splashImagePath", "");
+                return Result.success("开屏页图片删除成功");
+            } else {
+                return Result.error("开屏页图片删除失败");
+            }
+        } else {
+            return Result.success("开屏页图片不存在");
         }
     }
     
@@ -430,22 +581,6 @@ public class ThemeSettingServiceImpl implements ThemeSettingService {
             return Result.success("/theme/home_background.jpg");
         } else {
             return Result.success(""); // 返回空字符串表示没有设置首页背景图
-        }
-    }
-    
-    @Override
-    public Result<String> deleteSplashScreenImage() {
-        File splashScreen = new File(uploadPath + "/theme/splash_screen.jpg");
-        if (splashScreen.exists()) {
-            if (splashScreen.delete()) {
-                // 更新配置文件中的图片路径
-                updateImageSetting("splashImagePath", "");
-                return Result.success("开屏页图片删除成功");
-            } else {
-                return Result.error("开屏页图片删除失败");
-            }
-        } else {
-            return Result.success("开屏页图片不存在");
         }
     }
     
