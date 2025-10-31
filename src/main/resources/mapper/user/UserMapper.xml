@@ -99,4 +99,12 @@
             #{id}
         </foreach>
     </select>
+    
+    <!-- 查询所有启用状态的普通用户（用于批量发送通知） -->
+    <select id="selectAllActiveUsers" resultMap="UserResultMap">
+        SELECT 
+        <include refid="User_Column_List"/>
+        FROM user
+        WHERE user_type = 1 AND status = 1 AND deleted = 0
+    </select>
 </mapper>

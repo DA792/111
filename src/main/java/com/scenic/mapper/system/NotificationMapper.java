@@ -96,4 +96,12 @@ public interface NotificationMapper {
      */
     @Delete("DELETE FROM notification WHERE id = #{id}")
     int deleteById(Long id);
+    
+    /**
+     * 根据发送状态查询通知列表
+     * @param sendStatus 发送状态（0-未发送，1-已发送，2-发送失败）
+     * @return 通知列表
+     */
+    @Select("SELECT * FROM notification WHERE send_status = #{sendStatus} ORDER BY create_time ASC")
+    List<Notification> selectBySendStatus(@Param("sendStatus") Integer sendStatus);
 }

@@ -7,6 +7,7 @@ import com.scenic.common.dto.Result;
 import com.scenic.dto.system.NotificationDTO;
 import com.scenic.entity.system.Notification;
 import com.scenic.mapper.system.NotificationMapper;
+import com.scenic.mapper.user.UserMapper;
 import com.scenic.service.system.NotificationService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ public class NotificationServiceImpl implements NotificationService {
     
     @Autowired
     private NotificationMapper notificationMapper;
+    
+    @Autowired
+    private UserMapper userMapper;
     
     /**
      * 分页查询通知列表
@@ -247,9 +251,33 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 发送结果
      */
     private Result<String> sendSmsNotification(Notification notification) {
-        // TODO: 实现短信发送逻辑
-        // 这里应该调用短信服务提供商的API
-        return Result.success("短信发送成功");
+        try {
+            // 获取接收人信息
+            Long receiverId = notification.getReceiverId();
+            if (receiverId == null) {
+                return Result.error("接收人ID不能为空");
+            }
+            
+            // 查询用户手机号
+            com.scenic.entity.user.User user = userMapper.selectById(receiverId);
+            if (user == null || user.getPhone() == null || user.getPhone().isEmpty()) {
+                return Result.error("用户不存在或未绑定手机号");
+            }
+            
+            // TODO: 调用短信服务提供商的API
+            // 示例：阿里云短信、腾讯云短信等
+            // String phone = user.getPhone();
+            // String content = String.format("【智佳鸟类保护区】%s %s", notification.getTitle(), notification.getContent());
+            // smsService.sendSms(phone, content);
+            
+            // 记录发送日志
+            System.out.println(String.format("短信通知发送：用户ID=%d, 手机号=%s, 内容=%s", 
+                receiverId, user.getPhone(), notification.getContent()));
+            
+            return Result.success("短信发送成功");
+        } catch (Exception e) {
+            return Result.error("短信发送失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -258,9 +286,34 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 发送结果
      */
     private Result<String> sendEmailNotification(Notification notification) {
-        // TODO: 实现邮件发送逻辑
-        // 这里应该调用邮件服务提供商的API
-        return Result.success("邮件发送成功");
+        try {
+            // 获取接收人信息
+            Long receiverId = notification.getReceiverId();
+            if (receiverId == null) {
+                return Result.error("接收人ID不能为空");
+            }
+            
+            // 查询用户邮箱
+            com.scenic.entity.user.User user = userMapper.selectById(receiverId);
+            if (user == null || user.getEmail() == null || user.getEmail().isEmpty()) {
+                return Result.error("用户不存在或未绑定邮箱");
+            }
+            
+            // TODO: 调用邮件服务提供商的API
+            // 示例：JavaMail、阿里云邮件推送、腾讯云邮件等
+            // String email = user.getEmail();
+            // String subject = notification.getTitle();
+            // String body = notification.getContent();
+            // emailService.sendEmail(email, subject, body);
+            
+            // 记录发送日志
+            System.out.println(String.format("邮件通知发送：用户ID=%d, 邮箱=%s, 标题=%s", 
+                receiverId, user.getEmail(), notification.getTitle()));
+            
+            return Result.success("邮件发送成功");
+        } catch (Exception e) {
+            return Result.error("邮件发送失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -269,9 +322,36 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 发送结果
      */
     private Result<String> sendMiniappNotification(Notification notification) {
-        // TODO: 实现小程序推送逻辑
-        // 这里应该调用微信小程序推送API
-        return Result.success("小程序推送成功");
+        try {
+            // 获取接收人信息
+            Long receiverId = notification.getReceiverId();
+            if (receiverId == null) {
+                return Result.error("接收人ID不能为空");
+            }
+            
+            // 查询用户OpenID
+            com.scenic.entity.user.User user = userMapper.selectById(receiverId);
+            if (user == null || user.getOpenId() == null || user.getOpenId().isEmpty()) {
+                return Result.error("用户不存在或未绑定微信");
+            }
+            
+            // TODO: 调用微信小程序推送API
+            // 示例：使用微信小程序订阅消息或模板消息
+            // String openId = user.getOpenId();
+            // String templateId = "通知模板ID";
+            // Map<String, Object> data = new HashMap<>();
+            // data.put("thing1", new TemplateData(notification.getTitle()));
+            // data.put("thing2", new TemplateData(notification.getContent()));
+            // wechatMiniappService.sendTemplateMessage(openId, templateId, data);
+            
+            // 记录发送日志
+            System.out.println(String.format("小程序通知发送：用户ID=%d, OpenID=%s, 内容=%s", 
+                receiverId, user.getOpenId(), notification.getContent()));
+            
+            return Result.success("小程序推送成功");
+        } catch (Exception e) {
+            return Result.error("小程序推送失败: " + e.getMessage());
+        }
     }
     
     /**
@@ -280,9 +360,37 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 发送结果
      */
     private Result<String> sendServiceNotification(Notification notification) {
-        // TODO: 实现服务号推送逻辑
-        // 这里应该调用微信服务号推送API
-        return Result.success("服务号推送成功");
+        try {
+            // 获取接收人信息
+            Long receiverId = notification.getReceiverId();
+            if (receiverId == null) {
+                return Result.error("接收人ID不能为空");
+            }
+            
+            // 查询用户OpenID（服务号和小程序可能使用不同的OpenID，这里简化处理）
+            com.scenic.entity.user.User user = userMapper.selectById(receiverId);
+            if (user == null || user.getOpenId() == null || user.getOpenId().isEmpty()) {
+                return Result.error("用户不存在或未关注服务号");
+            }
+            
+            // TODO: 调用微信服务号推送API
+            // 示例：使用微信公众号模板消息
+            // String openId = user.getOpenId();
+            // String templateId = "通知模板ID";
+            // Map<String, Object> data = new HashMap<>();
+            // data.put("first", new TemplateData(notification.getTitle()));
+            // data.put("keyword1", new TemplateData(notification.getContent()));
+            // data.put("remark", new TemplateData("感谢您的关注！"));
+            // wechatServiceAccountService.sendTemplateMessage(openId, templateId, data);
+            
+            // 记录发送日志
+            System.out.println(String.format("服务号通知发送：用户ID=%d, OpenID=%s, 内容=%s", 
+                receiverId, user.getOpenId(), notification.getContent()));
+            
+            return Result.success("服务号推送成功");
+        } catch (Exception e) {
+            return Result.error("服务号推送失败: " + e.getMessage());
+        }
     }
     
     /**

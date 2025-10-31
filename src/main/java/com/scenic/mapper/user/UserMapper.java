@@ -118,4 +118,11 @@ public interface UserMapper {
      * @return 用户列表
      */
     List<User> selectByIds(@Param("ids") List<Long> ids);
+    
+    /**
+     * 查询所有启用状态的普通用户（用于批量发送通知）
+     * @return 用户列表
+     */
+    @Select("SELECT * FROM user WHERE user_type = 1 AND status = 1 AND deleted = 0")
+    List<User> selectAllActiveUsers();
 }
